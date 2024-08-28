@@ -1,1 +1,1 @@
-The package aims to support the download and processcing of DWD daily weather data. 
+The package aims to support the download and processing of DWD daily weather data. 
