@@ -1,0 +1,383 @@
+---
+title: "Weatherfunctions"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Weatherfunctions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+rm(list=ls())
+library(Weatherfunctions)
+library(stringi)
+library(RCurl)
+library(here)
+library(data.table)
+library(dplyr)
+library(fst)
+library(sf)
+library(dplyr)
+library(purrr)
+library(tidyr)
+```
+
+
+# Intro
+
+The German Weather Service (DWD) supplies weather data in different spatial and time resolution and from different types of weather stations.
+This package aims to a) assist in retrieving this data in a first step to a local copy of the data and b) in a second step to prepare the data for simulations and other purposes.
+Thereby especially the estimation of global radiation data from sunshine hours is supported and interpolation for certain locations based on distance weighted use of the nearest weather station is possible.
+
+## Structure of DWD ftp service
+
+### Daily observations of weather data
+
+The daily observations of weather data from the stations are divided into two sections, historical data which passed a quality control and recent data, not yet full controlled and usually containing the data of the actual and the data of the previous year.
+Their actuality is usually one day back, so that the observations from the last day are available on the next day.
+For convenience the link to these repositories and their local copies as well as already transformed data is stored in variable defined in the package.
+For the historical data the variable "DWD_ftp_historical" is defined containing the link to `r DWD_ftp_historical` and for the recent data the variable "DWD_ftp_recent" with the link to `r DWD_ftp_recent`.
+Also of interest are the directories with additional precipitation data and solar radiation data which are available only for a limited number of stations in Germany.
+There is also a directory with selected long term observations from selected stations (timeseries_overview):
+
+```         
+├───kl
+│   ├───historical
+│   └───recent
+├───more_precip
+│   ├───historical
+│   └───recent
+├───solar
+└───timeseries_overview
+```
+
+In order to reduce the number of file transfers when using these data it is convenient to make local copies of the DWD data.
+The package assumes that there is a sub directory "LocalCopyDWD/" in your R project and defines strings to the copies of recent and historical DWD data `r LocalCopy_DWD_ftp_historical`.
+
+## Structure of DWD data files
+
+The data for the recent and historic observations are stored in ZIP files, one for each station, which contain a number of files with meta data and a data file (Example: produkt_klima_tag_20211123_20230526_00164.txt) were the filename consists of a string constant "produkt_klima_tag" two strings with the date of the first and the last observation day in the file in the format yyyymmdd and the Stations_id of the station as a 5 char string with leading zeros.
+
+## Functions
+
+### Get the station meta data (getDWDContent)
+
+The function "getDWDContent" reads the content of the DWD ftp server and returns a data frame with the station meta data.
+The function is used to get the station meta data for the historical and recent observations.
+
+```{r getDWDContent, eval=TRUE, message=FALSE, warning=FALSE, include=TRUE}
+
+DWDhistorical <- getDWDContent(DWD_ftp_historical)
+DWDrecent     <- getDWDContent(DWD_ftp_recent)
+str(DWDhistorical)
+```
+
+The function returns a list with the following elements:
+
+- "stations" a data frame with the station meta data
+- "ziplist" a list of the ZIP files for the stations
+- "zipID" a list of the station IDs
+
+### Meta data for additional precipitaiton stations
+
+For the additional data from stations measuring precipitation data the function "getDWDContent" has to be called with the respective parameter "precipitation = TRUE".
+
+```{r getDWDContent_precipitation, eval=TRUE, message=FALSE, warning=FALSE, include=FALSE}
+DWDRain_content <- getDWDRainStationList(recent = DWDRain_ftp_recent, historical = DWDRain_ftp_historical)
+
+outputDir <- here(Local_R_DWD) 
+if (!dir.exists(here(outputDir))) {dir.create(here(outputDir))}
+fn <- paste0(here(outputDir), fn_DWDRain_content)
+save(DWDRain_content, file = fn)
+nHistoricalStationlist <- nrow(DWDRain_content$historical$stationlist)
+nRecentStationlist <- nrow(DWDRain_content$recent$stationlist)
+
+```
+
+The DWD records for historical observations consists of data different stations (which changed over time) and for the recent observations of  stations.
+
+
+### Retrieving the combined (recent & historic) information (getDWDStationList)
+
+The function getDWDStationList retrieves the information (meta data) for both, recent and historic directories.
+The function returns a compiled data frame containing all station parameters ("stations") as well as the lists of the historical and recent weather station information the function "getDWDContent" returns (see section above).
+
+```{r getDWDStationList, message=FALSE, warning=FALSE}
+DWD_content <- getDWDStationList(historical = DWD_ftp_historical, recent = DWD_ftp_recent)
+str(DWD_content)
+```
+
+### Make a local copy of DWD observation data (Copy_DWD_ZipFiles)
+
+For the file transfer the package holds the function "Copy_DWD_ZipFiles" for downloading the files to the local directory, which has do be exist on the local machine.
+There are 500+ recent stations available and 1000+ data for recent & historic stations.
+So the download takes some time.
+
+```{r Copy_DWD_ZipFiles, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+if (!dir.exists(here(LocalCopy_DWD_ftp_recent)) 
+    {dir.create(here(LocalCopy_DWD_ftp_recent))}
+Copy_DWD_ZipFiles(DWD_ftp_recent, LocalCopy_DWD_ftp_recent)
+
+```
+For a total download of the recent and historical data the function "Copy_DWD_ZipFiles" the function has to be called with the respective parameters twice.
+
+
+## Download DWD data
+
+The package Weatherfunctions provides functions to download the data from the DWD ftp server or its local copy.
+
+### Data for a single weather station recent or historical (getsingleDWDWeather)
+
+The data from the DWD repository or its local copy can be downloaded either from the historic or recent data repositories which can be the DWD ftp service or its local copy using the function getsingleDWDWeather.
+
+```{r getsingleDWDWeather, message=FALSE, warning=FALSE, echo=F}
+selstation <-  as.character(DWD_content$recent$zipID[3])
+recent_data <- NULL
+recent_data <- getsingleDWDWeather(station = selstation, ziplist = DWD_content$recent$ziplist,
+                            repository = DWD_ftp_recent, local = F, quiet = F)
+```
+
+```{r getsingleDWDWeatheroutput, message=FALSE, warning=FALSE}
+head(recent_data)
+
+```
+In addition to the data from produkt_klima_tag_YYYYMMDD_YYYYMMDD_nnnnn.txt, the measurement height of wind speed was retrieved from the metadata file of the selected weatherstations and a Date column is added in R format.
+
+The downloaded data have column names according to the code of DWD, for which in a first step also readable names are defined.
+in the data frame df_names_DWD.
+
+```{r DWDdata}
+df_names_DWD
+
+```
+
+
+
+### Download combined data (getcombinedDWDWeather)
+
+For downloading the combination of historic and recent weather data of a particular station the function "getcombinedDWDWeather" can be used.
+It also adds station information to the returned data frame.
+
+```{r getcombinedDWDWeather}
+combined_data <- NULL
+combined_data <- getcombinedDWDWeather(DWD_content = DWD_content, station = selstation,
+                              recent_repository = DWD_ftp_recent, historical_repository = DWD_ftp_historical, local = F)
+combined_data <- rename.weather(combined_data)
+str(combined_data)
+
+```
+
+## Add radiation data (getRadWeather)
+
+The function getRadWeather uses the DWD-data in long name format and adds several derived parameters.
+
+```{r getRadWeather}
+RadWeather <- NULL
+#RadWeather <- getRadWeather(combined_data)
+str(RadWeather)
+```
+
+The additional columns are DOY: day of year, Dayl: daylength in hours, Angot: maximum possible radiation outside atmosphere [MJ.m-2.d-1], RelSun: the relative sunshine hours on that day, Monat: the calendar month of the day, , EstGlobRad the estimated global radiation of the day, ExcelTime: the day of year in Excel format, VP: the average vapour pressure on the day [mBar], the saturation deficit of the air and Ra_Int, the radiation intensity in [W.m-2].
+The functions uses other functions from the package and external functions to calculate some of these parameters.
+*Calcsolar (dayofyear, latitude)* calculates the daylength and the angot value.
+The function *relrad(RelSun, Month)* calculates the relative radiation compared to the angot values of that day of year.
+The function is based on an empirical regression between the relative radiation the relative sunshine duration for different months in Germany based on DWD data.
+
+
+
+## Saving data to local files in fst-format (UpdateDWDData_to_fst)
+
+In order to save the downloaded data in a more compact and pre-computed format the function UpdateDWDData_to_fst can be used.The parameter isloadnew is used to load the data from the DWD ftp server, if false the local zip-files will be used, if available.
+This again is a time consuming process, as the data is read from the zip files and saved in a fst file.
+For further analysis it is often sufficient to download the historical data only to the fst file, as these data are updated only once a year.
+
+
+
+```{r UpdateDWDData_to_fst, message=FALSE, warning=FALSE, eval=FALSE}
+
+UpdateDWDData_to_fst(dataperiod = "recent", startdate = "1990-01-01", isloadnew = T)
+
+```
+
+A saved file can be read using the function read.fst from the package fst.
+ 
+```{r}
+test <- NULL
+fn <- "weather_dat_1990.fst"
+path <- paste0(here(Local_R_DWD, fn))
+
+weather_historic <- read.fst(path = path)
+```
+
+
+
+## Interpolation of weather data for a selected location
+
+The algorithm is basically based on the approach to select for every day and for every weather parameter the values of the 3 nearest observations and to interpolate between those values according to inverse distance weigthing.
+
+Additionally the rainfall data of the nearest weatherstation including the additional rainfall stations are used 
+
+```{r}
+UpdateRecentDWDdata <- F
+
+# 
+RecentRainStationList <- DWDRain_content$recent$stationlist
+
+
+# load historic weather data from local fst file ####
+fn <- here(Local_R_DWD, fn_histDWD_data)
+weather_historic <- read.fst(path = fn)
+# select the columns that are in the core data set and rename them
+weather_historic_core <- weather_historic[,c("Stations_id", "Date",longNames_DWD_core)]
+
+# update the local weather data for the recent period ######################
+# and store them in a fst file
+# this is done only once per day
+# the data is stored in a fst file
+# and takes up to 10-15 minutes
+if (UpdateRecentDWDdata) {
+  StartTime <- Sys.time()
+  UpdateDWDData_to_fst(dataperiod = "recent", 
+                       isloadnew = T,
+                       DWD_content = DWD_content,
+                       startdate = paste0(as.character(1990),"-01-01"))
+  
+  EndTime <- Sys.time()
+  print(paste("Time for UpdateDWDData_to_fst:", EndTime - StartTime))
+}
+
+fn_recentDWD_data <- "recent_weather_dat_1990.fst"
+weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
+  weather_recent  <- weather_recent[,c("Stations_id","Date",longNames_DWD_core)] 
+
+# set the location of the station  
+  geoBreite <- 52.7
+  geoLaenge <- 10.01
+  Hoehe_m <- 107
+  
+  # make location data frame  
+  Location <- data.frame(Latitude=as.numeric(geoBreite), Longitude=as.numeric(geoLaenge))
+  
+  # make an sf object from Location data frame
+  Location <- st_as_sf(Location, coords = c("Longitude", "Latitude")) %>%
+    st_set_crs(value = "+proj=longlat +datum=WGS84")
+  
+  
+  
+### interpolate the historic weather data for the location  
+  
+  # retrieve the recent station list from the DWD content
+  stationlist <- DWDhistorical$stationlist
+
+  # make an sf object from stationlist data frame
+  stationlist <- st_as_sf(stationlist, coords = c("geoLaenge", "geoBreite")) %>%
+    st_set_crs(value = "+proj=longlat +datum=WGS84")
+  
+  # add the distance to the location to the stationlist data frame
+  stationlist$Distance_m <- pmax(1,as.numeric(st_distance(stationlist, Location))) # minimum distance is 1 m because
+  stationlist$Distance_km <- format(stationlist$Distance_m /1000, digits = 3)
+  # remove the geometry column
+  stationlist$geometry <- NULL
+  stationlist <- as.data.frame(stationlist)
+  startdate <- "1990-01-01"
+  
+  # select the nearest stations with rain data, for historical data it is necessary to select more than one station
+  # because stations with rain data changed over time
+  RainStations_selected <- SelectStations (lat=geoBreite,
+                                          long=geoLaenge,
+                                          height_loc=Hoehe_m, 
+                                          stationlist = DWDRain_content$historical$stationlist,
+                                          #DWDRain_content$recent$stationlist,
+                                          minstations=1,
+                                          max_stations = 3,
+                                          radius=80000,
+                                          startdate=startdate,
+                                          max.Height.Distance_m=200)
+  
+  
+  # get the rain data for the selected stations
+  
+  df_Rain <- GetRainData_selection(RainStations_selected,
+                                     DWDRain_content$historical,
+                                     repository=DWDRain_ftp_historical,
+                                     startdate="1990-01-01") 
+  
+  
+  # add the distance to the rain station to the data frame
+  
+  
+  df_Rain <- left_join(df_Rain, RainStations_selected[,c("Stations_id", "Distance_km")], by="Stations_id")
+    
+  #
+  DWDdataHistorical <- InterpolateFromDWD(df_DWD_core = weather_historic_core, stationlist = stationlist, 
+                                          geoBreite = geoBreite, geoLaenge = geoLaenge, 
+                                max.Height.Distance_m=100, Hoehe_m = Hoehe_m, df_Rain = df_Rain, 
+                                startdate = startdate) 
+  
+  DWDdataHistorical$Longitude <- geoLaenge
+  DWDdataHistorical$Latitude <- geoBreite
+  summary(DWDdataHistorical)
+
+### interpolate the recent weather data for the location  
+  
+  
+  
+  
+  # retrieve the recent station list from the DWD content
+  stationlist <- DWD_content$recent$stationlist
+
+  # make an sf object from stationlist data frame
+  stationlist <- st_as_sf(stationlist, coords = c("geoLaenge", "geoBreite")) %>%
+    st_set_crs(value = "+proj=longlat +datum=WGS84")
+  
+  # add the distance to the location to the stationlist data frame
+  stationlist$Distance_m <- pmax(1,as.numeric(st_distance(stationlist, Location))) # minimum distance is 1 m because
+  stationlist$Distance_km <- format(stationlist$Distance_m /1000, digits = 3)
+  # remove the geometry column
+  stationlist$geometry <- NULL
+  stationlist <- as.data.frame(stationlist)
+  startdate <- "2023-01-01"
+  
+  # select the nearest station with rain data
+  RainStation_selected <- SelectStations (lat=geoBreite,
+                                          long=geoLaenge,
+                                          height_loc=Hoehe_m, 
+                                          stationlist = RecentRainStationList,
+                                          #DWDRain_content$recent$stationlist,
+                                          minstations=1,
+                                          max_stations = 1,
+                                          radius=80000,
+                                          startdate=startdate,
+                                          max.Height.Distance_m=200)
+  
+  
+  # get the rain data for the selected station
+  df_Rain <- getsingleDWDRain(station=RainStation_selected$Stations_id,
+                              DWDRain_content$recent$ziplist, repository=DWDRain_ftp_recent, local=F, quiet=T)
+  # add the distance to the rain station to the data frame
+
+  df_Rain$Distance_km <- RainStation_selected$Distance_km
+    
+  #
+  DWDdata <- InterpolateFromDWD(df_DWD_core = weather_recent, stationlist = stationlist, geoBreite = geoBreite, geoLaenge = geoLaenge, 
+                                max.Height.Distance_m=100, Hoehe_m = Hoehe_m, df_Rain = df_Rain, 
+                                startdate = startdate) 
+  
+  DWDdata$Longitude <- geoLaenge
+  DWDdata$Latitude <- geoBreite
+  summary(DWDdata)
+
+
+```
+
+
+
+
+

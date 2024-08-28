@@ -12,7 +12,7 @@ calcsolar(dayofyear, latitude)
 \item{latitude}{Latitude in °.}
 }
 \value{
-Daily maximum global radiation in [MJ.m-2.d-1]
+angot.value = Daily maximum global radiation in [MJ.m-2.d-1], declination of sun in [rad], daylength in [h]
 }
 \description{
 calcsolar: calculation of daily of maximum solar radiation

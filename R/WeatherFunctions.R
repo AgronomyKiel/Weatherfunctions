@@ -24,6 +24,8 @@ library(here)
 library(zoo)
 library(naniar)
 library(ggnewscale)
+library(purrr)
+library(stringi)
 
 #source(here("R","EvapFuncs.R"))
 #source(here("sources","EvapFuncs.R"))
@@ -123,6 +125,22 @@ longNames_DWD <- c( "QUALITAETS_NIVEAU",
                     "SONNENSCHEINDAUER"
 )
 
+
+# longNames_DWD is the long name for the weather data from original DWD data
+
+longNames_DWD_en <- c( "QUALITY_LEVEL",
+                    "AIRTEMPERATURE",
+                    "AIR_PRESSURE_STATIONHEIGHT",
+                    "REL_HUMIDITY",
+                    "WIND_SPEED",
+                    "AIRTEMPERATURE_MAXIMUM",
+                    "AIRTEMPERATURE_MINIMUM",
+                    "RAINFALL",
+                    "SUNSHINE_DURATION"
+)
+
+
+
 # longNames_DWD_core is the long name for the core weather data from original DWD data
 # needed to calculate potential evapotranspiration according to the Penman-Monteith method
 
@@ -137,18 +155,55 @@ longNames_DWD_core <- c( "LUFTTEMPERATUR",
 )
 
 
+longNames_DWD_core_en <- c( "AIRTEMPERATURE",
+                         "REL_HUMIDITY",
+                         "WIND_SPEED",
+                         "AIRTEMPERATURE_MAXIMUM",
+                         "AIRTEMPERATURE_MINIMUM",
+                         "RAINFALL",
+                         "SUNSHINE_DURATION",
+                         "MEASUREMENT_HEIGHT_WIND"
+)
+
+
+
+
+RainDataColumns <- c("STATIONS_ID", "MESS_DATUM", "QN_6", "RS", "RSF", "SH_TAG", "NSH_TAG")
+
+RainDataColumnsLong <- c("Station_id", "MESS_DATUM", "QUALITAETS_NIVEAU",
+                         "NIEDERSCHLAGSHOEHE", "NIEDERSCHLAGSFORM", "SCHNEEHOEHE", "NEUSCHNEEHOEHE")
+RainDataUnits <- c("", "YYYYMMDD", "code", "mm", "code", "cm", "cm")
+
+RainDataColumnsLong_en <- c("Station_id", "Date", "Quality_level",
+                         "Rainfall", "Rainfall_type", "Snow_height", "New_snow_height")
+RainDataUnits_en <- c("", "YYYYMMDD", "code", "mm", "code", "cm", "cm")
+
+
+
+
 # units of the weather data from original DWD data
 
 units_DWD <- c("code","Tagesmittel der Temperatur °C", "Tagesmittel des Luftdrucks hPa",
                "Tagesmittel der Relativen Feuchte %", "Tagesmittel Windgeschwindigkeit m/s",
-               "Tagesmaximum der Lufttemperaturin 2m Höhe °C", "Tagesminimum der Lufttemperaturin 2m Höhe °C",
+               "Tagesmaximum der Lufttemperatur in 2m Höhe °C", "Tagesminimum der Lufttemperatur in 2m Höhe °C",
                "tägliche Niederschlagshöhe mm", "tägliche Sonnenscheindauer h")
+
+units_DWD_en <- c("code","Mean air temperature °C", "Mean air pressure hPa",
+               "Mean relative humidity %", "Mean wind speed m/s",
+               "Daily maximum air temperature °C", "Daily minimum air temperature °C",
+                 "Rainfall rate mm", "Sunshine duration h")
 
 
 # data frames with names and units for DWD data
-df_names_DWD <- data.frame(names_DWD, longNames_DWD, units_DWD)
+df_names_DWD <- data.frame(names_DWD, longNames_DWD, units_DWD, longNames_DWD_en)
 # add brackets to the units
-df_names_DWD <- df_names_DWD %>% mutate(ylables = paste0(longNames_DWD, " [", units_DWD, "]") )
+df_names_DWD <- df_names_DWD %>% mutate(ylabels = paste0(longNames_DWD, " [", units_DWD, "]"),
+                                        ylabels_en = paste0(longNames_DWD_en, " [", units_DWD_en, "]"))
+df_Rainnames_DWD <- data.frame(RainDataColumns, RainDataColumnsLong, RainDataUnits, RainDataColumnsLong_en, RainDataUnits_en)
+
+# add brackets to the units
+df_Rainnames_DWD <- df_Rainnames_DWD %>% mutate(ylabels = paste0(RainDataColumnsLong, " [", RainDataUnits, "]"),
+                                                ylabels_en = paste0(RainDataColumnsLong_en, " [", RainDataUnits_en, "]"))
 
 
 
@@ -934,7 +989,7 @@ makeplot3 <- function(dfweather, parameter, BaseSize=18, ylabel="", xlabel="Datu
 #' @param dayofyear Julian day of the year.
 #' @param latitude Latitude in °.
 #'
-#' @return Daily maximum global radiation in [MJ.m-2.d-1]
+#' @return angot.value = Daily maximum global radiation in [MJ.m-2.d-1], declination of sun in [rad], daylength in [h]
 #' @export
 #'
 #' @examples calcsolar(200, 54)
@@ -1803,7 +1858,6 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
 
 
 
-
 #' Title getsingleDWDWeather loads data for a single weather station
 #'
 #' @details This is a function which loads data for a single weather station either for
@@ -2301,8 +2355,8 @@ SelectStations <- function(lat, long, height_loc=100, stationlist, minstations=7
 #' GetWeatherData_selection gets the weather data for the selected stations
 #' by downloading the data from the DWD ftp server
 #' @param stations_selected selected stations
-#' @param DWD_content list structure of available DWD stations
-#' @param local option for using local stored DWD zip-Files
+#' @param DWD_content list structure of available DWD stations,
+#' must be either DWD_content$recent or DWD_content$historical
 #' @param startdate start date for selection of data
 #'
 #' @return data frame with weather data for selected stations
@@ -2312,7 +2366,6 @@ SelectStations <- function(lat, long, height_loc=100, stationlist, minstations=7
 GetWeatherData_selection <- function(stations_selected,
                                      DWD_content,
                                      repository=DWD_ftp_historical,
-#                                     local = F,
                                      startdate="1990-01-01") {
 
   # Use local data?
@@ -2377,7 +2430,6 @@ GetWeatherData_selection <- function(stations_selected,
 #'
 #' @param stations_selected selected stations
 #' @param DWD_content list structure of available DWD stations
-#' @param local option for using local stored DWD zip-Files
 #' @param startdate start date for selection of data
 #'
 #' @return data frame with weather data for selected stations in fst format
@@ -2431,11 +2483,88 @@ GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, reposi
   weather_historical <- read.fst("./LocalCopyDWD/Rdata/weather_dat_1990.fst")
   weather_historical$Jahr <- year(weather_historical$Date)
   selcols <- names(weather_recent)
-  weather_historical <- weather_historical[,selcols]
+  weather_historical <- weather_historical[, selcols]
   weather_all <- rbind(weather_historical, weather_recent)
 
   return(weather_all)
 }
+
+
+
+
+
+#' GetRainData_selection gets the rain data for the selected stations
+#' by downloading the data from the DWD ftp server
+#' @param stations_selected selected stations
+#' @param DWDRain_content list structure of available DWD additional rain data stations,
+#' must be either DWDRain_content$recent or DWDRain_content$historical
+#' @param startdate start date for selection of data
+#'
+#' @return data frame with weather data for selected stations
+#' @export
+#'
+#' @examples GetWeatherData_selection(stations_selected, DWD_content, local=F, startdate="1990-01-01")
+GetRainData_selection <- function(stations_selected,
+                                     DWDRain_content,
+                                     repository=DWDRain_ftp_historical,
+                                     startdate="1990-01-01") {
+
+  # Use local data?
+  local <- ifelse(repository %in% c(DWDRain_ftp_recent, DWDRain_ftp_historical), F, T)
+
+  n_df <- length(stations_selected$Stations_id)
+  ## prepare list of data frames for weather data import
+  df_list <- vector(mode = "list", n_df)
+
+  raindata <- NULL
+  # loop over selected stations
+  for (station in stations_selected$Stations_id) {
+    # for debugging
+    #    ID <- station_selected$Stations_id[1]
+    # is station in the list of available zip files?
+    if (station %in% DWDRain_content$zipID){
+
+      # get the weather data for the station
+      raindata <- getsingleDWDRain(station = station,
+                                     ziplist = DWDRain_content$ziplist,
+                                     repository = repository,
+                                     local = local,
+                                     quiet = T)
+      raindata$Stations_id <- station
+      # add to list of data frames
+      df_list[[station]] <- raindata}
+  }
+  ## remove empty data frames (no valid names etc.)
+  df_list <-   df_list[lapply(df_list, length) > 1]
+  ## convert list of data frames in one
+  # convert list of data frames in one
+  raindata <- try(data.table::rbindlist(df_list, use.names = T), silent = T)
+  rm(df_list)
+  raindata <- as.data.frame(raindata)
+  # remove data older than start date
+  raindata <- raindata %>% filter(Date >= as.Date(startdate))
+  # rename columns
+  raindata <- raindata %>% rename(NIEDERSCHLAGSHOEHE = RS)
+  raindata$Date <- as.Date(as.character(raindata$MESS_DATUM), "%Y%m%d")
+  raindata$MESS_DATUM <- NULL
+  raindata$Jahr <- year(raindata$Date)
+  raindata$Monat <- month(raindata$Date)
+  raindata$ExcelTime <- as.integer(difftime(raindata$Date, as.Date("1899-12-30")))
+  # add station info
+  raindata <- raindata %>% left_join( stations_selected, by = "Stations_id")
+  # add radiation data
+  raindata <- merge(x = raindata, y = stations_selected[,c("Stations_id", "Distance_m", "Distance_km", "Height.Distance_m")], by="Stations_id")
+  ## add additional time indicators, remove Values older than start date
+  raindata <- raindata %>% mutate(Jahr=year(Date), Monat=month(Date),
+                                        ExcelTime = as.integer(difftime(Date, as.Date("1899-12-30")))
+  ) %>%
+    dplyr::select(c(all_of(idvars), "Date", "Jahr","Monat","ExcelTime", "NIEDERSCHLAGSHOEHE"))
+
+
+  return(raindata)
+}
+
+
 
 
 
@@ -2556,9 +2685,15 @@ getHUMEWeather <- function(RadWeather){
 
   weather_historic$Jahr <- year(weather_historic$Date)
   weather_recent$Jahr <- year(weather_recent$Date)
+#  setDT(weather_historic)
+#  setDT(weather_recent)
+  weather_historic <- as.data.frame(weather_historic)
+
 
   selcols <- names(weather_recent)
-  weather_all <- rbind(weather_historic[, ..selcols], weather_recent)
+#  weather_all <- rbind(weather_historic[, ..selcols], weather_recent)
+  weather_all <- weather_historic %>% dplyr::select(selcols)
+  weather_all <- rbind(weather_all, weather_recent)
   rm(weather_recent, weather_historic)
 
 
@@ -2624,7 +2759,7 @@ InterpolateWeatherData <- function(station_selected,
   SelNames <- names(weather_dat)
   ## add RainData do weather data
   tmp <- bind_rows(weather_dat, RainData)
-  weather_dat <- tmp[, ..SelNames]
+  weather_dat <- tmp[, SelNames]
   rm(tmp)
 
 
@@ -2648,15 +2783,15 @@ InterpolateWeatherData <- function(station_selected,
   # add column with mean values for each variable and day
 
   # data table version
-  DailyMeanRegionalWeather_l <- wetter_long[ ,list(meanRegionValue=mean(Value, na.rm=T), sdRegionalValue = sd(Value, na.rm=T)),
-                                             by=c("Date", "variable")]
+  DailyMeanRegionalWeather_l <- wetter_long[ , .(meanRegionValue=mean(Value, na.rm=T), sdRegionalValue = sd(Value, na.rm=T)),
+                                             by=.(Date, variable)]
 
   # dplyr version
   #  DailyMeanRegionalWeather_l <- wetter_long %>% group_by(Date, variable) %>% summarise(meanRegionValue=mean(Value, na.rm=T),
   #                                                                                       sdRegionalValue = sd(Value, na.rm=T))
 
   # data table version
-  MonthlyMeanRegionalWeather_l <- wetter_long[, .(MonthmeanRegionValue=mean(Value, na.rm=T)), by=c("Jahr", "Monat", "variable")]
+  MonthlyMeanRegionalWeather_l <- wetter_long[, .(MonthmeanRegionValue=mean(wetter_long$Value, na.rm=T)), by=c("Jahr", "Monat", "variable")]
 
   # dplyr version
   #  MonthlyMeanRegionalWeather_l <- wetter_long %>% mutate(Jahr=year(Date), Monat=month(Date)) %>%
@@ -2690,7 +2825,7 @@ InterpolateWeatherData <- function(station_selected,
 
   # merge weather data with station data
 #  wetter_long <-  merge(x = wetter_long, y = station_selected[,c("Stationsname", "Distance_m")], by="Stationsname", all.x=T)
-   wetter_long <-  left_join(x = wetter_long, y = station_selected[,c("Stations_id", "Distance_m")], by="Stations_id", all.x=T)
+   wetter_long <-  left_join(x = wetter_long, y = station_selected[,c("Stations_id", "Distance_m")], by="Stations_id")
 
   # select rain observations of nearest weather station
   Raindata <- wetter_long %>% filter(variable == "NIEDERSCHLAGSHOEHE", !is.na(Value)) %>% dplyr::select(Stationsname, Date, variable, Value, Distance_m) %>%
@@ -2754,7 +2889,7 @@ InterpolateWeatherData <- function(station_selected,
   #' @export
   #'
   #' @examples InterpolateFromDWD(df_DWD_core, stationlist, geoBreite, geoLaenge, max.Height.Distance_m=100, Hoehe_m = 100, df_Rain=NULL, startdate = "1990-01-01")
-  InterpolateFromDWD <- function(df_DWD_core, stationlist, geoBreite, geoLaenge,max.Height.Distance_m=100, Hoehe_m = 100, df_Rain=NULL,
+  InterpolateFromDWD <- function(df_DWD_core, stationlist, geoBreite, geoLaenge, max.Height.Distance_m=100, Hoehe_m = 100, df_Rain=NULL,
                                  startdate = "1990-01-01") {
 
 
@@ -2769,8 +2904,8 @@ InterpolateWeatherData <- function(station_selected,
         df_Rain <- NULL
       }
     }
-    df_DWD_core <- merge(x = df_DWD_core,
-                         y = stationlist[,c("Stations_id", "Distance_km","Stationshoehe")], by = "Stations_id", all.x = T)
+    df_DWD_core <- left_join(x = df_DWD_core,
+                         y = stationlist[,c("Stations_id", "Distance_km","Stationshoehe")], by = "Stations_id")
     # set to data table format to increase speed
     setDT(df_DWD_core)
 
@@ -2784,51 +2919,59 @@ InterpolateWeatherData <- function(station_selected,
     id_vars <- c("Stations_id", "Date",  "Distance_km")
 
     # melt the data to long format
-    long_data <- melt(df_DWD_core, id.vars = id_vars, measure.vars = longNames_DWD_core)
+    long_data <- data.table::melt(df_DWD_core, id.vars = id_vars, measure.vars = longNames_DWD_core,
+                                  variable.name = "variable", value.name = "value")
+ #   long_data <- long_data[(!is.na(long_data$value))&(!is.na(long_data$Distance_km)), ]
 
     if (!is.null(df_Rain) ){
-      df_Rain$value <- df_Rain$RS
+      df_Rain$value <- df_Rain$NIEDERSCHLAGSHOEHE
       df_Rain$variable <- "NIEDERSCHLAGSHOEHE"
-      df_Rain$Date <- as.Date(as.character(df_Rain$MESS_DATUM), format = "%Y%m%d")
+#      df_Rain$Date <- as.Date(as.character(df_Rain$MESS_DATUM), format = "%Y%m%d")
       df_Rain <- df_Rain %>% dplyr::select(Stations_id, Date, variable, value, Distance_km) %>% filter(!is.na(value))
       long_data <- rbind(long_data, df_Rain)
     }
 
     # merge the rain data with the weather data
     long_data$Distance_km <- as.numeric(long_data$Distance_km)
+    long_data <- as.data.table(long_data)
 
     # sort the data by date and distance and variable
     setkey(long_data, Date, Distance_km, variable)
+  #  na.omit(long_data, cols = c("value", "Distance_km"))
 
     # select the first three values for each date and variable which are not NA
-    result <- long_data[!is.na(value)&!is.na(Distance_km), head(.SD, 3), by = .(Date, variable)]
+    result <- long_data[ !is.na(value)&!is.na(Distance_km), head(.SD, 3),by = .(Date, variable)]
+
+#    result <- long_data %>% group_by(Date, variable) %>%
+#      filter(!is.na(value) & !is.na(Distance_km)) %>%
+#      slice_head(n = 3)
 
 
-
-    if(!is.null(df_Rain) ){
+#    if(!is.null(df_Rain) ){
       # select the first value for the rain data for each date
-      Raindata <- result[result$variable == "NIEDERSCHLAGSHOEHE",]
-      setkey(Raindata, Date, Distance_km)
-      Raindata <- Raindata[,head(.SD,1), by = .(Date)]
-    }
+#      Raindata <- result[result$variable == "NIEDERSCHLAGSHOEHE",]
+#      setkey(Raindata, Date, Distance_km)
+      # select the nearest station with rain data
+#     Raindata <- Raindata[,head(.SD,1), by = .(Date)]
+#    }
 
     # interpolate according to inverse distance weighting and transform into wide format
     xport <- result %>% dplyr::select(Date, variable, value, Distance_km) %>%
       filter (!is.na(value)) %>%
-      dplyr::group_by(variable,Date) %>%
+      dplyr::group_by(variable, Date) %>%
       dplyr::summarise(sumValue=sum(value/Distance_km), sum_1_Dist=sum(1/Distance_km)) %>%
       mutate(value=sumValue/sum_1_Dist) %>%
       ungroup %>% dplyr::select(-sum_1_Dist, -sumValue) %>%
       pivot_wider(names_from = variable, values_from = value) %>% arrange(Date)
 
     # use rain data from nearest station if available
-    if (!is.null(df_Rain)){
-      xport$NIEDERSCHLAGSHOEHE <- Raindata$value
-    }
+#    if (!is.null(df_Rain)){
+#      xport$NIEDERSCHLAGSHOEHE <- Raindata$value
+#    }
 
     # add the coordinates to the data
-    xport$geoBreite <- geoBreite$Latitude
-    xport$geoLaenge <- geoLaenge$Longitude
+    xport$geoBreite <- geoBreite
+    xport$geoLaenge <- geoLaenge
     xport <- st_as_sf(xport, coords = c("geoLaenge", "geoBreite")) %>%
       st_set_crs(value = "+proj=longlat +datum=WGS84")
     # calculate the radiation data
