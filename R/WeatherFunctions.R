@@ -41,6 +41,7 @@ if (OSname == "Windows") {
 
 # Directories -------------------------------------------------------------
 
+.datatable.aware = TRUE
 
 ## DWD repositories for synoptic weather data ########
 DWD_ftp_historical <- "ftp://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/daily/kl/historical/"
@@ -1287,6 +1288,7 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 
   tmp <- stri_encode(stri_read_raw(dest_file),
                      from="latin1", to="UTF-8")
+#  tmp <- readr::read_delim(file = dest_file, delim = " ", col_names = TRUE, quote = "", escape_double = FALSE)
 
   # Zeilenende ist irgendwas zwisch CRCRLF CRLF und LF... das sollte mit allem klappen...
   tmp <- stri_split_lines1(gsub("\r\n", "\n", tmp))
@@ -1296,7 +1298,13 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 
   # In Stationsnamen kommen Trennzeichen vor... wieder zusammensetzen...
 
-  tmplst <- sapply(tmp[3:length(tmp)],
+  # added to handle/remove the 9th extra column introduced by DWD
+  tmp2 <- sapply(tmp,8, FUN = function(obj, ncol){
+      obj <- c(obj[1:ncol])
+    return(obj)
+  }, simplify = FALSE)
+
+  tmplst <- sapply(tmp2[3:length(tmp2)],
                    FUN = function(obj){
                      if(length(obj)>8){
                        obj <- c(obj[1:6], paste(obj[7:(length(obj)-1)], collapse=" "), last(obj))
@@ -1305,8 +1313,8 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
                    }, simplify = FALSE)
 
   stationlist <- rbindlist(tmplst)
-  names(stationlist) <- tmp[[1]]
-  rm(tmp, tmplst)
+  names(stationlist) <- tmp2[[1]]
+  rm(tmp, tmp2, tmplst)
 
 
   if(LoadMetaData) {
@@ -1454,15 +1462,25 @@ getDWDRainContent <- function(repository, quiet=T){
   tmp <- stri_encode(stri_read_raw(here("DWD_tmp","RainStationlist.txt")),
                      from="latin1", to="UTF-8")
 
+
+
+
   # Zeilenende ist irgendwas zwisch CRCRLF CRLF und LF... das sollte mit allem klappen...
   tmp <- stri_split_lines1(gsub("\r\n", "\n", tmp))
 
   # Trennzeichen und -breiten sind inkonsistent..
   tmp <- stri_split_regex(tmp,"[[:space:]]{1,}", omit_empty = TRUE)
 
+  # added to handle/remove the 9th extra column introduced by DWD
+  tmp2 <- sapply(tmp,8, FUN = function(obj, ncol){
+    obj <- c(obj[1:ncol])
+    return(obj)
+  }, simplify = FALSE)
+
+
   # In Stationsnamen kommen Trennzeichen vor... wieder zusammensetzen...
 
-  tmplst <- sapply(tmp[3:length(tmp)],
+  tmplst <- sapply(tmp2[3:length(tmp2)],
                    FUN = function(obj){
                      if(length(obj)>8){
                        obj <- c(obj[1:6], paste(obj[7:(length(obj)-1)], collapse=" "), last(obj))
@@ -1471,7 +1489,7 @@ getDWDRainContent <- function(repository, quiet=T){
                    }, simplify = FALSE)
 
   stationlist <- rbindlist(tmplst)
-  names(stationlist) <- tmp[[1]]
+  names(stationlist) <- tmp2[[1]]
   rm(tmp, tmplst)
 
   stationlist$Stationshoehe <- type.convert(stationlist$Stationshoehe, dec = ".", as.is="T")

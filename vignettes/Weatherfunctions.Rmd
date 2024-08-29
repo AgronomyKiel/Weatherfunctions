@@ -27,6 +27,7 @@ library(sf)
 library(dplyr)
 library(purrr)
 library(tidyr)
+library(lubridate)
 ```
 
 
@@ -222,40 +223,54 @@ weather_historic <- read.fst(path = path)
 
 The algorithm is basically based on the approach to select for every day and for every weather parameter the values of the 3 nearest observations and to interpolate between those values according to inverse distance weigthing.
 
-Additionally the rainfall data of the nearest weatherstation including the additional rainfall stations are used 
+Additionally the rainfall data of the nearest weather station including the additional rainfall stations are used.
 
-```{r}
-UpdateRecentDWDdata <- F
+The function InterpolateFromDWD is used to interpolate the weather data for a selected location. The procedure is splitted in two parts, first the interpolation of the historical data and second the interpolation of the recent data, finally the data is combined in one data frame.
 
-# 
-RecentRainStationList <- DWDRain_content$recent$stationlist
+The retrieval of the historical and - to a lesser extent - the recent data is time consuming, as the data for each station has to be downloaded as zip files  and extracted. It is therefore more efficient to pre download the data. The package supports two different approaches, the first is to  a fst file for further use. Here the the fst approach is used.
+
+## Retrieval of the weather data for interpolation
+
+```{r LoadDataForInterpolation, message=FALSE, warning=FALSE, eval=TRUE}
 
 
 # load historic weather data from local fst file ####
+# the filename is constructed from two strings for the actual path of the project
+# and a filename which are both pre defined.
+
 fn <- here(Local_R_DWD, fn_histDWD_data)
 weather_historic <- read.fst(path = fn)
-# select the columns that are in the core data set and rename them
+
+# select the columns that are in the core, i.e. essential data set and rename them
 weather_historic_core <- weather_historic[,c("Stations_id", "Date",longNames_DWD_core)]
+
 
 # update the local weather data for the recent period ######################
 # and store them in a fst file
-# this is done only once per day
+# this has to be done only once per day
 # the data is stored in a fst file
 # and takes up to 10-15 minutes
+
+ThisYear <- as.numeric(format(Sys.Date(), "%Y"))
+# take the data frame with meta data for recent stations to a separate variable
+RecentRainStationList <- DWDRain_content$recent$stationlist
+
+UpdateRecentDWDdata <- F
 if (UpdateRecentDWDdata) {
   StartTime <- Sys.time()
   UpdateDWDData_to_fst(dataperiod = "recent", 
                        isloadnew = T,
                        DWD_content = DWD_content,
-                       startdate = paste0(as.character(1990),"-01-01"))
+                       startdate = paste0(as.character(ThisYear-1),"-01-01"))
   
   EndTime <- Sys.time()
   print(paste("Time for UpdateDWDData_to_fst:", EndTime - StartTime))
 }
 
-fn_recentDWD_data <- "recent_weather_dat_1990.fst"
+
+fn_recentDWD_data <- paste0("recent_weather_dat_", as.character(ThisYear-1),".fst")
 weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
-  weather_recent  <- weather_recent[,c("Stations_id","Date",longNames_DWD_core)] 
+weather_recent  <- weather_recent[,c("Stations_id","Date",longNames_DWD_core)] 
 
 # set the location of the station  
   geoBreite <- 52.7
@@ -268,8 +283,20 @@ weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
   # make an sf object from Location data frame
   Location <- st_as_sf(Location, coords = c("Longitude", "Latitude")) %>%
     st_set_crs(value = "+proj=longlat +datum=WGS84")
-  
-  
+
+```
+
+The historic weather data contains the data for the years 1990 to the previous year and consists of `r nrow(weather_historic_core)` records.
+The recent weather data contains the data for the years `r ThisYear-1` to the current year and consists of `r nrow(weather_recent)` records.
+
+
+## Interpolation of the historic weather data for the location
+
+In a next step the historic weather data is interpolated for the location.
+If all gets ok then the data frame should have no NA values.
+
+```{r InterpolateHistoricData, message=FALSE, warning=FALSE, eval=TRUE}
+
   
 ### interpolate the historic weather data for the location  
   
@@ -311,27 +338,43 @@ weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
   
   
   # add the distance to the rain station to the data frame
-  
-  
+
   df_Rain <- left_join(df_Rain, RainStations_selected[,c("Stations_id", "Distance_km")], by="Stations_id")
-    
-  #
+  
+  # interpolate the weather data for the location
   DWDdataHistorical <- InterpolateFromDWD(df_DWD_core = weather_historic_core, stationlist = stationlist, 
                                           geoBreite = geoBreite, geoLaenge = geoLaenge, 
                                 max.Height.Distance_m=100, Hoehe_m = Hoehe_m, df_Rain = df_Rain, 
                                 startdate = startdate) 
   
+  # remove the data for the current and previous year as they are in the recent data
+  ThisYear <- as.numeric(format(Sys.Date(), "%Y"))
+  FirstDayOfYear <- as.Date(paste0(ThisYear-1,"-01-01"))
+  ExcelFirstDayofYear <- as.numeric(FirstDayOfYear - as.Date("1899-12-30"))
+  DWDdataHistorical <- DWDdataHistorical %>% filter(Time < ExcelFirstDayofYear)
+  
+  # Add longitude and latitude to the data frame
   DWDdataHistorical$Longitude <- geoLaenge
   DWDdataHistorical$Latitude <- geoBreite
   summary(DWDdataHistorical)
 
-### interpolate the recent weather data for the location  
+
+```
+
+
+## Interpolation of the recent weather data for the location
+
+In a next step the recent weather data is interpolated for the location.
+Here, the data for the most actual date(s) may be incomplete.
+
+```{r InterpolateRecentData, message=FALSE, warning=FALSE, eval=TRUE}
+
   
+# recent data #######
+
+  ## retrieve the recent station list from the DWD content
   
-  
-  
-  # retrieve the recent station list from the DWD content
-  stationlist <- DWD_content$recent$stationlist
+  stationlist <- DWDrecent$stationlist
 
   # make an sf object from stationlist data frame
   stationlist <- st_as_sf(stationlist, coords = c("geoLaenge", "geoBreite")) %>%
@@ -343,40 +386,59 @@ weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
   # remove the geometry column
   stationlist$geometry <- NULL
   stationlist <- as.data.frame(stationlist)
-  startdate <- "2023-01-01"
+  startdate <- paste0(as.character(ThisYear-1),"-01-01")
   
-  # select the nearest station with rain data
+  # select the neart stations with rain data
   RainStation_selected <- SelectStations (lat=geoBreite,
                                           long=geoLaenge,
                                           height_loc=Hoehe_m, 
                                           stationlist = RecentRainStationList,
                                           #DWDRain_content$recent$stationlist,
-                                          minstations=1,
-                                          max_stations = 1,
+                                          minstations=3,
+                                          max_stations = 3,
                                           radius=80000,
                                           startdate=startdate,
                                           max.Height.Distance_m=200)
   
   
-  # get the rain data for the selected station
-  df_Rain <- getsingleDWDRain(station=RainStation_selected$Stations_id,
-                              DWDRain_content$recent$ziplist, repository=DWDRain_ftp_recent, local=F, quiet=T)
+  # get the rain data for the selected stations
+  
+  df_Rain <- GetRainData_selection(RainStations_selected,
+                                     DWDRain_content$recent,
+                                     repository=DWDRain_ftp_recent,
+                                     startdate="2023-01-01") 
+  
+  
   # add the distance to the rain station to the data frame
 
-  df_Rain$Distance_km <- RainStation_selected$Distance_km
-    
+  df_Rain <- left_join(df_Rain, RainStations_selected[,c("Stations_id", "Distance_km")], by="Stations_id")
+
+
   #
-  DWDdata <- InterpolateFromDWD(df_DWD_core = weather_recent, stationlist = stationlist, geoBreite = geoBreite, geoLaenge = geoLaenge, 
+  DWDdatarecent <- InterpolateFromDWD(df_DWD_core = weather_recent, stationlist = stationlist, geoBreite = geoBreite, geoLaenge = geoLaenge, 
                                 max.Height.Distance_m=100, Hoehe_m = Hoehe_m, df_Rain = df_Rain, 
                                 startdate = startdate) 
   
-  DWDdata$Longitude <- geoLaenge
-  DWDdata$Latitude <- geoBreite
-  summary(DWDdata)
-
+  DWDdatarecent$Longitude <- geoLaenge
+  DWDdatarecent$Latitude <- geoBreite
+  
+  summary(DWDdatarecent)
 
 ```
 
+## Combine the historical and recent data
+
+The data from the historical and recent data is combined in one data frame.
+
+```{r}
+  
+  DWDdata <- rbind(DWDdataHistorical, DWDdatarecent)
+  summary(DWDdata)
+
+```
+
+The combined data frame contains `r nrow(DWDdata)` records and starts at `r as.Date(min(DWDdata$Time),origin = "1899-12-30" )` and ends at 
+`r as.Date(max(DWDdata$Time),origin = "1899-12-30" )`.
 
 
 
