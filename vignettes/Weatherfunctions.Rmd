@@ -88,7 +88,7 @@ The function returns a list with the following elements:
 
 ### Meta data for additional precipitaiton stations
 
-For the additional data from stations measuring precipitation data the function "getDWDContent" has to be called with the respective parameter "precipitation = TRUE".
+For the additional data from stations measuring precipitation data the function "getDWDContent" has to be called with the respective parameters.
 
 ```{r getDWDContent_precipitation, eval=TRUE, message=FALSE, warning=FALSE, include=FALSE}
 DWDRain_content <- getDWDRainStationList(recent = DWDRain_ftp_recent, historical = DWDRain_ftp_historical)
@@ -102,7 +102,7 @@ nRecentStationlist <- nrow(DWDRain_content$recent$stationlist)
 
 ```
 
-The DWD records for historical observations consists of data different stations (which changed over time) and for the recent observations of  stations.
+The DWD records for historical observations consists of data `r nHistoricalStationlist`  different historical stations (which changed over time) and for the recent observations of values of `r nRecentStationlist`  stations.
 
 
 ### Retrieving the combined (recent & historic) information (getDWDStationList)

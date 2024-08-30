@@ -1276,11 +1276,16 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
   # extract the 5 digit zipIDs
   zipID <- gsub("tageswerte_KL_", "", ziplist)
   zipID <- stri_split_fixed(zipID, "_", n = 1, tokens_only=TRUE, simplify=TRUE)[,1]
-  path <- here("DWD_tmp")
-#  subDir <- "/DWD_tmp/"
-#  path <- file.path(path, subDir)
-  dir.create(path = path, showWarnings = FALSE, recursive = T)
-  dest_file <- here(path, "Stationlist.txt")
+
+  path_unzip <- here("DWD_tmp")
+
+  dir.create(path_unzip, showWarnings = FALSE, recursive = T)
+
+  dest_file <- here(path_unzip,"RainStationlist.txt")
+
+
+  dir.create(path = path_unzip, showWarnings = FALSE, recursive = T)
+  dest_file <- here(path_unzip, "Stationlist.txt")
   # Hier wird es kompliziert, da der DWD ständig das File-Format ändert...
   download.file(url=paste0(repository, fn_KLBeschreibung),
                 #		destfile="/DWD_tmp/Stationlist.txt", mode = "wb")
@@ -1449,11 +1454,11 @@ getDWDRainContent <- function(repository, quiet=T){
   zipID <- gsub("tageswerte_RR_", "", ziplist)
   zipID <- stri_split_fixed(zipID, "_", n = 1, tokens_only=TRUE, simplify=TRUE)[,1]
 
-  subDir <- "DWD_tmp"
+  path_unzip <- here("DWD_tmp")
 
-  dir.create(here(subDir), showWarnings = FALSE, recursive = T)
+  dir.create(path_unzip, showWarnings = FALSE, recursive = T)
 
-  dest_file <- here("DWD_tmp","RainStationlist.txt")
+  dest_file <- here(path_unzip,"RainStationlist.txt")
   # Hier wird es kompliziert, da der DWD ständig das File-Format ändert...
   download.file(url=paste0(repository, "RR_Tageswerte_Beschreibung_Stationen.txt"),
                 #		destfile="/DWD_tmp/Stationlist.txt", mode = "wb")
@@ -1502,6 +1507,11 @@ getDWDRainContent <- function(repository, quiet=T){
   # Kodierung der ID mal mit und mal ohne führende Nullen. Das sollte der Schritt einheitlich machen...
   stationlist$Stations_id <- sprintf("%05i", type.convert(stationlist$Stations_id, dec = ".", as.is="T"))
   stationlist <- stationlist %>% filter(Stations_id %in% zipID)
+  # remove temporary files
+  if(file.exists(path_unzip)){
+    unlink(path_unzip, recursive = TRUE, force = TRUE)
+  }
+
   return(list(stationlist= stationlist,
               filelist=filelist, ziplist=ziplist, zipID=zipID))
 }
