@@ -71,9 +71,6 @@ Local_DWD_recent <- here("recent")
 Local_Rain_DWD_historical <- here("historical")
 Local_Rain_DWD_recent <- here("recent")
 
-Local_Rdata_path <- here("LocalCopyDWD","Rdata")
-
-
 ### local RData file names ####
 HistoricalDWD <- "historicalDWDweather.RData"
 HistoricalDWDRain <- "historicalDWDRain.RData"
@@ -1193,7 +1190,7 @@ windheight <- function(ui, zi, zo) {
 #' @examples rename.weather(DWDWeather)
 
 rename.weather <- function(DWDWeather){
-  stopifnot(names(DWDWeather)%in%c("Stations_id", "MESS_DATUM", "FX", "FM",  "QN_3", "WINDGESCHWINDIGKEIT",
+  stopifnot(names(DWDWeather)%in%c("Stations_id", "MESS_DATUM", "FX", "FM",  "QN_4", "WINDGESCHWINDIGKEIT",
                                  "QN_4", "RSK", "RSKF", "SDK", "SHK_TAG", "NM", "VPM", "PM", "TMK", "UPM", "TXK",
                                  "TNK", "TGK", "eor",  "MHoeheWind", "Date", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname"))
   # rename columns
@@ -1237,7 +1234,7 @@ abr.names <- function(tab){
 #'
 #' @examples rename.Rain(DWDRain)
 rename.Rain <- function(DWDRain){
-  stopifnot(names(DWDRain)%in%c("Stations_id", "MESS_DATUM","QN_6", "RS", "RSF","SH_TAG","NSH_TAG","eor",
+  stopifnot(names(DWDRain)==c("Stations_id", "MESS_DATUM","QN_6", "RS", "RSF","SH_TAG","NSH_TAG","eor",
                               "Date", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname"))
   # Umbenennen nach altem Schema
   names(DWDRain)[names(DWDRain)=="QN_6"] <- "QUALITAETS_NIVEAU"
@@ -1876,10 +1873,10 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
 
   # save data to fst file
   if (dataperiod == "recent") {
-    fn <- paste0(Local_Rdata_path,"/recent_weather_dat_",as.character(startyear),".fst")
+    fn <- here(paste0("recent_weather_dat_",as.character(startyear),".fst"))
     write.fst(x = df, path = fn)}
   if (dataperiod == "historical") {
-    fn <- paste0(Local_Rdata_path,"/weather_dat_",as.character(startyear),".fst")
+    fn <- here(paste0("weather_dat_",as.character(startyear),".fst"))
     write.fst(x = df, path = fn)}
 }
 
@@ -1969,8 +1966,8 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
   # add standard measurement height for wind speed
   DWDWeather$MHoeheWind <- 10 # default value [m]
   DWDWeather$Date <- as.Date(as.character(DWDWeather$MESS_DATUM), "%Y%m%d")
-
-
+  
+  
 
   # read meta data for wind speed measurement height
   MetaWindfn <- paste0("Metadaten_Geraete_Windgeschwindigkeit_", station,".txt")
@@ -2009,7 +2006,7 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
     # correct for measurement heigts different to 10m
 #    DWDWeather$WINDGESCHWINDIGKEIT <-  windheight( ui = DWDWeather$WINDGESCHWINDIGKEIT,
 #                                                   zi =  DWDWeather$MHoeheWind, zo = 10)
-    DWDWeather$FM <-  windheight( ui = DWDWeather$FM,
+    DWDWeather$WINDGESCHWINDIGKEIT <-  windheight( ui = DWDWeather$FM,
                                                        zi =  DWDWeather$MHoeheWind, zo = 10)
   }
 
@@ -2983,7 +2980,7 @@ InterpolateWeatherData <- function(station_selected,
     # data table approch to select the first three values for each date and variable which are not NA
     result <- long_data[ !is.na(value)&!is.na(Distance_km), head(.SD, 3),by = .(Date, variable)]
     # select the nearest value for the rain data for each date
-    rainresult <- long_data[variable == "NIEDERSCHLAGSHOEHE"& !is.na(value)&!is.na(Distance_km), head(.SD, 1), by = .(Date, variable)]
+    rainresult <- long_data[variable == "NIEDERSCHLAGSHOEHE", !is.na(value)&!is.na(Distance_km), head(.SD, 1), by = .(Date, variable)]
     # remove the rain data from the result
     result <- result[variable != "NIEDERSCHLAGSHOEHE",]
     # combine the rain data with the result
@@ -2992,14 +2989,13 @@ InterpolateWeatherData <- function(station_selected,
 #    result <- long_data %>% group_by(Date, variable) %>%
 #      filter(!is.na(value) & !is.na(Distance_km)) %>%
 #      slice_head(n = 3)
+   nusedstations <- result %>% group_by(Stations_id, variable) %>%
+     dplyr::summarise( n=n()) %>% ungroup()
 
-    # calculate the sum of the inverse distance for each variable
-    df.SumInvDist <- result %>% mutate(InvDist = 1/Distance_km)  %>%  group_by(Date, variable) %>%
-             dplyr::summarise(SumInvDist=sum(InvDist)) %>%
-             ungroup()
-    df.InvDist <- result %>% mutate(InvDist = 1/Distance_km) %>% dplyr::select(Date, variable, Stations_id, InvDist)
+   usedstations <- result %>% group_by(Date, Stations_id, variable) %>%
+     dplyr::summarise(InvDist = 1/Distance_km, SumDist=sum(Distance_km, na.rm=T, wf=InvDist/SumDist, dist_frac=Distance_km*wf) ) %>%
+     group_by(variable) %>% mutate(wDistance = sum(dist_frac, na.rm=T)) %>% ungroup()
 
-    df.wf <- merge(x = df.InvDist, y = df.SumInvDist, by = c("Date", "variable")) %>% mutate(wf=InvDist/SumInvDist)
 
 
 #   %>% dplyr::summarise(Distance_km=mean(Distance_km, na.rm=T), n=n())
@@ -3027,129 +3023,18 @@ InterpolateWeatherData <- function(station_selected,
 #    }
 
     # add the coordinates to the data
-    xport$geoBreite <- as.numeric(geoBreite)
-    xport$geoLaenge <- as.numeric(geoLaenge)
+    xport$geoBreite <- geoBreite
+    xport$geoLaenge <- geoLaenge
     xport <- st_as_sf(xport, coords = c("geoLaenge", "geoBreite")) %>%
       st_set_crs(value = "+proj=longlat +datum=WGS84")
     # calculate the radiation data
     df <- getRadWeather(xport)
     # format and rename to HUME-formated data
     DWDdata <- getHUMEWeather(df)
-    output <- list(DWDdata=DWDdata, df.wf=df.wf)
+    output <- list(DWDdata=DWDdata, nusedstations=nusedstations, usedstations = usedstations)
     return(output)
   }
 
-
-
-  #' Title InterpolateToFST Interpolates weather data for a list of locations
-  #'
-  #' @param core_weather data frame with the core DWD data
-  #' @param df.locations data frame with the locations for which the weather data should be interpolated
-  #' @param DWD_content Meta data for the DWD weather stations
-  #' @param DWDRain_content Meta data for the DWD rain stations
-  #'
-  #' @return a data frame with the interpolated weather data
-  #' @export
-  #'
-  #' @examples
-  InterpolateToFST <- function(core_weather, df.locations, DWD_content, DWDRain_content, startdate, recent=TRUE) {
-
-
-    ################# interpolation of Weather data ####################
-
-    sites <- df.locations$ID
-    df.locations$Stationsname <- df.locations$ID
-
-    starttime <- Sys.time()
-    i <- 1
-    AllData <- data.frame()
-    for (site in sites){
-      #  site <- sites[1]
-      #  site <- "Nomborn"
-
-      print(paste0(site, "Site Nr.: ",as.character(i), "\n"))
-      i <- i + 1
-      starttime <- Sys.time()
-      print(paste0(site, "\n"))
-
-      geoBreite <- df.locations %>%  filter(ID==site) %>% dplyr::select(Latitude)  #[df$Stationsname=="site", "geoBreite"]
-      geoLaenge <- df.locations %>%  filter(ID==site) %>% dplyr::select(Longitude)  #[df$Stationsname=="site", "geoBreite"]
-      #Hoehe_m <- df[df$Stationsname==site, "Stationshoehe"]
-      Hoehe_m <- as.numeric(df.locations[df.locations$ID==site, "Hoehe_m"])
-
-      Location <- data.frame(Latitude=as.numeric(geoBreite), Longitude=as.numeric(geoLaenge))
-      Location <- st_as_sf(Location, coords = c("Longitude", "Latitude")) %>%
-        st_set_crs(value = "+proj=longlat +datum=WGS84")
-
-      if (recent == TRUE) {
-        stationlist <- DWD_content$recent$stationlist
-        RainStationList <- DWDRain_content$recent$stationlist
-        ziplist <- DWD_content$recent$ziplist
-        RainZiplist <- DWDRain_content$recent$ziplist
-        RainRepository <- DWDRain_ftp_recent
-      }
-      else {
-        stationlist <- DWD_content$historical$stationlist
-        RainStationList <- DWDRain_content$historical$stationlist
-        ziplist <- DWD_content$historical$ziplist
-        RainZiplist <- DWDRain_content$historical$ziplist
-        RainRepository <- DWDRain_ftp_historical
-      }
-
-      # make an sf object from stationlist data frame
-      stationlist <- st_as_sf(stationlist, coords = c("geoLaenge", "geoBreite")) %>%
-        st_set_crs(value = "+proj=longlat +datum=WGS84")
-
-      stationlist$Distance_m <- pmax(1,as.numeric(st_distance(stationlist, Location))) # minimum distance is 1 m because
-      stationlist$Distance_km <- format(stationlist$Distance_m /1000, digits = 3)
-      stationlist$geometry <- NULL
-      stationlist <- as.data.frame(stationlist)
-
-      # select the nearest station with rain data
-      RainStation_selected <- SelectStations (lat=geoBreite,
-                                              long=geoLaenge,
-                                              height_loc=Hoehe_m,
-                                              stationlist = RainStationList,
-                                              #DWDRain_content$recent$stationlist,
-                                              minstations=1,
-                                              max_stations = 1,
-                                              radius=50000,
-                                              startdate=startdate,
-                                              max.Height.Distance_m=200)
-
-      # get the rain data for the selected station
-      df_Rain <- getsingleDWDRain(station=RainStation_selected$Stations_id,
-                                  RainZiplist,
-                                  repository=RainRepository,
-                                  local=F,
-                                  quiet=T)
-      # add the distance to the rain station to the data frame
-      df_Rain <- rename.Rain(df_Rain)
-      df_Rain$Distance_km <- RainStation_selected$Distance_km
-
-      #
-      result <- InterpolateFromDWD(df_DWD_core = core_weather, stationlist = stationlist, geoBreite = geoBreite, geoLaenge = geoLaenge,
-                                   max.Height.Distance_m=100, Hoehe_m = Hoehe_m, df_Rain = df_Rain,
-                                   startdate = startdate)
-      DWDdata <- result$DWDdata
-
-      DWDdata$ID <- site
-      DWDdata$Longitude <- geoLaenge$Longitude
-      DWDdata$Latitude <- geoBreite$Latitude
-      summary(DWDdata)
-
-      AllData <- rbind(AllData, DWDdata)
-
-      endtime <- Sys.time()
-      cat("Time for ", site, " : ", endtime - starttime, "/n")
-
-    }
-
-    EndTime <- Sys.time()
-    print(paste0("Time for interpolation of data: ", round(EndTime - starttime, digits=2), "\n"))
-    return(AllData)
-
-  }
 
 
 

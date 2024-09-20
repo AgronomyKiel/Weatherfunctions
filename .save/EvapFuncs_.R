@@ -207,34 +207,6 @@ sat_vap_press_f <- function (Temp)
   sat_vap_press_f <- 6.11 * exp(17.4 * Temp / (Temp + 239.0))
 }
 # ----------------------------------------------------------------------- }
-
-
-
-#' Title
-#'
-#' @param temperature 
-#' @param relative_humidity 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-air_saturation_deficit <- function(temperature, relative_humidity){
-  
-  # saturation vapour pressure [mbar]
-  svp <- sat_vap_press_f(temperature)
-  
-  # actual vapour pressure [mbar]
-  avp <- svp * relative_humidity / 100.0
-  
-  # air saturation deficit [mbar]
-  air_saturation_deficit <- svp - avp
-  return(air_saturation_deficit)
-  
-}
-
-
-
 # ----------------------------------------------------------------------- }
 
 

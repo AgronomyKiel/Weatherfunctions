@@ -86,7 +86,7 @@ The function returns a list with the following elements:
 - "ziplist" a list of the ZIP files for the stations
 - "zipID" a list of the station IDs
 
-### Meta data for additional precipitaiton stations
+### Meta data for additional precipitation stations
 
 For the additional data from stations measuring precipitation data the function "getDWDContent" has to be called with the respective parameters.
 
@@ -229,7 +229,7 @@ The function InterpolateFromDWD is used to interpolate the weather data for a se
 
 The retrieval of the historical and - to a lesser extent - the recent data is time consuming, as the data for each station has to be downloaded as zip files  and extracted. It is therefore more efficient to pre download the data. The package supports two different approaches, the first is to  a fst file for further use. Here the the fst approach is used.
 
-## Retrieval of the weather data for interpolation
+### Retrieval of the weather data for interpolation
 
 ```{r LoadDataForInterpolation, message=FALSE, warning=FALSE, eval=TRUE}
 
@@ -273,9 +273,9 @@ weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
 weather_recent  <- weather_recent[,c("Stations_id","Date",longNames_DWD_core)] 
 
 # set the location of the station  
-  geoBreite <- 52.7
-  geoLaenge <- 10.01
-  Hoehe_m <- 107
+  geoBreite <- 52.7306
+  geoLaenge <- 10.6298
+  Hoehe_m <- 85
   
   # make location data frame  
   Location <- data.frame(Latitude=as.numeric(geoBreite), Longitude=as.numeric(geoLaenge))
@@ -290,7 +290,7 @@ The historic weather data contains the data for the years 1990 to the previous y
 The recent weather data contains the data for the years `r ThisYear-1` to the current year and consists of `r nrow(weather_recent)` records.
 
 
-## Interpolation of the historic weather data for the location
+### Interpolation of the historic weather data for the location
 
 In a next step the historic weather data is interpolated for the location.
 If all gets ok then the data frame should have no NA values.
@@ -342,27 +342,32 @@ If all gets ok then the data frame should have no NA values.
   df_Rain <- left_join(df_Rain, RainStations_selected[,c("Stations_id", "Distance_km")], by="Stations_id")
   
   # interpolate the weather data for the location
-  DWDdataHistorical <- InterpolateFromDWD(df_DWD_core = weather_historic_core, stationlist = stationlist, 
+  IntPolDWDHistorical <- InterpolateFromDWD(df_DWD_core = weather_historic_core, stationlist = stationlist, 
                                           geoBreite = geoBreite, geoLaenge = geoLaenge, 
                                 max.Height.Distance_m=100, Hoehe_m = Hoehe_m, df_Rain = df_Rain, 
                                 startdate = startdate) 
+  IntPolDWDdataHistorical <- IntPolDWDHistorical$DWDdata
   
   # remove the data for the current and previous year as they are in the recent data
   ThisYear <- as.numeric(format(Sys.Date(), "%Y"))
   FirstDayOfYear <- as.Date(paste0(ThisYear-1,"-01-01"))
   ExcelFirstDayofYear <- as.numeric(FirstDayOfYear - as.Date("1899-12-30"))
-  DWDdataHistorical <- DWDdataHistorical %>% filter(Time < ExcelFirstDayofYear)
-  
+  IntPolDWDdataHistorical <- IntPolDWDdataHistorical %>% filter(Time < ExcelFirstDayofYear)
+
   # Add longitude and latitude to the data frame
-  DWDdataHistorical$Longitude <- geoLaenge
-  DWDdataHistorical$Latitude <- geoBreite
-  summary(DWDdataHistorical)
+  IntPolDWDdataHistorical$Longitude <- geoLaenge
+  IntPolDWDdataHistorical$Latitude <- geoBreite
+  summary(IntPolDWDdataHistorical)
+  
+  usedstations <- IntPolDWDHistorical$usedstations
+  Diststations <- usedstations %>% group_by(variable) %>% dplyr::summarise(MeanDistance_km = mean(Distance_km, na.rm = T))
+  Diststations
 
 
 ```
 
 
-## Interpolation of the recent weather data for the location
+### Interpolation of the recent weather data for the location
 
 In a next step the recent weather data is interpolated for the location.
 Here, the data for the most actual date(s) may be incomplete.
@@ -415,14 +420,18 @@ Here, the data for the most actual date(s) may be incomplete.
 
 
   #
-  DWDdatarecent <- InterpolateFromDWD(df_DWD_core = weather_recent, stationlist = stationlist, geoBreite = geoBreite, geoLaenge = geoLaenge, 
+  IntpolDWDrecent <- InterpolateFromDWD(df_DWD_core = weather_recent, stationlist = stationlist, geoBreite = geoBreite, geoLaenge = geoLaenge, 
                                 max.Height.Distance_m=100, Hoehe_m = Hoehe_m, df_Rain = df_Rain, 
                                 startdate = startdate) 
   
-  DWDdatarecent$Longitude <- geoLaenge
-  DWDdatarecent$Latitude <- geoBreite
+  IntPolDWDdatarecent <- IntpolDWDrecent$DWDdata
+ 
   
-  summary(DWDdatarecent)
+  
+  IntPolDWDdatarecent$Longitude <- geoLaenge
+  IntPolDWDdatarecent$Latitude <- geoBreite
+  
+  summary(IntPolDWDdatarecent)
 
 ```
 
@@ -432,7 +441,7 @@ The data from the historical and recent data is combined in one data frame.
 
 ```{r}
   
-  DWDdata <- rbind(DWDdataHistorical, DWDdatarecent)
+  DWDdata <- rbind(IntPolDWDdataHistorical, IntPolDWDdatarecent)
   summary(DWDdata)
 
 ```
