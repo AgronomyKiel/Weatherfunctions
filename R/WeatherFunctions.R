@@ -3047,6 +3047,8 @@ InterpolateWeatherData <- function(station_selected,
   #' @param df.locations data frame with the locations for which the weather data should be interpolated
   #' @param DWD_content Meta data for the DWD weather stations
   #' @param DWDRain_content Meta data for the DWD rain stations
+  #' @param startdate
+  #' @param recent
   #'
   #' @return a data frame with the interpolated weather data
   #' @export
@@ -3055,7 +3057,6 @@ InterpolateWeatherData <- function(station_selected,
   InterpolateToFST <- function(core_weather, df.locations, DWD_content, DWDRain_content, startdate, recent=TRUE) {
 
 
-    ################# interpolation of Weather data ####################
 
     sites <- df.locations$ID
     df.locations$Stationsname <- df.locations$ID
@@ -3404,4 +3405,101 @@ WriteHumeWeatherFile <- function(df, fn) {
   # Datei muss explizit geschlossen werden
   close(fileHUME)
 }
+
+
+#' Title
+#'
+#' @param fn file name of the stationlist file
+#'
+#' @return a data frame with the forecast data for all station in the list
+#' @export
+#'
+#' @examples
+GetForecastDataForStationList <- function(fn) {
+
+
+  # read the list of location for which weather data should be interpolated
+  df.locations <- read_csv(fn)
+
+  #sites <- df$Stationsname
+  df.locations <- as.data.frame(df.locations)
+  sites <- df.locations$ID
+  df.locations$Stationsname <- df.locations$ID
+
+  i <- 1
+  AllForeCastData <- data.frame()
+  for (site in sites){
+    #      site <- sites[1]
+    #  site <- "Nomborn"
+
+    cat(site, "Site Nr.",as.character(i), "/n")
+    i <- i + 1
+    starttime <- Sys.time()
+    cat(site, "\n")
+
+    geoBreite <- df.locations %>%  filter(ID==site) %>% dplyr::select(Latitude)  #[df$Stationsname=="site", "geoBreite"]
+    geoLaenge <- df.locations %>%  filter(ID==site) %>% dplyr::select(Longitude)  #[df$Stationsname=="site", "geoBreite"]
+    #Hoehe_m <- df[df$Stationsname==site, "Stationshoehe"]
+    Hoehe_m <- as.numeric(df.locations[df.locations$ID==site, "Hoehe_m"])
+
+    Location <- data.frame(Latitude=as.numeric(geoBreite), Longitude=as.numeric(geoLaenge))
+    Location <- st_as_sf(Location, coords = c("Longitude", "Latitude")) %>%
+      st_set_crs(value = "+proj=longlat +datum=WGS84")
+
+    # create a location object as numeric vector of Latitude and Longitude
+    location <- c(as.numeric(geoBreite), as.numeric(geoLaenge))
+
+    forecast_start <- LatestRecentDate+1
+    forecast_end <- as.Date(Sys.Date())+7
+    # get the weather forecast data
+    forecast <- weather_forecast(
+      location = location,
+      start = forecast_start,
+      end = forecast_end,
+      hourly = c("temperature_2m", "shortwave_radiation", "wind_speed_10m", "relative_humidity_2m"),
+      daily = c("temperature_2m_max", "temperature_2m_min","precipitation_sum", "shortwave_radiation_sum", "sunshine_duration" ),
+      response_units = list(
+        temperature_unit = "celsius",
+        precipitation_unit = "mm",
+        #        wind_unit = "m/s"
+        wind_speed_unit = "ms"
+      ),
+      #      daily = NULL,
+      model = NULL,#"icon_d2",#NULL, "icon_eu",#
+      timezone = "Europe/Berlin"
+    )
+    daily_forecast <- forecast[is.na(forecast$time),c("date","daily_temperature_2m_max","daily_temperature_2m_min","daily_precipitation_sum","daily_shortwave_radiation_sum","daily_sunshine_duration")]
+    tmp <- forecast %>% filter(!is.na(time)) %>% dplyr::select("date","time","hourly_temperature_2m","hourly_shortwave_radiation","hourly_wind_speed_10m","hourly_relative_humidity_2m") %>%
+      mutate(Sat_def = air_saturation_deficit(hourly_temperature_2m, hourly_relative_humidity_2m)) %>%
+      mutate(date = as.Date(date)) %>% group_by(date) %>%
+      summarise(TMPM = mean(hourly_temperature_2m, na.rm = T),
+                Sat_def = mean(Sat_def, na.rm = T),
+                LF = mean(hourly_relative_humidity_2m, na.rm = T),
+                Wind = mean(hourly_wind_speed_10m, na.rm = T),
+                LF = mean(hourly_relative_humidity_2m, na.rm = T))
+
+    daily_forecast <- left_join(daily_forecast, tmp, by = "date")
+    #  daily_forecast$Time <-  as.numeric(daily_forecast$date-as.Date("1899-12-30"))
+    daily_forecast <- daily_forecast %>% mutate(Date = as.Date(date), Time=as.numeric(Date-as.Date("1899-12-30"))) %>% dplyr::select(-date)
+    daily_forecast <- daily_forecast %>% rename(TMPMX = daily_temperature_2m_max, TMPMN=daily_temperature_2m_min, Rain=daily_precipitation_sum, GlobRad = daily_shortwave_radiation_sum)
+    daily_forecast <- daily_forecast %>%  mutate(VP = 6.1078 * exp(17.269 * TMPM / (TMPM + 237.3)), Sat_def = 6.1078 * exp(17.269 * TMPM / (TMPM + 237.3) - LF / 100 * 17.269 * TMPM / (TMPM + 237.3))) %>%
+      dplyr::select(-daily_sunshine_duration, -Date)
+
+    summary(daily_forecast)
+    daily_forecast$ID <- site
+    daily_forecast$Longitude <- geoLaenge$Longitude
+    daily_forecast$Latitude <- geoBreite$Latitude
+    daily_forecast$Rad_Int <- daily_forecast$GlobRad * 1e6/86400
+
+    AllForeCastData <- rbind(AllForeCastData, daily_forecast)
+
+    endtime <- Sys.time()
+    cat(paste0("Time for ", site, " : ", round(endtime - starttime, digits=2)," seconds", "\n"))
+  }
+  EndTime <- Sys.time()
+  cat(paste("Time for gathering of forecast data:", round(EndTime - starttime, digits=2), " seconds", "\n"))
+  return(AllForeCastData)
+
+}
+
 
