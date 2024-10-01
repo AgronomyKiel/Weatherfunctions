@@ -2,3 +2,9 @@
 ^\.Rproj\.user$
 ^data-raw$
 ^tests$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^Weatherfunctions$
+^WeatherFunctions$
+^\.github$

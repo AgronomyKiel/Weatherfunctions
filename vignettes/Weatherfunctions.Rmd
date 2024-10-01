@@ -93,9 +93,9 @@ For the additional data from stations measuring precipitation data the function 
 ```{r getDWDContent_precipitation, eval=TRUE, message=FALSE, warning=FALSE, include=FALSE}
 DWDRain_content <- getDWDRainStationList(recent = DWDRain_ftp_recent, historical = DWDRain_ftp_historical)
 
-outputDir <- here(Local_R_DWD) 
-if (!dir.exists(here(outputDir))) {dir.create(here(outputDir))}
-fn <- paste0(here(outputDir), fn_DWDRain_content)
+outputDir <- Local_R_DWD 
+if (!dir.exists(outputDir)) {dir.create(outputDir, recursive = T)}
+fn <- paste0(outputDir, fn_DWDRain_content)
 save(DWDRain_content, file = fn)
 nHistoricalStationlist <- nrow(DWDRain_content$historical$stationlist)
 nRecentStationlist <- nrow(DWDRain_content$recent$stationlist)
@@ -117,13 +117,14 @@ str(DWD_content)
 
 ### Make a local copy of DWD observation data (Copy_DWD_ZipFiles)
 
-For the file transfer the package holds the function "Copy_DWD_ZipFiles" for downloading the files to the local directory, which has do be exist on the local machine.
+For the file transfer the package holds the function "Copy_DWD_ZipFiles" for downloading the files to the local directory, which has to exist on the local machine.
 There are 500+ recent stations available and 1000+ data for recent & historic stations.
 So the download takes some time.
 
 ```{r Copy_DWD_ZipFiles, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-if (!dir.exists(here(LocalCopy_DWD_ftp_recent)) 
-    {dir.create(here(LocalCopy_DWD_ftp_recent))}
+
+
+if (!dir.exists(LocalCopy_DWD_ftp_recent)) {dir.create(LocalCopy_DWD_ftp_recent, recursive = T)}
 Copy_DWD_ZipFiles(DWD_ftp_recent, LocalCopy_DWD_ftp_recent)
 
 ```
@@ -181,7 +182,7 @@ The function getRadWeather uses the DWD-data in long name format and adds severa
 
 ```{r getRadWeather}
 RadWeather <- NULL
-#RadWeather <- getRadWeather(combined_data)
+RadWeather <- getRadWeather(combined_data)
 str(RadWeather)
 ```
 
@@ -210,11 +211,17 @@ UpdateDWDData_to_fst(dataperiod = "recent", startdate = "1990-01-01", isloadnew 
 A saved file can be read using the function read.fst from the package fst.
  
 ```{r}
-test <- NULL
-fn <- "weather_dat_1990.fst"
-path <- paste0(here(Local_R_DWD, fn))
+fn <- "recent_weather_dat_1990.fst"
+path <- paste(Local_R_DWD, fn, sep="/")
+if (file.exists(path)){
+  weather_recent <- read.fst(path = path)}
+```
 
-weather_historic <- read.fst(path = path)
+The function UpdateDWDData_to_fst can also be used to update the historical data. This is done by setting the parameter dataperiod to "historical" and the startdate to the first date of the data to be downloaded. This process is time consuming and should be done only once a year.
+
+```{r UpdateDWDData_to_fst_historical, message=FALSE, warning=FALSE, eval=FALSE}
+UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1990-01-01", isloadnew = T)
+
 ```
 
 
@@ -268,7 +275,7 @@ if (UpdateRecentDWDdata) {
 }
 
 
-fn_recentDWD_data <- paste0("recent_weather_dat_", as.character(ThisYear-1),".fst")
+fn_recentDWD_data <- paste0("recent_weather_dat_", as.character(1990),".fst")
 weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
 weather_recent  <- weather_recent[,c("Stations_id","Date",longNames_DWD_core)] 
 
@@ -359,8 +366,9 @@ If all gets ok then the data frame should have no NA values.
   IntPolDWDdataHistorical$Latitude <- geoBreite
   summary(IntPolDWDdataHistorical)
   
-  usedstations <- IntPolDWDHistorical$usedstations
-  Diststations <- usedstations %>% group_by(variable) %>% dplyr::summarise(MeanDistance_km = mean(Distance_km, na.rm = T))
+  usedstations <- IntPolDWDHistorical$df.wf
+  usedstations$Distance <- 1/usedstations$InvDist
+  Diststations <- usedstations %>% group_by(variable) %>% dplyr::summarise(Distance = mean(Distance, na.rm = T))
   Diststations
 
 

@@ -66,26 +66,23 @@ DWDRain_ftp_recent <- "ftp://opendata.dwd.de/climate_environment/CDC/observation
 ## Local directories for DWD data ####
 
 ### Local folders for copies of DWD data ####
-LocalCopy_DWD_ftp_historical <- paste(DataDir,"LocalCopyDWD","kl","historical", sep = "/")
-LocalCopy_DWD_ftp_recent <- paste(DataDir, "LocalCopyDWD","kl","recent", sep = "/")
+LocalCopy_DWD_ftp_historical <- here("LocalCopyDWD","kl","historical")
+LocalCopy_DWD_ftp_recent <- here("LocalCopyDWD","kl","recent")
 
 ### Local folders for copies of additional DWD rainfall data ####
-LocalCopy_DWD_Rain_ftp_historical <- paste(DataDir, "LocalCopyDWD","more_precip","historical", sep = "/")
-LocalCopy_DWD_Rain_ftp_recent <- paste(DataDir,  "LocalCopyDWD","more_precip","recent", sep = "/")
+LocalCopy_DWD_Rain_ftp_historical <- here("LocalCopyDWD","more_precip","historical")
+LocalCopy_DWD_Rain_ftp_recent <- here( "LocalCopyDWD","more_precip","recent")
 
 ### local DWD Rdata paths ####
-Local_DWD <- paste(DataDir, "LocalCopyDWD", sep = "/")
-Local_R_DWD <- paste(DataDir, "LocalCopyDWD","Rdata", sep = "/")
-Local_DWD_historical <- paste(DataDir, "historical", sep = "/")
-Local_DWD_recent <- paste(DataDir, "recent", sep = "/")
+Local_DWD <- here("LocalCopyDWD")
+Local_R_DWD <- here("LocalCopyDWD","Rdata")
+Local_DWD_historical <- here("historical")
+Local_DWD_recent <- here("recent")
 
-Local_Rain_DWD_historical <- paste(DataDir, "historical", sep = "/")
-Local_Rain_DWD_recent <- paste(DataDir, "recent", sep = "/")
+Local_Rain_DWD_historical <- here("historical")
+Local_Rain_DWD_recent <- here("recent")
 
-Local_Rdata_path <- paste(DataDir, "LocalCopyDWD","Rdata", sep = "/")
-
-path_unzip <- paste(DataDir, "DWD_tmp", sep="/")
-
+Local_Rdata_path <- here("LocalCopyDWD","Rdata")
 
 
 ### local RData file names ####
@@ -93,8 +90,8 @@ HistoricalDWD <- "historicalDWDweather.RData"
 HistoricalDWDRain <- "historicalDWDRain.RData"
 
 ### outputpath ####
-datapath <- paste(DataDir, "data")
-figurepath <- paste(DataDir, "figures")
+datapath <- here("data")
+figurepath <- here("figures")
 
 
 ## local RData file names
@@ -1294,10 +1291,15 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
   zipID <- gsub("tageswerte_KL_", "", ziplist)
   zipID <- stri_split_fixed(zipID, "_", n = 1, tokens_only=TRUE, simplify=TRUE)[,1]
 
+  path_unzip <- here("DWD_tmp")
 
   dir.create(path_unzip, showWarnings = FALSE, recursive = T)
 
-  dest_file <- paste(path_unzip, "Stationlist.txt")
+  dest_file <- here(path_unzip,"RainStationlist.txt")
+
+
+  dir.create(path = path_unzip, showWarnings = FALSE, recursive = T)
+  dest_file <- here(path_unzip, "Stationlist.txt")
   # Hier wird es kompliziert, da der DWD ständig das File-Format ändert...
   download.file(url=paste0(repository, fn_KLBeschreibung),
                 #		destfile="/DWD_tmp/Stationlist.txt", mode = "wb")
@@ -1344,13 +1346,15 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 
     if(fn %in% ziplist){
 
+    # if unzip directory is not existing, create it
+    path_unzip <- here(path,"unzip")
 
     if (dir.exists(paste0(path_unzip))==F){
       dir.create(path_unzip, recursive = T)
     }
 
     # download the zip file
-    dest_file <- paste(DataDir, path_unzip, fn)
+    dest_file <- here(path_unzip, fn)
     download.file(url=paste0(repository, fn),
                   destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")
 
@@ -1358,7 +1362,7 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
     if (file.exists(dest_file)){
       unzip(zipfile = dest_file, exdir = path_unzip)
     # get the name of the unzipped file with the weather data
-      fn_Meta <- paste(DataDir, path_unzip, paste0(fn_Metadaten, id, ".txt"))
+      fn_Meta <- here(path_unzip, paste0(fn_Metadaten, id, ".txt"))
       if(file.exists(fn_Meta)){
 
   # read weather data from temporary file
@@ -1464,15 +1468,17 @@ getDWDRainContent <- function(repository, quiet=T){
   zipID <- gsub("tageswerte_RR_", "", ziplist)
   zipID <- stri_split_fixed(zipID, "_", n = 1, tokens_only=TRUE, simplify=TRUE)[,1]
 
+  path_unzip <- here("DWD_tmp")
+
   dir.create(path_unzip, showWarnings = FALSE, recursive = T)
 
-  dest_file <- paste(path_unzip,"RainStationlist.txt")
+  dest_file <- here(path_unzip,"RainStationlist.txt")
   # Hier wird es kompliziert, da der DWD ständig das File-Format ändert...
   download.file(url=paste0(repository, "RR_Tageswerte_Beschreibung_Stationen.txt"),
                 #		destfile="/DWD_tmp/Stationlist.txt", mode = "wb")
                 destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")
 
-  tmp <- stri_encode(stri_read_raw(paste(path_unzip,"RainStationlist.txt")),
+  tmp <- stri_encode(stri_read_raw(here("DWD_tmp","RainStationlist.txt")),
                      from="latin1", to="UTF-8")
 
 
@@ -1765,7 +1771,7 @@ Copy_DWD_ZipFiles <- function(DWD_ftp_, LocalCopy_DWD_ftp_) {
   # Download each file from the FTP server to the local directory
   for (i in seq_along(filelist)) {
     filename <- filelist[i]
-    savedir <- getwd()
+    savedir <- here()
     newdir <-  LocalCopy_DWD_ftp_
     setwd(newdir)
     dest_file <- filename
@@ -1911,9 +1917,13 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
 getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
 
   # if tmp directory is not existing, create it
-  path <- path_unzip
+  path <- here("DWD_tmp")
+  if (dir.exists(paste0(path))==F){
+    dir.create(path, recursive = T)
+  }
 
   # if unzip directory is not existing, create it
+  path_unzip <- paste0(path,"/unzip/")
   if (dir.exists(paste0(path_unzip))==F){
     dir.create(path_unzip, recursive = T)
   }
@@ -1937,6 +1947,10 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
     download.file(url=paste0(repository, filename),
                 destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")}
 
+  # check if path_unzip exists, if yes remove it
+  if(dir.exists(path_unzip)){
+    unlink(path_unzip, recursive = TRUE, force = TRUE)
+  }
 
   # if local, unzip the file from the local directory
   if (local){
@@ -1959,7 +1973,7 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
   }
 
   # read weather data from temporary file
-  DWDWeather <- read.table(file = paste(path_unzip, filename, sep="/"),
+  DWDWeather <- read.table(file = paste0(path_unzip, filename),
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
 
@@ -1972,7 +1986,7 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
   # read meta data for wind speed measurement height
   MetaWindfn <- paste0("Metadaten_Geraete_Windgeschwindigkeit_", station,".txt")
   if(file.exists(paste0(path_unzip, MetaWindfn))){
-  MetaWinddata <- read.table(file = paste0(path_unzip, MetaWindfn, sep="/"),
+  MetaWinddata <- read.table(file = paste0(path_unzip, MetaWindfn),
                              header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                              stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   # letzte Zeile raus
@@ -2029,10 +2043,10 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
 #'
 #' @examples getsingleDWDRain("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
 getsingleDWDRain <- function(station, ziplist, repository, local=F, quiet=T){
-  path <- path_unzip
+  path <- here("DWD_tmp")
   filename <- grep(paste0("tageswerte_RR_", station), ziplist, value = TRUE)
   # filename <- paste0(path, "/", filename)
-  dest_file <- paste(path, filename, sep="/")
+  dest_file <- here("DWD_tmp", filename)
   if (!dir.exists(path)) {dir.create(path, recursive = T)}
   if (!local) {
 
@@ -2042,35 +2056,35 @@ getsingleDWDRain <- function(station, ziplist, repository, local=F, quiet=T){
                   }
 
 
-#  if(file.exists(paste(DataDir, "DWD_tmp","unzip"))){
-#    unlink(paste(DataDir, "DWD_tmp","unzip"), recursive = TRUE, force = TRUE)
-#  }
+  if(file.exists(here("DWD_tmp","unzip"))){
+    unlink(here("DWD_tmp","unzip"), recursive = TRUE, force = TRUE)
+  }
 
   if (local){
     if (file.exists(paste0(repository, "/",filename))){
-      unzip(paste0(repository, "/",filename), exdir =path_unzip)
-      filename <- grep("produkt_nieder_tag_", list.files(path_unzip), value = TRUE)}
+      unzip(paste0(repository, "/",filename), exdir = here("DWD_tmp","unzip"))
+      filename <- grep("produkt_nieder_tag_", list.files(here("DWD_tmp","unzip/")), value = TRUE)}
     else {
       return <- NULL
       stop()
     }
   } else {
-    unzip(paste(path_unzip, filename, sep="/"), exdir = path_unzip, overwrite = T)
-    filename <- grep("produkt_nieder_tag_", list.files(path_unzip), value = TRUE)
+    unzip(here("DWD_tmp", filename), exdir = here("DWD_tmp","unzip"), overwrite = T)
+    filename <- grep("produkt_nieder_tag_", list.files(here("DWD_tmp","unzip")), value = TRUE)
   }
 
 
   #  unzip(paste0(path,"/DWD_tmp/", filename), exdir = paste0(path,"/DWD_tmp/unzip"))
   #  filename <- grep("produkt_nieder_tag_", list.files(paste0(path,"/DWD_tmp/unzip/")), value = TRUE)
 
-  DWDWeather <- read.table(file = paste(path_unzip, filename, sep="/"),
+  DWDWeather <- read.table(file = here("DWD_tmp", "unzip", filename),
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   DWDWeather$Date <- as.Date(as.character(DWDWeather$MESS_DATUM), "%Y%m%d")
 
   DWDWeather <- DWDWeather %>% dplyr::rename(Stations_id = STATIONS_ID)
-  if(file.exists(path_unzip)){
-    unlink(path_unzip, recursive = TRUE, force = TRUE)
+  if(file.exists(here("DWD_tmp", "unzip"))){
+    unlink(here("DWD_tmp", "unzip"), recursive = TRUE, force = TRUE)
   }
   return(DWDWeather)
 }

@@ -17,8 +17,6 @@ GetWeatherData_selection_fst(
 \item{DWD_content}{list structure of available DWD stations}
 
 \item{startdate}{start date for selection of data}
-
-\item{local}{option for using local stored DWD zip-Files}
 }
 \value{
 data frame with weather data for selected stations in fst format
