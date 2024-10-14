@@ -104,7 +104,7 @@ fn_DWDRain_content_recent <- "DWDRain_content_recent.Rdata"
 fn_DWDRain_content <- "DWDRainStationlist.RData"
 
 
-fn_histDWD_data <- "weather_dat_1990.fst"
+fn_histDWD_data_str <- "weather_dat_"
 
 
 fn_HistoricalDWD <- "historicalDWDweather.RData"
@@ -2516,7 +2516,8 @@ GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, reposi
   ) %>%
     dplyr::select(c(all_of(idvars), "Date", "Jahr","Monat","ExcelTime", all_of(measvars)))
 
-  weather_historical <- read.fst("./LocalCopyDWD/Rdata/weather_dat_1990.fst")
+  fn_historical <- paste0("./LocalCopyDWD/Rdata/weather_dat_", as.character(startdate), ".fst")
+  weather_historical <- read.fst(fn_historical)
   weather_historical$Jahr <- year(weather_historical$Date)
   selcols <- names(weather_recent)
   weather_historical <- weather_historical[, selcols]
