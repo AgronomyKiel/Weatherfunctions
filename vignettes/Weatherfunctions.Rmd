@@ -245,6 +245,8 @@ The retrieval of the historical and - to a lesser extent - the recent data is ti
 # the filename is constructed from two strings for the actual path of the project
 # and a filename which are both pre defined.
 
+fn_histDWD_data <- paste0(fn_histDWD_data_str, as.character(1990),".fst")
+
 fn <- here(Local_R_DWD, fn_histDWD_data)
 weather_historic <- read.fst(path = fn)
 
