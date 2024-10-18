@@ -1064,7 +1064,7 @@ estSg_S0 <- function (RelSun, Month)
 #' @param RelSun Relative sunshine duration of a particular day of year
 #' @param Month Month of the year
 #'
-#' @return Global radiation in [MJ.m-2.d-1]
+#' @return Relative Global radiation [0..1]
 #' @export
 #' @details New function for calculation of daily solar radiation from relative sunshine hours ####
 #' the function uses directly the parameters  from  "mod.Angstroem"
@@ -2978,7 +2978,7 @@ InterpolateWeatherData <- function(station_selected,
     setkey(long_data, Date, Distance_km, variable)
   #  na.omit(long_data, cols = c("value", "Distance_km"))
 
-    # data table approch to select the first three values for each date and variable which are not NA
+    # data table approach to select the first three values for each date and variable which are not NA
     result <- long_data[ !is.na(value)&!is.na(Distance_km), head(.SD, 3),by = .(Date, variable)]
     # select the nearest value for the rain data for each date
     rainresult <- long_data[variable == "NIEDERSCHLAGSHOEHE"& !is.na(value)&!is.na(Distance_km), head(.SD, 1), by = .(Date, variable)]
