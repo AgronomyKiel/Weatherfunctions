@@ -1297,41 +1297,49 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 
   dir.create(path_unzip, showWarnings = FALSE, recursive = T)
 
-  dest_file <- paste(path_unzip, "Stationlist.txt")
+  dest_file <- paste0(path_unzip, "/Stationlist.txt")
   # Hier wird es kompliziert, da der DWD ständig das File-Format ändert...
   download.file(url=paste0(repository, fn_KLBeschreibung),
                 #		destfile="/DWD_tmp/Stationlist.txt", mode = "wb")
                 destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")
 
-  tmp <- stri_encode(stri_read_raw(dest_file),
-                     from="latin1", to="UTF-8")
+#  tmp <- stri_encode(stri_read_raw(dest_file),
+#                     from="latin1", to="UTF-8")
 #  tmp <- readr::read_delim(file = dest_file, delim = " ", col_names = TRUE, quote = "", escape_double = FALSE)
+  tmp <- read.fwf(file = dest_file, widths = c(5, -1, 8,-1, 8,-1, 14,-5, 7, -3, 7, -1, 41, 41, 4), skip=2,
+           col.names = c("Stations_id", "von_datum", "bis_datum", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname", "Bundesland", "Abgabe"),
+           fileEncoding = "latin1", stringsAsFactors = FALSE, na.strings = "-999")
+
+  tmp$Stationsname <- trimws(tmp$Stationsname, which = c("both"))
+  tmp$Bundesland <- trimws(tmp$Bundesland, which = c("both"))
+
 
   # Zeilenende ist irgendwas zwisch CRCRLF CRLF und LF... das sollte mit allem klappen...
-  tmp <- stri_split_lines1(gsub("\r\n", "\n", tmp))
+#  tmp <- stri_split_lines1(gsub("\r\n", "\n", tmp))
 
   # Trennzeichen und -breiten sind inkonsistent..
-  tmp <- stri_split_regex(tmp,"[[:space:]]{1,}", omit_empty = TRUE)
+#  tmp <- stri_split_regex(tmp,"[[:space:]]{1,}", omit_empty = TRUE)
 
   # In Stationsnamen kommen Trennzeichen vor... wieder zusammensetzen...
 
   # added to handle/remove the 9th extra column introduced by DWD
-  tmp2 <- sapply(tmp,8, FUN = function(obj, ncol){
-      obj <- c(obj[1:ncol])
-    return(obj)
-  }, simplify = FALSE)
+#  tmp2 <- sapply(tmp,8, FUN = function(obj, ncol){
+#      obj <- c(obj[1:ncol])
+#    return(obj)
+#  }, simplify = FALSE)
 
-  tmplst <- sapply(tmp2[3:length(tmp2)],
-                   FUN = function(obj){
-                     if(length(obj)>8){
-                       obj <- c(obj[1:6], paste(obj[7:(length(obj)-1)], collapse=" "), last(obj))
-                     }
-                     return(as.data.table(t(obj)))
-                   }, simplify = FALSE)
+#  tmplst <- sapply(tmp2[3:length(tmp2)],
+#                   FUN = function(obj){
+#                     if(length(obj)>8){
+#                       obj <- c(obj[1:6], paste(obj[7:(length(obj)-1)], collapse=" "), last(obj))
+#                     }
+#                     return(as.data.table(t(obj)))
+#                   }, simplify = FALSE)
 
-  stationlist <- rbindlist(tmplst)
-  names(stationlist) <- tmp2[[1]]
-  rm(tmp, tmp2, tmplst)
+#  stationlist <- rbindlist(tmplst)
+  stationlist <- tmp
+  # names(stationlist) <- tmp2[[1]]
+#  rm(tmp, tmp2, tmplst)
 
 
   if(LoadMetaData) {
@@ -1350,7 +1358,7 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
     }
 
     # download the zip file
-    dest_file <- paste(DataDir, path_unzip, fn)
+    dest_file <- paste(path_unzip, fn, sep="/")
     download.file(url=paste0(repository, fn),
                   destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")
 
@@ -1466,45 +1474,22 @@ getDWDRainContent <- function(repository, quiet=T){
 
   dir.create(path_unzip, showWarnings = FALSE, recursive = T)
 
-  dest_file <- paste(path_unzip,"RainStationlist.txt")
+  dest_file <- paste(path_unzip,"RainStationlist.txt", sep="/")
   # Hier wird es kompliziert, da der DWD ständig das File-Format ändert...
   download.file(url=paste0(repository, "RR_Tageswerte_Beschreibung_Stationen.txt"),
                 #		destfile="/DWD_tmp/Stationlist.txt", mode = "wb")
                 destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")
 
-  tmp <- stri_encode(stri_read_raw(paste(path_unzip,"RainStationlist.txt")),
-                     from="latin1", to="UTF-8")
+
+  tmp <- read.fwf(file = dest_file, widths = c(5, -1, 8,-1, 8,-1, 14,-5, 7, -3, 7, -1, 41, 41, 4), skip=2,
+                  col.names = c("Stations_id", "von_datum", "bis_datum", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname", "Bundesland", "Abgabe"),
+                  fileEncoding = "latin1", stringsAsFactors = FALSE, na.strings = "-999")
+
+  tmp$Stationsname <- trimws(tmp$Stationsname, which = c("both"))
+  tmp$Bundesland <- trimws(tmp$Bundesland, which = c("both"))
 
 
-
-
-  # Zeilenende ist irgendwas zwisch CRCRLF CRLF und LF... das sollte mit allem klappen...
-  tmp <- stri_split_lines1(gsub("\r\n", "\n", tmp))
-
-  # Trennzeichen und -breiten sind inkonsistent..
-  tmp <- stri_split_regex(tmp,"[[:space:]]{1,}", omit_empty = TRUE)
-
-  # added to handle/remove the 9th extra column introduced by DWD
-  tmp2 <- sapply(tmp,8, FUN = function(obj, ncol){
-    obj <- c(obj[1:ncol])
-    return(obj)
-  }, simplify = FALSE)
-
-
-  # In Stationsnamen kommen Trennzeichen vor... wieder zusammensetzen...
-
-  tmplst <- sapply(tmp2[3:length(tmp2)],
-                   FUN = function(obj){
-                     if(length(obj)>8){
-                       obj <- c(obj[1:6], paste(obj[7:(length(obj)-1)], collapse=" "), last(obj))
-                     }
-                     return(as.data.table(t(obj)))
-                   }, simplify = FALSE)
-
-  stationlist <- rbindlist(tmplst)
-  names(stationlist) <- tmp2[[1]]
-  rm(tmp, tmplst)
-
+  stationlist <- tmp
   stationlist$Stationshoehe <- type.convert(stationlist$Stationshoehe, dec = ".", as.is="T")
   stationlist$geoBreite <- type.convert(stationlist$geoBreite, dec = ".", as.is="T")
   stationlist$geoLaenge <- type.convert(stationlist$geoLaenge, dec = ".", as.is="T")
@@ -1597,7 +1582,7 @@ Get_ZipLists_Station_ids <- function(dataperiod="recent", loadnew=T,
       recent     <- getDWDContent(DWD_ftp_recent)
     } else
     {
-      load(paste0(Local_R_DWD, localStationdata_fn))
+      load(paste(Local_R_DWD, localStationdata_fn, sep = "/"))
     }
   }
 
@@ -1606,7 +1591,7 @@ Get_ZipLists_Station_ids <- function(dataperiod="recent", loadnew=T,
       historical <- getDWDContent(DWD_ftp_historical)
     } else
     {
-      load(paste0(Local_R_DWD, localStationdata_fn))
+      load(paste(Local_R_DWD, localStationdata_fn, sep = "/"))
     }
   }
 
@@ -1765,10 +1750,7 @@ Copy_DWD_ZipFiles <- function(DWD_ftp_, LocalCopy_DWD_ftp_) {
   # Download each file from the FTP server to the local directory
   for (i in seq_along(filelist)) {
     filename <- filelist[i]
-    savedir <- getwd()
-    newdir <-  LocalCopy_DWD_ftp_
-    setwd(newdir)
-    dest_file <- filename
+    dest_file <- paste(LocalCopy_DWD_ftp_,filename, sep="/" )
     cat(i, "\n")
     if (nchar(dest_file) > 1) {
       tryCatch({
@@ -1777,7 +1759,6 @@ Copy_DWD_ZipFiles <- function(DWD_ftp_, LocalCopy_DWD_ftp_) {
         warning(paste("Failed to download file:", filename))
       })
     }
-    setwd(savedir)
   }
 }
 
@@ -1837,16 +1818,28 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
     for (i in 1:length(Stationids)){
       #  i <- 18
       station <- Stationids[i]
-      df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_recent, local = !isloadnew), silent = F)
+      if (isloadnew) {
+        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_recent, local = !isloadnew), silent = F)
+      } else {
+        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = LocalCopy_DWD_ftp_recent, local = !isloadnew), silent = F)
+      }
     }
   }
+
   # same for historical data
   if (dataperiod == "historical") {
     for (i in 1:length(Stationids)){
       #  i <- 18
       station <- Stationids[i]
       #  df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical, local = isloadnew), silent = F)
-      df_list[[i]] <- getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical, local = F)
+      if (isloadnew) {
+        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical, local = !isloadnew), silent = F)
+      } else {
+        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = LocalCopy_DWD_ftp_historical, local = !isloadnew), silent = F)
+      }
+
+
+#      df_list[[i]] <- getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical, local = F)
     }
   }
 
@@ -1887,8 +1880,6 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
     fn <- paste0(Local_Rdata_path,"/weather_dat_",as.character(startyear),".fst")
     write.fst(x = df, path = fn)}
 }
-
-
 
 
 #' Title getsingleDWDWeather loads data for a single weather station
@@ -1941,7 +1932,12 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
   # if local, unzip the file from the local directory
   if (local){
     # check if the file exists in the local directory
-    if (file.exists(paste0(repository, filename))){
+    if (file.exists(paste0(repository,"/", filename))){
+      # get all files in the unzip directory, recursively
+      f <- list.files(path_unzip, include.dirs = F, full.names = T, recursive = T)
+      # remove the files
+      file.remove(f)
+
       unzip(zipfile = paste0(repository, "/",filename),
             exdir = path_unzip)
       filename <- grep("produkt_klima_tag_", list.files(path_unzip), value = TRUE)}
@@ -1971,8 +1967,8 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
 
   # read meta data for wind speed measurement height
   MetaWindfn <- paste0("Metadaten_Geraete_Windgeschwindigkeit_", station,".txt")
-  if(file.exists(paste0(path_unzip, MetaWindfn))){
-  MetaWinddata <- read.table(file = paste0(path_unzip, MetaWindfn, sep="/"),
+  if(file.exists(paste0(path_unzip, "/",MetaWindfn))){
+  MetaWinddata <- read.table(file = paste(path_unzip, MetaWindfn, sep="/"),
                              header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                              stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   # letzte Zeile raus
