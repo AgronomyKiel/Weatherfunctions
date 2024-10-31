@@ -1306,7 +1306,7 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 #  tmp <- stri_encode(stri_read_raw(dest_file),
 #                     from="latin1", to="UTF-8")
 #  tmp <- readr::read_delim(file = dest_file, delim = " ", col_names = TRUE, quote = "", escape_double = FALSE)
-  tmp <- read.fwf(file = dest_file, widths = c(5, -1, 8,-1, 8,-1, 14,-5, 7, -3, 7, -1, 41, 41, 4), skip=2,
+  tmp <- read.fwf(file = dest_file, widths = c(5, -1, 8, -1, 8,-1, 14,-3, 7, -5, 7, -1, 40,-1, 40, -1, 4), skip=2,
            col.names = c("Stations_id", "von_datum", "bis_datum", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname", "Bundesland", "Abgabe"),
            fileEncoding = "latin1", stringsAsFactors = FALSE, na.strings = "-999")
 
@@ -1481,7 +1481,7 @@ getDWDRainContent <- function(repository, quiet=T){
                 destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")
 
 
-  tmp <- read.fwf(file = dest_file, widths = c(5, -1, 8,-1, 8,-1, 14,-5, 7, -3, 7, -1, 41, 41, 4), skip=2,
+  tmp <- read.fwf(file = dest_file, widths = c(5, -1, 8, -1, 8,-1, 14,-3, 7, -5, 7, -1, 40,-1, 40, -1, 4), skip=2,
                   col.names = c("Stations_id", "von_datum", "bis_datum", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname", "Bundesland", "Abgabe"),
                   fileEncoding = "latin1", stringsAsFactors = FALSE, na.strings = "-999")
 
@@ -1904,58 +1904,46 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
   # if tmp directory is not existing, create it
   path <- path_unzip
 
-  # if unzip directory is not existing, create it
-  if (dir.exists(paste0(path_unzip))==F){
+  # if no local unzip directory is existing, create it
+  if (!dir.exists(paste0(path_unzip))){
+    # if unzip directory is not existing, create it
     dir.create(path_unzip, recursive = T)
+  } else {
+
+  # delete all files in the unzip directory just in case there are some left
+  # get all files in the unzip directory, recursively
+    f <- list.files(path_unzip, include.dirs = F, full.names = T, recursive = T)
+  # remove the files
+    file.remove(f)
   }
 
   # name of file with measurement height of wind data
   df_mHeight <- NULL
-  #  filename <-
 
   # select the file name for to be zipfile to be downloaded/unzipped from ziplist
-  filename <- grep(paste0("tageswerte_KL_", station), ziplist, value = TRUE)
-  if (nchar(filename)<2) {
+  ZipFilename <- grep(paste0("tageswerte_KL_", station), ziplist, value = TRUE)
+  if (nchar(ZipFilename)<2) {
     stop()
     return <- NULL
-    }
-  # filename <- paste0(path, "/", filename)
-  # name of the destination file
-  dest_file <- paste0(path, "/", filename)
+  }
+
+  # name of the destination file were the data are stored
+  dest_file <- paste0(path, "/", ZipFilename)
 
   # if not local  download the zip file from the ftp server
   if (!local) {
-    download.file(url=paste0(repository, filename),
+    download.file(url=paste0(repository, ZipFilename),
                 destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")}
 
-
-  # if local, unzip the file from the local directory
-  if (local){
-    # check if the file exists in the local directory
-    if (file.exists(paste0(repository,"/", filename))){
-      # get all files in the unzip directory, recursively
-      f <- list.files(path_unzip, include.dirs = F, full.names = T, recursive = T)
-      # remove the files
-      file.remove(f)
-
-      unzip(zipfile = paste0(repository, "/",filename),
+  # unzip the file to the unzip directory
+  unzip(zipfile = dest_file,
             exdir = path_unzip)
-      filename <- grep("produkt_klima_tag_", list.files(path_unzip), value = TRUE)}
-    # if not, stop the function
-    else {
-      return <- NULL
-      stop()
-      }
-  }
-  # if not local, unzip the file from the temporary directory
-  else {
-    unzip(paste0(path, "/",filename), exdir = path_unzip)
-    # get the name of the unzipped file with the weather data
-    filename <- grep("produkt_klima_tag_", list.files(path_unzip), value = TRUE)
-  }
+
+  # construct the name of the data file
+  DataFilename <- grep("produkt_klima_tag_", list.files(path_unzip), value = TRUE)
 
   # read weather data from temporary file
-  DWDWeather <- read.table(file = paste(path_unzip, filename, sep="/"),
+  DWDWeather <- read.table(file = paste(path_unzip, DataFilename, sep="/"),
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
 
@@ -1963,10 +1951,9 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
   DWDWeather$MHoeheWind <- 10 # default value [m]
   DWDWeather$Date <- as.Date(as.character(DWDWeather$MESS_DATUM), "%Y%m%d")
 
-
-
   # read meta data for wind speed measurement height
   MetaWindfn <- paste0("Metadaten_Geraete_Windgeschwindigkeit_", station,".txt")
+
   if(file.exists(paste0(path_unzip, "/",MetaWindfn))){
   MetaWinddata <- read.table(file = paste(path_unzip, MetaWindfn, sep="/"),
                              header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
@@ -1984,28 +1971,21 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
     dateseq <- c(dateseq, dateseqi)
     Heightseqi <- rep(MetaWinddata[i, "Geberhoehe.ueber.Grund..m."], length(dateseqi))
     Heightseq <- c(Heightseq, Heightseqi)
-
   }
+
   df_mHeight <- data.frame(Date=as.Date(x = dateseq, origin="1970-01-01"), MHoeheWind=Heightseq)
   df_mHeight <- df_mHeight %>% distinct(Date, .keep_all = T)
-}
-
-  # remove temporary files
-  if(file.exists(path_unzip)){
-    unlink(path_unzip, recursive = TRUE, force = TRUE)
-  }
 
   # add measurement height for wind speed to the data frame
   if (!is.null(df_mHeight)){
     DWDWeather$MHoeheWind <- NULL
     DWDWeather <- DWDWeather %>% left_join(x = DWDWeather, y = df_mHeight, by="Date")
+
     # correct for measurement heigts different to 10m
-#    DWDWeather$WINDGESCHWINDIGKEIT <-  windheight( ui = DWDWeather$WINDGESCHWINDIGKEIT,
-#                                                   zi =  DWDWeather$MHoeheWind, zo = 10)
-    DWDWeather$FM <-  windheight( ui = DWDWeather$FM,
-                                                       zi =  DWDWeather$MHoeheWind, zo = 10)
+    DWDWeather$FM <-  windheight( ui = DWDWeather$FM, zi =  DWDWeather$MHoeheWind, zo = 10)
   }
 
+  }
   DWDWeather <- DWDWeather %>% dplyr::rename(Stations_id = STATIONS_ID)
   return(DWDWeather)
 }
@@ -2025,49 +2005,54 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
 #'
 #' @examples getsingleDWDRain("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
 getsingleDWDRain <- function(station, ziplist, repository, local=F, quiet=T){
+
+
+  # if tmp directory is not existing, create it
   path <- path_unzip
-  filename <- grep(paste0("tageswerte_RR_", station), ziplist, value = TRUE)
-  # filename <- paste0(path, "/", filename)
-  dest_file <- paste(path, filename, sep="/")
-  if (!dir.exists(path)) {dir.create(path, recursive = T)}
-  if (!local) {
 
-    download.file(url=paste0(repository, filename),
-                  destfile=dest_file, mode = "wb", method = "auto", quiet)}else{
-
-                  }
-
-
-#  if(file.exists(paste(DataDir, "DWD_tmp","unzip"))){
-#    unlink(paste(DataDir, "DWD_tmp","unzip"), recursive = TRUE, force = TRUE)
-#  }
-
-  if (local){
-    if (file.exists(paste0(repository, "/",filename))){
-      unzip(paste0(repository, "/",filename), exdir =path_unzip)
-      filename <- grep("produkt_nieder_tag_", list.files(path_unzip), value = TRUE)}
-    else {
-      return <- NULL
-      stop()
-    }
+  # if no local unzip directory is existing, create it
+  if (!dir.exists(paste0(path_unzip))){
+    # if unzip directory is not existing, create it
+    dir.create(path_unzip, recursive = T)
   } else {
-    unzip(paste(path_unzip, filename, sep="/"), exdir = path_unzip, overwrite = T)
-    filename <- grep("produkt_nieder_tag_", list.files(path_unzip), value = TRUE)
+
+    # delete all files in the unzip directory just in case there are some left
+    # get all files in the unzip directory, recursively
+    f <- list.files(path_unzip, include.dirs = F, full.names = T, recursive = T)
+    # remove the files
+    file.remove(f)
   }
 
 
-  #  unzip(paste0(path,"/DWD_tmp/", filename), exdir = paste0(path,"/DWD_tmp/unzip"))
-  #  filename <- grep("produkt_nieder_tag_", list.files(paste0(path,"/DWD_tmp/unzip/")), value = TRUE)
+  ZipFilename <- grep(paste0("tageswerte_RR_", station), ziplist, value = TRUE)
 
-  DWDWeather <- read.table(file = paste(path_unzip, filename, sep="/"),
+  if (nchar(ZipFilename)<2) {
+    stop()
+    return <- NULL
+  }
+
+  # name of the destination file were the data are stored
+  dest_file <- paste(path, ZipFilename, sep="/")
+
+
+  # if not local  download the zip file from the ftp server
+  if (!local) {
+    download.file(url=paste0(repository, ZipFilename),
+                  destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")}
+
+  # unzip the file to the unzip directory
+  unzip(zipfile = dest_file,
+        exdir = path_unzip)
+
+  DataFileName <- grep("produkt_nieder_tag_", list.files(path_unzip), value = TRUE)
+
+  DWDWeather <- read.table(file = paste(path_unzip, DataFileName, sep="/"),
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   DWDWeather$Date <- as.Date(as.character(DWDWeather$MESS_DATUM), "%Y%m%d")
 
   DWDWeather <- DWDWeather %>% dplyr::rename(Stations_id = STATIONS_ID)
-  if(file.exists(path_unzip)){
-    unlink(path_unzip, recursive = TRUE, force = TRUE)
-  }
+
   return(DWDWeather)
 }
 
@@ -2330,9 +2315,14 @@ SelectStationsByDataAvailability <- function(lat, long,
 #' @examples SelectStations(50.0, 8.0, 100, stationlist, 3, 20, 70000, "1990-01-01", 100)
 SelectStations <- function(lat, long, height_loc=100, stationlist, minstations=7,
                            max_stations=20,
-                           radius=70000,  startdate, max.Height.Distance_m=100) {
+                           radius=70000,
+                           startdate,
+                           max.Height.Distance_m=100) {
 
 # create a data frame from location coordinates
+  stationlist$bis_datum <- as.Date(as.character(stationlist$bis_datum), "%Y%m%d")
+  stationlist$von_datum <- as.Date(as.character(stationlist$von_datum), "%Y%m%d")
+  startdate <- as.Date(startdate, "%Y-%m-%d")
   Location <- data.frame(Latitude=lat, Longitude=long)
   Location <- st_as_sf(Location, coords = c("Longitude", "Latitude")) %>%
     st_set_crs(value = "+proj=longlat +datum=WGS84")
@@ -2343,7 +2333,7 @@ SelectStations <- function(lat, long, height_loc=100, stationlist, minstations=7
 
 # calculate distances between stations and location
   stationlist$Distance_m <- pmax(1,as.numeric(st_distance(stationlist, Location))) # minimum distance is 1 m because
-  stationlist$Distance_km <- format(stationlist$Distance_m /1000, digits = 3)
+  stationlist$Distance_km <- as.numeric(format(stationlist$Distance_m /1000, digits = 3))
 
 # filter
   stationlist <- stationlist %>%

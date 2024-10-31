@@ -121,13 +121,17 @@ str(DWD_content)
 
 ### Make a local copy of DWD observation data (Copy_DWD_ZipFiles)
 
-For the file transfer the package holds the function "Copy_DWD_ZipFiles" for downloading the files to the local directory, which has to exist on the local machine.
+For the file transfer the package holds the function "Copy_DWD_ZipFiles" for downloading the files to a local directory.
+For the recent data the package defines the path `r LocalCopy_DWD_ftp_recent` and for the historical data the path `r LocalCopy_DWD_ftp_historical`.
+
 There are 500+ recent stations available and 1000+ data for recent & historic stations.
 So the download takes some time.
 
+For a total download of the recent and historical data the function "Copy_DWD_ZipFiles" the function has to be called with the respective parameters twice.
+
 ```{r Copy_DWD_ZipFiles, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 
-
+# download the recent data
 if (!dir.exists(LocalCopy_DWD_ftp_recent)) {dir.create(LocalCopy_DWD_ftp_recent, recursive = T)}
 Copy_DWD_ZipFiles(DWD_ftp_recent, LocalCopy_DWD_ftp_recent)
 
@@ -138,10 +142,11 @@ Copy_DWD_ZipFiles(DWD_ftp_historical, LocalCopy_DWD_ftp_historical)
 
 
 ```
-For a total download of the recent and historical data the function "Copy_DWD_ZipFiles" the function has to be called with the respective parameters twice.
+For further processing of the data and to save disk space the data can be saved in a more compact format using the function "UpdateDWDData_to_fst". The parameter isloadnew is used to load the data from the DWD ftp server, if false the local zip-files will be used, if available. Again this process is time consuming, as the data is read from the zip files and saved in a fst file. The parameter startdate is used to define the start date of the data to be processed. The file size may still be large, the data in fst format for the historical data from 1970 on is about 1 GB.
 
 
-```{r}
+
+```{r eval=FALSE, include=FALSE}
 UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1970-01-01", isloadnew = F)
 UpdateDWDData_to_fst(dataperiod = "recent", startdate = "1990-01-01", isloadnew = F)
 
@@ -162,6 +167,11 @@ selstation <-  as.character(DWD_content$recent$zipID[3])
 recent_data <- NULL
 recent_data <- getsingleDWDWeather(station = selstation, ziplist = DWD_content$recent$ziplist,
                             repository = DWD_ftp_recent, local = F, quiet = F)
+```
+```{r}
+selstation <-  as.character(DWDRain_content$recent$zipID[3])
+test <- getsingleDWDRain(station = selstation, ziplist = DWDRain_content$recent$ziplist,
+                            repository = DWDRain_ftp_recent, local = F, quiet = F)
 ```
 
 ```{r getsingleDWDWeatheroutput, message=FALSE, warning=FALSE}
@@ -186,6 +196,7 @@ For downloading the combination of historic and recent weather data of a particu
 It also adds station information to the returned data frame.
 
 ```{r getcombinedDWDWeather}
+selstation <-  as.character(DWD_content$recent$zipID[3])
 combined_data <- NULL
 combined_data <- getcombinedDWDWeather(DWD_content = DWD_content, station = selstation,
                               recent_repository = DWD_ftp_recent, historical_repository = DWD_ftp_historical, local = F)
@@ -243,7 +254,6 @@ UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1990-01-01", isload
 ```
 
 
-
 ## Interpolation of weather data for a selected location
 
 The algorithm is basically based on the approach to select for every day and for every weather parameter the values of the 3 nearest observations and to interpolate between those values according to inverse distance weigthing.
@@ -263,14 +273,14 @@ The retrieval of the historical and - to a lesser extent - the recent data is ti
 # the filename is constructed from two strings for the actual path of the project
 # and a filename which are both pre defined.
 
-fn_histDWD_data <- paste0(fn_histDWD_data_str, as.character(1990),".fst")
+fn_histDWD_data <- paste0(fn_histDWD_data_str, as.character(1970),".fst")
 
 fn <- here(Local_R_DWD, fn_histDWD_data)
 weather_historic <- read.fst(path = fn)
 
 # select the columns that are in the core, i.e. essential data set and rename them
 weather_historic_core <- weather_historic[,c("Stations_id", "Date",longNames_DWD_core)]
-
+rm(weather_historic)
 
 # update the local weather data for the recent period ######################
 # and store them in a fst file
@@ -336,18 +346,18 @@ If all gets ok then the data frame should have no NA values.
   
   # add the distance to the location to the stationlist data frame
   stationlist$Distance_m <- pmax(1,as.numeric(st_distance(stationlist, Location))) # minimum distance is 1 m because
-  stationlist$Distance_km <- format(stationlist$Distance_m /1000, digits = 3)
+  stationlist$Distance_km <- as.numeric(format(stationlist$Distance_m /1000, digits = 3))
   # remove the geometry column
   stationlist$geometry <- NULL
   stationlist <- as.data.frame(stationlist)
   startdate <- "1990-01-01"
-  
+  RainStationList <- DWDRain_content$historical$stationlist
   # select the nearest stations with rain data, for historical data it is necessary to select more than one station
   # because stations with rain data changed over time
   RainStations_selected <- SelectStations (lat=geoBreite,
                                           long=geoLaenge,
                                           height_loc=Hoehe_m, 
-                                          stationlist = DWDRain_content$historical$stationlist,
+                                          stationlist = RainStationList,
                                           #DWDRain_content$recent$stationlist,
                                           minstations=3,
                                           max_stations = 3,
