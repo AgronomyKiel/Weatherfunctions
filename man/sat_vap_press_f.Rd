@@ -10,7 +10,7 @@ sat_vap_press_f(Temp)
 \item{Temp}{}
 }
 \value{
-sat_vap_press_f [mbar]
+sat_vap_press_f [mbar] or [hPa]
 }
 \description{
 Title sat_vap_press_f

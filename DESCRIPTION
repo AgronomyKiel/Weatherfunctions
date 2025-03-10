@@ -25,7 +25,7 @@ Imports:
     here,
     httr,
     purrr,
-    RCurl,
+    RCurl (>= 1.0.0),
     scales,
     sf,
     stringi,

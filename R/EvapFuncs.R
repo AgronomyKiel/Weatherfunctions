@@ -1,8 +1,10 @@
 # some constants
 
-l_h_v_water <- 2.477 * 1E6 # latente Verdunstungsenergie von Wasser bei bei 10 øC in [J/Kg] }
-Psycro      <- 0.000662    # { Psychrometerkonstante [1/øK] }
-Karman_const <- 0.41       # { von Karman-Konstante [-] }
+l_h_v_water <- 2.477 * 1E6 # latent evaporation energy of  water at  10 °C in [J/Kg] }
+Psycro      <- 0.000662    # Psychrometric "constant" [1/°K] }
+Karman_const <- 0.41       # { von Karman-constant [-] }
+sigma <- 4.903e-9 # Stefan-Boltzmann-Constant in [MJ m-2 d-1 K-4]
+Kelvin0 <- 273.15 # Kelvin 0
 
 
 #' Title roughness_f
@@ -184,7 +186,7 @@ Penman <- function (Temp, Sat_def, Net_beam, delta, gamma,
 #'
 #' @param Temp
 #'
-#' @return sat_vap_press_f [mbar]
+#' @return sat_vap_press_f [mbar] or [hPa]
 #' @export
 #'
 #' @examples sat_vap_press_f(20)
@@ -210,27 +212,45 @@ sat_vap_press_f <- function (Temp)
 
 
 
-#' Title
+
+#' Long wave net radiation for daily time steps
 #'
-#' @param temperature 
-#' @param relative_humidity 
+#' @param Tmax_k maximum temperature [K]
+#' @param Tmin_k minimum temperature [K]
+#' @param ea actual vapor pressure [kPa]
+#' @param Rs global radiation [MJ/m2/d]
+#' @param Rs0 clear sky radiation [MJ/m2/d]
+#' @param sigma Stefan-Boltzmann constant [MJ/(m2*K4*d)]
 #'
-#' @return
+#' @return long wave backward radiation [MJ/m2/d]
 #' @export
 #'
-#' @examples
+R_nl <- function(Tmax_k, Tmin_k, ea, Rs, Rs0, sigma=4.903e-9, a1=0.34, a2=0.14, ac=1.35, bc=0.35){
+  return(sigma * ((Tmax_k+Tmin_k)/2)^4 * (a1 - a2 * sqrt(ea)) * (ac * Rs/Rs0 - bc))
+}
+
+
+
+#' calculation of air saturation deficit of water vapour
+#'
+#' @param temperature air temperature
+#' @param relative_humidity relative humidity
+#'
+#' @return air_saturation_deficit [mbar]
+#' @export
+#'
 air_saturation_deficit <- function(temperature, relative_humidity){
-  
+
   # saturation vapour pressure [mbar]
   svp <- sat_vap_press_f(temperature)
-  
+
   # actual vapour pressure [mbar]
   avp <- svp * relative_humidity / 100.0
-  
+
   # air saturation deficit [mbar]
   air_saturation_deficit <- svp - avp
   return(air_saturation_deficit)
-  
+
 }
 
 
