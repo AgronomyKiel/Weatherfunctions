@@ -3150,54 +3150,59 @@ InterpolateWeatherData <- function(station_selected,
 #' @export
 #'
 #' @examples AddWeatherParameters(df)
-AddWeatherParameters <- function(df, ShiftYears=FALSE, StartMonth=1){
-  stopifnot("Time" %in% names(df))
-  stopifnot("GlobRad" %in% names(df))
-  stopifnot("TMPM" %in% names(df))
-  stopifnot("Rain" %in% names(df))
-  stopifnot("Wind" %in% names(df))
-  stopifnot("VP" %in% names(df))
-  stopifnot("Sat_def" %in% names(df))
+  AddWeatherParameters <- function(df, ShiftYears=FALSE, StartMonth=1){
+    stopifnot("Time" %in% names(df))
+    stopifnot("GlobRad" %in% names(df))
+    stopifnot("TMPM" %in% names(df))
+    stopifnot("Rain" %in% names(df))
+    stopifnot("Wind" %in% names(df))
+    stopifnot("VP" %in% names(df))
+    stopifnot("Sat_def" %in% names(df))
 
-  df$Datum <- as.Date(df$Time, origin = "1899-12-30")
-  df$Date <- df$Datum
-  df$Year <- year(df$Datum)
-  df$Month <- month(df$Datum)
-  df$DOY <- yday(df$Datum)
+    # add some derived date variables
+    df <- df %>%
+      mutate(Datum = as.Date(Time, origin = "1899-12-30"),
+             Date = Datum,
+             Year = year(Datum),
+             Month = month(Datum),
+             DOY = yday(Datum))
 
-  # add parameter for calculations of year summation parameters other than the calendar year
-  if (ShiftYears) {
-    df$SumYear <- ifelse(df$Month >= StartMonth, df$Year+1, df$Year)
+    # add parameter for calculations of year summation parameters other than the calendar year
+    if (ShiftYears) {
+      df$SumYear <- ifelse(df$Month >= StartMonth, df$Year+1, df$Year)
+    }
+    else {
+      df$SumYear <- df$Year
+    }
+
+    # add derived variables
+    df <- df %>%
+      mutate(PT = 0,
+             PT = ifelse(TMPM > 0 , GlobRad / TMPM, 0), # calculate photo-thermal quotient
+             Rn = pmax(0, 0.6494 * (Rad_Int) - 18.417), # calculate net radiation
+             ra = ra_f(wind_speed = Wind, crop_height = 0.15, measure_height = 10, f_ra_funct = "Thom-Oliver"), # calculate aerodynamic resistance using the Thom-Oliver method
+             rc = rc_f_vectorized(rc0 = 50, LAI = 4), # calculate canopy resistance of a well watered closed crop canopy (rc0=50, LAI=4)
+             pETP = Penman(Temp = TMPM, Sat_def = Sat_def, Net_beam = Rn, # calculate potential evapotranspiration
+                           delta = delta_f(sat_vap_press = VP, Temp = TMPM),
+                           gamma = 1013 * Psycro, l_h_v_water = l_h_v_water,
+                           ra = ra, rc = rc),
+             climWbal = Rain - pETP # calculate climatic water balance
+      )
+
+    # calculate cumulative parameters
+    df <- df %>%
+      group_by(SumYear) %>%
+      mutate(CumRain = cumsum(Rain),
+             CumRad = cumsum(GlobRad),
+             TempSum = cumsum(pmax(0, TMPM)),
+             cumETP = cumsum(pETP),
+             cumWbal = cumsum(climWbal),
+             cPT = cumsum(PT)) %>%
+      ungroup()
+
+    return(df)
+
   }
-  else {
-    df$SumYear <- df$Year
-  }
-  # calculate cumulative parameters
-  df <- df %>% group_by(SumYear) %>% mutate(CumRain = cumsum(Rain))
-  df <- df %>% group_by(SumYear) %>% mutate(CumRad = cumsum(GlobRad))
-  df <- df %>% group_by(SumYear) %>% mutate(TempSum = cumsum(pmax(0, TMPM)))
-  df$PT <- 0
-  df <- df %>% group_by(SumYear) %>% mutate(PT = ifelse(TMPM>0 , GlobRad/TMPM, 0))
-  df <- df %>% group_by(SumYear) %>% mutate(cPT = cumsum(PT))
-  df <- df %>% mutate(Rn = pmax(0, 0.6494 * (Rad_Int) - 18.417))
-
-  # calculate aerodynamic resistance using the Thom-Oliver method
-  df <- df %>% mutate(ra = ra_f(wind_speed = Wind, crop_height = 0.15, measure_height = 10, f_ra_funct = "Thom-Oliver"))
-  #   df <- df %>% mutate(ra = ra_f(wind_speed = Wind, crop_height = 0.15, measure_height = 10, f_ra_funct = "Thom-Oliver"))
-
-  # calculate canopy resistance of a well watered closed crop canopy (rc0=50, LAI=4)
-  df <- df %>% mutate(rc = rc_f_vectorized(rc0 = 50, LAI = 4))
-  df <- df %>%  mutate(pETP = Penman(Temp = TMPM, Sat_def = Sat_def, Net_beam = Rn,
-                                                         delta=delta_f(sat_vap_press = VP, Temp = TMPM),
-                                                         gamma = 1013*Psycro, l_h_v_water = l_h_v_water,
-                                                         ra = ra, rc = rc))
-  #
-  df <- df %>% group_by(SumYear) %>% mutate(cumETP = cumsum(pETP))
-  df <- df %>% mutate(climWbal = Rain-pETP)
-  df <- df %>% group_by(SumYear) %>% mutate(cumWbal = cumsum(climWbal))
-#  df$SumYear <- NULL
-  return(df)
-}
 
 
 
