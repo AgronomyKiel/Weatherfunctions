@@ -10,7 +10,7 @@
 library(curl)
 library(RCurl)
 library(scales)
-#library(stringi)
+library(stringi)
 library(sf)
 library(lubridate)
 library(fst)
