@@ -148,6 +148,7 @@ fn_HistoricalDWDRain <- "historicalDWDRain.RData"
 
 # names_DWD is the short name for the weather data from original DWD data
 
+#' @export names_DWD
 names_DWD <- c("QN_4", # QUALITAETS_NIVEAU
                "TMK",  # LUFTTEMPERATUR
                "PM",   # LUFTDRUCK_STATIONSHOEHE
@@ -161,6 +162,7 @@ names_DWD <- c("QN_4", # QUALITAETS_NIVEAU
 
 # longNames_DWD is the long name for the weather data from original DWD data
 
+#' @export longNames_DWD
 longNames_DWD <- c( "QUALITAETS_NIVEAU",
                     "LUFTTEMPERATUR",
                     "LUFTDRUCK_STATIONSHOEHE",
@@ -175,6 +177,7 @@ longNames_DWD <- c( "QUALITAETS_NIVEAU",
 
 # longNames_DWD is the long name for the weather data from original DWD data
 
+#' @export longNames_DWD_en
 longNames_DWD_en <- c( "QUALITY_LEVEL",
                     "AIRTEMPERATURE",
                     "AIR_PRESSURE_STATIONHEIGHT",
@@ -191,6 +194,7 @@ longNames_DWD_en <- c( "QUALITY_LEVEL",
 # longNames_DWD_core is the long name for the core weather data from original DWD data
 # needed to calculate potential evapotranspiration according to the Penman-Monteith method
 
+#' @export longNames_DWD_core
 longNames_DWD_core <- c( "LUFTTEMPERATUR",
                     "REL_FEUCHTE",
                     "WINDGESCHWINDIGKEIT",
@@ -201,7 +205,7 @@ longNames_DWD_core <- c( "LUFTTEMPERATUR",
                     "MHoeheWind"
 )
 
-
+#' @export longNames_DWD_core_en
 longNames_DWD_core_en <- c( "AIRTEMPERATURE",
                          "REL_HUMIDITY",
                          "WIND_SPEED",
@@ -1051,7 +1055,7 @@ calcsolar <- function (dayofyear, latitude)
     if (min(dayofyear) < 1 | max(dayofyear) > 366) {
       stop("Invalid input. 'dayofyear' should be a value between 1 and 366.")
     }
-    if (min(latitude < -90) | max(latitude) > 90) {
+    if (min(latitude) < -90 | max(latitude) > 90) {
       stop("Invalid input. 'latitude' should be a value between -90 and 90.")
     }
   rad <- pi/180
@@ -1901,6 +1905,9 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
   df <- df %>% left_join( stationlist, by = "Stations_id")
   class(df) <- class(as.data.frame(df))
 
+  # remove rows with missing geoBreite which is a necessary information. This is a dirty patch and the basic reasons should be tackled.
+  df <- df %>%
+    filter(!is.na(geoBreite))
 
   if (MinDataset==FALSE) {
     # add estimates for radiation
