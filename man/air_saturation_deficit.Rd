@@ -2,17 +2,18 @@
 % Please edit documentation in R/EvapFuncs.R
 \name{air_saturation_deficit}
 \alias{air_saturation_deficit}
-\title{Title}
+\title{calculation of air saturation deficit of water vapour}
 \usage{
 air_saturation_deficit(temperature, relative_humidity)
 }
 \arguments{
-\item{temperature}{air temperature [°C]}
+\item{temperature}{air temperature}
 
-\item{relative_humidity}{relative humidity [%]
-
-#' @export}
+\item{relative_humidity}{relative humidity}
+}
+\value{
+air_saturation_deficit [mbar]
 }
 \description{
-Title
+calculation of air saturation deficit of water vapour
 }
