@@ -1901,6 +1901,9 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
   df <- df %>% left_join( stationlist, by = "Stations_id")
   class(df) <- class(as.data.frame(df))
 
+  # remove rows with missing geoBreite which is a necessary information. This is a dirty patch and the basic reasons should be tackled.
+  df <- df %>%
+    filter(!is.na(geoBreite))
 
   if (MinDataset==FALSE) {
     # add estimates for radiation
