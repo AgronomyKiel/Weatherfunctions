@@ -1051,7 +1051,7 @@ calcsolar <- function (dayofyear, latitude)
     if (min(dayofyear) < 1 | max(dayofyear) > 366) {
       stop("Invalid input. 'dayofyear' should be a value between 1 and 366.")
     }
-    if (min(latitude < -90) | max(latitude) > 90) {
+    if (min(latitude) < -90 | max(latitude) > 90) {
       stop("Invalid input. 'latitude' should be a value between -90 and 90.")
     }
   rad <- pi/180
