@@ -48,59 +48,95 @@ if (OSname == "Windows") {
 .datatable.aware = TRUE
 
 ## DWD repositories for synoptic weather data ########
+#' @export DWD_ftp_historical
 DWD_ftp_historical <- "ftp://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/daily/kl/historical/"
+
+#' @export DWD_ftp_recent
 DWD_ftp_recent <- "ftp://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/daily/kl/recent/"
 
 ## DWD repositories for additional rainfall data ########
+#' @export DWDRain_ftp_historical
 DWDRain_ftp_historical <- "ftp://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/daily/more_precip/historical/"
+
+#' @export DWDRain_ftp_recent
 DWDRain_ftp_recent <- "ftp://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/daily/more_precip/recent/"
 
 
 ## Local directories for DWD data ####
 
 ### Local folders for copies of DWD data ####
+#' @export LocalCopy_DWD_ftp_historical
 LocalCopy_DWD_ftp_historical <- paste(DataDir,"LocalCopyDWD","kl","historical", sep = "/")
+
+#' @export LocalCopy_DWD_ftp_recent
 LocalCopy_DWD_ftp_recent <- paste(DataDir, "LocalCopyDWD","kl","recent", sep = "/")
 
 ### Local folders for copies of additional DWD rainfall data ####
+#' @export LocalCopy_DWDRain_ftp_historical
 LocalCopy_DWD_Rain_ftp_historical <- paste(DataDir, "LocalCopyDWD","more_precip","historical", sep = "/")
+
+#' @export LocalCopy_DWDRain_ftp_recent
 LocalCopy_DWD_Rain_ftp_recent <- paste(DataDir,  "LocalCopyDWD","more_precip","recent", sep = "/")
 
 ### local DWD Rdata paths ####
+#' @export Local_DWD
 Local_DWD <- paste(DataDir, "LocalCopyDWD", sep = "/")
+
+#' @export Local_R_DWD
 Local_R_DWD <- paste(DataDir, "LocalCopyDWD","Rdata", sep = "/")
+
+#' @export Local_DWD_historical
 Local_DWD_historical <- paste(DataDir, "historical", sep = "/")
+
+#' @export Local_DWD_recent
 Local_DWD_recent <- paste(DataDir, "recent", sep = "/")
 
+#' @export Local_Rain_DWD_historical
 Local_Rain_DWD_historical <- paste(DataDir, "historical", sep = "/")
+
+#' @export Local_Rain_DWD_recent
 Local_Rain_DWD_recent <- paste(DataDir, "recent", sep = "/")
 
+#' @export Local_Rdata_path
 Local_Rdata_path <- paste(DataDir, "LocalCopyDWD","Rdata", sep = "/")
 
+#' @export path_unzip
 path_unzip <- paste(DataDir, "DWD_tmp", sep="/")
 
 
 
 ### local RData file names ####
+#' @export HistoricalDWD
 HistoricalDWD <- "historicalDWDweather.RData"
+
+#' @export HistoricalDWDRain
 HistoricalDWDRain <- "historicalDWDRain.RData"
 
 ### outputpath ####
+#' @export datapath
 datapath <- paste(DataDir, "data")
+
+#' @export figurepath
 figurepath <- paste(DataDir, "figures")
 
 
 ## local RData file names
-
+#' @export fn_DWD_content
 fn_DWD_content <- "DWD_content.Rdata"
+
+#' @export fn_DWDRain_content_recent
 fn_DWDRain_content_recent <- "DWDRain_content_recent.Rdata"
+
+#' @export fn_DWDRain_content
 fn_DWDRain_content <- "DWDRainStationlist.RData"
 
-
+#' @export fn_histDWD_data_str
 fn_histDWD_data_str <- "weather_dat_"
 
-
+#' @export fn_HistoricalDWD
 fn_HistoricalDWD <- "historicalDWDweather.RData"
+
+#' @export fn_HistoricalDWDRain
 fn_HistoricalDWDRain <- "historicalDWDRain.RData"
 
 
