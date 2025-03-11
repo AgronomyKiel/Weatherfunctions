@@ -1466,6 +1466,7 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 #' ziplist: names of the zip files in the repository
 #' zipID: 5 digit ZipIDs
 #' @export
+#' @import stringi
 #'
 #' @examples getDWDStationList("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/",
 getDWDStationList <- function(historical, recent){
