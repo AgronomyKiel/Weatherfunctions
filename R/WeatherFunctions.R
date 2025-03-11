@@ -72,10 +72,10 @@ LocalCopy_DWD_ftp_historical <- paste(DataDir,"LocalCopyDWD","kl","historical", 
 LocalCopy_DWD_ftp_recent <- paste(DataDir, "LocalCopyDWD","kl","recent", sep = "/")
 
 ### Local folders for copies of additional DWD rainfall data ####
-#' @export LocalCopy_DWDRain_ftp_historical
+#' @export LocalCopy_DWD_Rain_ftp_historical
 LocalCopy_DWD_Rain_ftp_historical <- paste(DataDir, "LocalCopyDWD","more_precip","historical", sep = "/")
 
-#' @export LocalCopy_DWDRain_ftp_recent
+#' @export LocalCopy_DWD_Rain_ftp_recent
 LocalCopy_DWD_Rain_ftp_recent <- paste(DataDir,  "LocalCopyDWD","more_precip","recent", sep = "/")
 
 ### local DWD Rdata paths ####
