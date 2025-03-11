@@ -148,6 +148,7 @@ fn_HistoricalDWDRain <- "historicalDWDRain.RData"
 
 # names_DWD is the short name for the weather data from original DWD data
 
+#' @export names_DWD
 names_DWD <- c("QN_4", # QUALITAETS_NIVEAU
                "TMK",  # LUFTTEMPERATUR
                "PM",   # LUFTDRUCK_STATIONSHOEHE
@@ -161,6 +162,7 @@ names_DWD <- c("QN_4", # QUALITAETS_NIVEAU
 
 # longNames_DWD is the long name for the weather data from original DWD data
 
+#' @export longNames_DWD
 longNames_DWD <- c( "QUALITAETS_NIVEAU",
                     "LUFTTEMPERATUR",
                     "LUFTDRUCK_STATIONSHOEHE",
@@ -175,6 +177,7 @@ longNames_DWD <- c( "QUALITAETS_NIVEAU",
 
 # longNames_DWD is the long name for the weather data from original DWD data
 
+#' @export longNames_DWD_en
 longNames_DWD_en <- c( "QUALITY_LEVEL",
                     "AIRTEMPERATURE",
                     "AIR_PRESSURE_STATIONHEIGHT",
@@ -191,6 +194,7 @@ longNames_DWD_en <- c( "QUALITY_LEVEL",
 # longNames_DWD_core is the long name for the core weather data from original DWD data
 # needed to calculate potential evapotranspiration according to the Penman-Monteith method
 
+#' @export longNames_DWD_core
 longNames_DWD_core <- c( "LUFTTEMPERATUR",
                     "REL_FEUCHTE",
                     "WINDGESCHWINDIGKEIT",
@@ -201,7 +205,7 @@ longNames_DWD_core <- c( "LUFTTEMPERATUR",
                     "MHoeheWind"
 )
 
-
+#' @export longNames_DWD_core_en
 longNames_DWD_core_en <- c( "AIRTEMPERATURE",
                          "REL_HUMIDITY",
                          "WIND_SPEED",
