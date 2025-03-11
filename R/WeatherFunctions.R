@@ -9,7 +9,7 @@
 
 library(curl)
 library(RCurl)
-library(scales)
+# library(scales)
 library(stringi)
 library(sf)
 library(lubridate)
@@ -1207,9 +1207,9 @@ windheight <- function(ui, zi, zo) {
 #' @examples rename.weather(DWDWeather)
 
 rename.weather <- function(DWDWeather){
-  stopifnot(names(DWDWeather)%in%c("Stations_id", "MESS_DATUM", "FX", "FM",  "QN_3", "WINDGESCHWINDIGKEIT",
-                                 "QN_4", "RSK", "RSKF", "SDK", "SHK_TAG", "NM", "VPM", "PM", "TMK", "UPM", "TXK",
-                                 "TNK", "TGK", "eor",  "MHoeheWind", "Date", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname"))
+  # stopifnot(names(DWDWeather)%in%c("Stations_id", "MESS_DATUM", "FX", "FM",  "QN_3", "WINDGESCHWINDIGKEIT",
+  #                                "QN_4", "RSK", "RSKF", "SDK", "SHK_TAG", "NM", "VPM", "PM", "TMK", "UPM", "TXK",
+  #                                "TNK", "TGK", "eor",  "MHoeheWind", "Date", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname"))
   # rename columns
   for (i in 1:length(names_DWD)){
     oldname <- names_DWD[i]
