@@ -1809,6 +1809,7 @@ Copy_DWD_ZipFiles <- function(DWD_ftp_, LocalCopy_DWD_ftp_) {
 #' @param DWD_content list with stationlist, ziplist, zipID
 #' @param MinDataset option to load only the minimum dataset
 #' @import fst
+#' @import lubridate
 #'
 #' @return Nothing, a fst file is written to the local directory
 #' @export
