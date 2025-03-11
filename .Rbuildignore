@@ -8,3 +8,6 @@
 ^Weatherfunctions$
 ^WeatherFunctions$
 ^\.github$
+^doc$
+^Meta$
+^LICENSE\.md$

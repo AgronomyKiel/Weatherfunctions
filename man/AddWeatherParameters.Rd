@@ -16,6 +16,3 @@ CumRain, CumRad, TempSum, PT, cPT, Rn, ra, rc, pETP, cumETP, climWbal, cumWbal
 \description{
 Title
 }
-\examples{
-AddWeatherParameters(df)
-}

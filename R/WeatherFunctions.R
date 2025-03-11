@@ -3208,7 +3208,6 @@ InterpolateWeatherData <- function(station_selected,
 #' CumRain, CumRad, TempSum, PT, cPT, Rn, ra, rc, pETP, cumETP, climWbal, cumWbal
 #' @export
 #'
-#' @examples AddWeatherParameters(df)
   AddWeatherParameters <- function(df, ShiftYears=FALSE, StartMonth=1){
     stopifnot("Time" %in% names(df))
     stopifnot("GlobRad" %in% names(df))
