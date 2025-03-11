@@ -13,7 +13,7 @@ RelRad(RelSun = 0.8, Month = 6)
 \item{Month}{Month of the year}
 }
 \value{
-Global radiation in [MJ.m-2.d-1]
+Relative Global radiation [0..1]
 }
 \description{
 RelRad: calculation of daily solar radiation from relative sunshine

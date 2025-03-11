@@ -7,9 +7,11 @@
 air_saturation_deficit(temperature, relative_humidity)
 }
 \arguments{
-\item{temperature}{}
+\item{temperature}{air temperature [°C]}
 
-\item{relative_humidity}{}
+\item{relative_humidity}{relative humidity [%]
+
+#' @export}
 }
 \description{
 Title

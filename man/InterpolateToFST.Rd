@@ -22,7 +22,9 @@ InterpolateToFST(
 
 \item{DWDRain_content}{Meta data for the DWD rain stations}
 
-\item{recent}{}
+\item{startdate}{start date for the interpolation}
+
+\item{recent}{logical, if TRUE use recent data, if FALSE use historical data}
 }
 \value{
 a data frame with the interpolated weather data
