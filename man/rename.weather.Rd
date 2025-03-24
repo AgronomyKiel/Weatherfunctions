@@ -2,31 +2,19 @@
 % Please edit documentation in R/WeatherFunctions.R
 \name{rename.weather}
 \alias{rename.weather}
-\title{Copy_DWD_ZipFiles makes a local copy of DWD weather data as zip files}
+\title{rename weather data to long names}
 \usage{
 \method{rename}{weather}(DWDWeather)
 }
 \arguments{
 \item{DWDWeather}{Data frame in DWD name style.}
-
-\item{DWD_ftp_}{ftp address of DWD  weather data}
-
-\item{LocalCopy_DWD_ftp_}{directory for storing local copy of DWD data}
 }
 \value{
-Nothing
-
 data frame with readable column names
 }
 \description{
-Copy_DWD_ZipFiles makes a local copy of DWD weather data as zip files
-}
-\details{
-can / should be used for recent and historical weather data
-using the addresses of DWD_ftp_recent, DWD_ftp_historical and the directory names Local_DWD
+rename weather data to long names
 }
 \examples{
-rename weather data to long names
-
 rename.weather(DWDWeather)
 }

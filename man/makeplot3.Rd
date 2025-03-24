@@ -27,7 +27,7 @@ makeplot3(
 
 \item{SelYear}{The year to be highlighted}
 
-\item{IsLegend}{}
+\item{IsLegend}{Add a legend to the plot?}
 }
 \value{
 A ggplot object

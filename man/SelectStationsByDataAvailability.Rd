@@ -35,6 +35,8 @@ SelectStationsByDataAvailability(
 
 \item{MinRedundancy}{Minimum redundancy which has to be reached for all parameters}
 
+\item{radius}{Maximum radius where the station should be selected from}
+
 \item{startdate}{date from which weather data should be available}
 
 \item{max.Height.Distance_m}{maximum height}
