@@ -4,7 +4,7 @@ l_h_v_water <- 2.477 * 1E6 # latent evaporation energy of  water at  10 °C in [
 Psycro      <- 0.000662    # Psychrometric "constant" [1/°K] }
 Karman_const <- 0.41       # { von Karman-constant [-] }
 sigma <- 4.903e-9 # Stefan-Boltzmann-Constant in [MJ m-2 d-1 K-4]
-Kelvin0 <- 273.15 # Kelvin 0
+#Kelvin0 <- 273.15 # Kelvin 0
 
 
 #' Title roughness_f

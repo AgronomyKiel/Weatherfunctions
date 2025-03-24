@@ -1,6 +1,9 @@
 pandoc: '3.2'
-pkgdown: 2.1.0
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   Weatherfunctions: Weatherfunctions.html
-last_built: 2024-10-01T16:10Z
+last_built: 2025-03-19T18:04Z
+urls:
+  reference: https://henningkage.github.io/Weatherfunctions/reference
+  article: https://henningkage.github.io/Weatherfunctions/articles

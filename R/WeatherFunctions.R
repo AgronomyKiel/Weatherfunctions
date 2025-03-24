@@ -62,6 +62,24 @@ DWDRain_ftp_historical <- "ftp://opendata.dwd.de/climate_environment/CDC/observa
 DWDRain_ftp_recent <- "ftp://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/daily/more_precip/recent/"
 
 
+# some constants
+#' @export lat_h_v_water
+l_h_v_water <- 2.477 * 1E6 # latent evaporation energy of  water at  10 °C in [J/Kg] }
+#' @export
+Psycro      <- 0.000662    # Psychrometric "constant" [1/°K] }
+
+#' @export Karman_const
+Karman_const <- 0.41       # { von Karman-constant [-] }
+
+#' @export sigma
+sigma <- 4.903e-9 # Stefan-Boltzmann-Constant in [MJ m-2 d-1 K-4]
+
+##' @export Kelvin0
+#Kelvin0 <- 273.15 # Kelvin 0
+
+
+
+
 ## Local directories for DWD data ####
 
 ### Local folders for copies of DWD data ####

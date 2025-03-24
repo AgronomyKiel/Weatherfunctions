@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+```{r setup, include=TRUE, warning=FALSE, message=FALSE}
 rm(list=ls())
 library(Weatherfunctions)
 library(stringi)
@@ -182,6 +182,10 @@ head(recent_data)
 ```
 In addition to the data from produkt_klima_tag_YYYYMMDD_YYYYMMDD_nnnnn.txt, the measurement height of wind speed was retrieved from the metadata file of the selected weather stations and a Date column is added in R format.
 
+Note that the windspeed data is given for a height of 10 m above ground level. If wind speed was measured at a different height the correction is made with the function "windheight".
+
+$$u_o = u_i \cdot \frac{ log(67.8 \cdot z_o - 5.42)} { log(67.8 * z_i - 5.42)}$$
+
 The downloaded data have column names according to the code of DWD, for which in a first step also readable names are defined.
 in the data frame df_names_DWD.
 
@@ -197,7 +201,7 @@ df_names_DWD
 For downloading the combination of historic and recent weather data of a particular station the function "getcombinedDWDWeather" can be used.
 It also adds station information to the returned data frame.
 
-```{r getcombinedDWDWeather, eval=FALSE,}
+```{r getcombinedDWDWeather, eval=FALSE}
 selstation <-  as.character(DWD_content$recent$zipID[3])
 combined_data <- NULL
 combined_data <- getcombinedDWDWeather(DWD_content = DWD_content, station = selstation,
