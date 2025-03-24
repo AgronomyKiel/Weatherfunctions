@@ -58,6 +58,21 @@
 
     
     
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span>list<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/ls.html" class="external-link">ls</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://henningkage.github.io/Weatherfunctions/">Weatherfunctions</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://stringi.gagolewski.com/" class="external-link">stringi</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">RCurl</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://here.r-lib.org/" class="external-link">here</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://www.fstpackage.org" class="external-link">fst</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://purrr.tidyverse.org/" class="external-link">purrr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://lubridate.tidyverse.org" class="external-link">lubridate</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://httr.r-lib.org/" class="external-link">httr</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="intro">Intro<a class="anchor" aria-label="anchor" href="#intro"></a>
 </h2>
@@ -132,7 +147,7 @@ leading zeros.</p>
 and returns a data frame with the station meta data. The function is
 used to get the station meta data for the historical and recent
 observations.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">DWDhistorical</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDWDContent.html">getDWDContent</a></span><span class="op">(</span><span class="va">DWD_ftp_historical</span><span class="op">)</span></span>
 <span><span class="va">DWDrecent</span>     <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDWDContent.html">getDWDContent</a></span><span class="op">(</span><span class="va">DWD_ftp_recent</span><span class="op">)</span></span>
@@ -167,7 +182,7 @@ compiled data frame containing all station parameters (“stations”) as
 well as the lists of the historical and recent weather station
 information the function “getDWDContent” returns (see section
 above).</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">DWD_content</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getDWDStationList.html">getDWDStationList</a></span><span class="op">(</span>historical <span class="op">=</span> <span class="va">DWD_ftp_historical</span>, recent <span class="op">=</span> <span class="va">DWD_ftp_recent</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">DWD_content</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -209,25 +224,29 @@ from the DWD ftp server or its local copy.</p>
 either from the historic or recent data repositories which can be the
 DWD ftp service or its local copy using the function
 getsingleDWDWeather.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">selstation</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">DWD_content</span><span class="op">$</span><span class="va">recent</span><span class="op">$</span><span class="va">zipID</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">recent_data</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
 <span><span class="va">recent_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getsingleDWDWeather.html">getsingleDWDWeather</a></span><span class="op">(</span>station <span class="op">=</span> <span class="va">selstation</span>, ziplist <span class="op">=</span> <span class="va">DWD_content</span><span class="op">$</span><span class="va">recent</span><span class="op">$</span><span class="va">ziplist</span>,</span>
 <span>                            repository <span class="op">=</span> <span class="va">DWD_ftp_recent</span>, local <span class="op">=</span> <span class="cn">F</span>, quiet <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">selstation</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">DWDRain_content</span><span class="op">$</span><span class="va">recent</span><span class="op">$</span><span class="va">zipID</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">test</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getsingleDWDRain.html">getsingleDWDRain</a></span><span class="op">(</span>station <span class="op">=</span> <span class="va">selstation</span>, ziplist <span class="op">=</span> <span class="va">DWDRain_content</span><span class="op">$</span><span class="va">recent</span><span class="op">$</span><span class="va">ziplist</span>,</span>
 <span>                            repository <span class="op">=</span> <span class="va">DWDRain_ftp_recent</span>, local <span class="op">=</span> <span class="cn">F</span>, quiet <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">recent_data</span><span class="op">)</span></span></code></pre></div>
 <p>In addition to the data from
 produkt_klima_tag_YYYYMMDD_YYYYMMDD_nnnnn.txt, the measurement height of
 wind speed was retrieved from the metadata file of the selected weather
 stations and a Date column is added in R format.</p>
+<p>Note that the windspeed data is given for a height of 10 m above
+ground level. If wind speed was measured at a different height the
+correction is made with the function “windheight”.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>u</mi><mi>o</mi></msub><mo>=</mo><msub><mi>u</mi><mi>i</mi></msub><mo>⋅</mo><mfrac><mrow><mi>l</mi><mi>o</mi><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>67.8</mn><mo>⋅</mo><msub><mi>z</mi><mi>o</mi></msub><mo>−</mo><mn>5.42</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mi>l</mi><mi>o</mi><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>67.8</mn><mo>*</mo><msub><mi>z</mi><mi>i</mi></msub><mo>−</mo><mn>5.42</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac></mrow><annotation encoding="application/x-tex">u_o = u_i \cdot \frac{ log(67.8 \cdot z_o - 5.42)} { log(67.8 * z_i - 5.42)}</annotation></semantics></math></p>
 <p>The downloaded data have column names according to the code of DWD,
 for which in a first step also readable names are defined. in the data
 frame df_names_DWD.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_names_DWD</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -236,7 +255,7 @@ frame df_names_DWD.</p>
 <p>For downloading the combination of historic and recent weather data
 of a particular station the function “getcombinedDWDWeather” can be
 used. It also adds station information to the returned data frame.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">selstation</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">DWD_content</span><span class="op">$</span><span class="va">recent</span><span class="op">$</span><span class="va">zipID</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">combined_data</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
 <span><span class="va">combined_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getcombinedDWDWeather.html">getcombinedDWDWeather</a></span><span class="op">(</span>DWD_content <span class="op">=</span> <span class="va">DWD_content</span>, station <span class="op">=</span> <span class="va">selstation</span>,</span>
@@ -250,7 +269,7 @@ used. It also adds station information to the returned data frame.</p>
 </h3>
 <p>The function getRadWeather uses the DWD-data in long name format and
 adds several derived parameters.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">RadWeather</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
 <span><span class="va">RadWeather</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getRadWeather.html">getRadWeather</a></span><span class="op">(</span><span class="va">combined_data</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">RadWeather</span><span class="op">)</span></span></code></pre></div>
@@ -281,22 +300,22 @@ again is a time consuming process, as the data is read from the zip
 files and saved in a fst file. For further analysis it is often
 sufficient to download the historical data only to the fst file, as
 these data are updated only once a year.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="../reference/UpdateDWDData_to_fst.html">UpdateDWDData_to_fst</a></span><span class="op">(</span>dataperiod <span class="op">=</span> <span class="st">"recent"</span>, startdate <span class="op">=</span> <span class="st">"1990-01-01"</span>, isloadnew <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></code></pre></div>
 <p>A saved file can be read using the function read.fst from the package
 fst.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fn</span> <span class="op">&lt;-</span> <span class="st">"recent_weather_dat_1990.fst"</span></span>
 <span><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">Local_R_DWD</span>, <span class="va">fn</span>, sep<span class="op">=</span><span class="st">"/"</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">path</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
-<span>  <span class="va">weather_recent</span> <span class="op">&lt;-</span> <span class="fu">read.fst</span><span class="op">(</span>path <span class="op">=</span> <span class="va">path</span><span class="op">)</span><span class="op">}</span></span></code></pre></div>
+<span>  <span class="va">weather_recent</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://www.fstpackage.org/reference/write_fst.html" class="external-link">read.fst</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">path</span><span class="op">)</span><span class="op">}</span></span></code></pre></div>
 <p>The function UpdateDWDData_to_fst can also be used to update the
 historical data. This is done by setting the parameter dataperiod to
 “historical” and the startdate to the first date of the data to be
 downloaded. This process is time consuming and should be done only once
 a year.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/UpdateDWDData_to_fst.html">UpdateDWDData_to_fst</a></span><span class="op">(</span>dataperiod <span class="op">=</span> <span class="st">"historical"</span>, startdate <span class="op">=</span> <span class="st">"1990-01-01"</span>, isloadnew <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -321,7 +340,7 @@ used.</p>
 <div class="section level4">
 <h4 id="retrieval-of-the-weather-data-for-interpolation">Retrieval of the weather data for interpolation<a class="anchor" aria-label="anchor" href="#retrieval-of-the-weather-data-for-interpolation"></a>
 </h4>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
 <span><span class="co"># load historic weather data from local fst file ####</span></span>
@@ -330,8 +349,8 @@ used.</p>
 <span></span>
 <span><span class="va">fn_histDWD_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">fn_histDWD_data_str</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fl">1970</span><span class="op">)</span>,<span class="st">".fst"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fn</span> <span class="op">&lt;-</span> <span class="fu">here</span><span class="op">(</span><span class="va">Local_R_DWD</span>, <span class="va">fn_histDWD_data</span><span class="op">)</span></span>
-<span><span class="va">weather_historic</span> <span class="op">&lt;-</span> <span class="fu">read.fst</span><span class="op">(</span>path <span class="op">=</span> <span class="va">fn</span><span class="op">)</span></span>
+<span><span class="va">fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://here.r-lib.org//reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="va">Local_R_DWD</span>, <span class="va">fn_histDWD_data</span><span class="op">)</span></span>
+<span><span class="va">weather_historic</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://www.fstpackage.org/reference/write_fst.html" class="external-link">read.fst</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">fn</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># select the columns that are in the core, i.e. essential data set and rename them</span></span>
 <span><span class="va">weather_historic_core</span> <span class="op">&lt;-</span> <span class="va">weather_historic</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stations_id"</span>, <span class="st">"Date"</span>,<span class="va">longNames_DWD_core</span><span class="op">)</span><span class="op">]</span></span>
@@ -361,7 +380,7 @@ used.</p>
 <span></span>
 <span></span>
 <span><span class="va">fn_recentDWD_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"recent_weather_dat_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fl">1990</span><span class="op">)</span>,<span class="st">".fst"</span><span class="op">)</span></span>
-<span><span class="va">weather_recent</span> <span class="op">&lt;-</span> <span class="fu">read.fst</span><span class="op">(</span>path <span class="op">=</span> <span class="fu">here</span><span class="op">(</span><span class="va">Local_R_DWD</span>, <span class="va">fn_recentDWD_data</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">weather_recent</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://www.fstpackage.org/reference/write_fst.html" class="external-link">read.fst</a></span><span class="op">(</span>path <span class="op">=</span> <span class="fu"><a href="https://here.r-lib.org//reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="va">Local_R_DWD</span>, <span class="va">fn_recentDWD_data</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">weather_recent</span>  <span class="op">&lt;-</span> <span class="va">weather_recent</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stations_id"</span>,<span class="st">"Date"</span>,<span class="va">longNames_DWD_core</span><span class="op">)</span><span class="op">]</span> </span>
 <span></span>
 <span><span class="co"># set the location of the station  </span></span>
@@ -373,8 +392,8 @@ used.</p>
 <span>  <span class="va">Location</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Latitude<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">geoBreite</span><span class="op">)</span>, Longitude<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">geoLaenge</span><span class="op">)</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># make an sf object from Location data frame</span></span>
-<span>  <span class="va">Location</span> <span class="op">&lt;-</span> <span class="fu">st_as_sf</span><span class="op">(</span><span class="va">Location</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Longitude"</span>, <span class="st">"Latitude"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>    <span class="fu">st_set_crs</span><span class="op">(</span>value <span class="op">=</span> <span class="st">"+proj=longlat +datum=WGS84"</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="va">Location</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">Location</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Longitude"</span>, <span class="st">"Latitude"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_crs.html" class="external-link">st_set_crs</a></span><span class="op">(</span>value <span class="op">=</span> <span class="st">"+proj=longlat +datum=WGS84"</span><span class="op">)</span></span></code></pre></div>
 <p>The historic weather data contains the data for the years 1990 to the
 previous year and consists of r nrow(weather_historic_core) records. The
 recent weather data contains the data for the years r ThisYear-1 to the
@@ -386,7 +405,7 @@ current year and consists of r nrow(weather_recent) records.</p>
 <p>In a next step the historic weather data is interpolated for the
 location. If all gets ok then the data frame should have no NA
 values.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span>  </span>
 <span><span class="co">### interpolate the historic weather data for the location  </span></span>
@@ -395,11 +414,11 @@ values.</p>
 <span>  <span class="va">stationlist</span> <span class="op">&lt;-</span> <span class="va">DWDhistorical</span><span class="op">$</span><span class="va">stationlist</span></span>
 <span></span>
 <span>  <span class="co"># make an sf object from stationlist data frame</span></span>
-<span>  <span class="va">stationlist</span> <span class="op">&lt;-</span> <span class="fu">st_as_sf</span><span class="op">(</span><span class="va">stationlist</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geoLaenge"</span>, <span class="st">"geoBreite"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>    <span class="fu">st_set_crs</span><span class="op">(</span>value <span class="op">=</span> <span class="st">"+proj=longlat +datum=WGS84"</span><span class="op">)</span></span>
+<span>  <span class="va">stationlist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">stationlist</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geoLaenge"</span>, <span class="st">"geoBreite"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_crs.html" class="external-link">st_set_crs</a></span><span class="op">(</span>value <span class="op">=</span> <span class="st">"+proj=longlat +datum=WGS84"</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># add the distance to the location to the stationlist data frame</span></span>
-<span>  <span class="va">stationlist</span><span class="op">$</span><span class="va">Distance_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu">st_distance</span><span class="op">(</span><span class="va">stationlist</span>, <span class="va">Location</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># minimum distance is 1 m because</span></span>
+<span>  <span class="va">stationlist</span><span class="op">$</span><span class="va">Distance_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_measures.html" class="external-link">st_distance</a></span><span class="op">(</span><span class="va">stationlist</span>, <span class="va">Location</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># minimum distance is 1 m because</span></span>
 <span>  <span class="va">stationlist</span><span class="op">$</span><span class="va">Distance_km</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">stationlist</span><span class="op">$</span><span class="va">Distance_m</span> <span class="op">/</span><span class="fl">1000</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="co"># remove the geometry column</span></span>
 <span>  <span class="va">stationlist</span><span class="op">$</span><span class="va">geometry</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
@@ -430,7 +449,7 @@ values.</p>
 <span>  </span>
 <span>  <span class="co"># add the distance to the rain station to the data frame</span></span>
 <span></span>
-<span>  <span class="va">df_Rain</span> <span class="op">&lt;-</span> <span class="fu">left_join</span><span class="op">(</span><span class="va">df_Rain</span>, <span class="va">RainStations_selected</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stations_id"</span>, <span class="st">"Distance_km"</span><span class="op">)</span><span class="op">]</span>, by<span class="op">=</span><span class="st">"Stations_id"</span><span class="op">)</span></span>
+<span>  <span class="va">df_Rain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">df_Rain</span>, <span class="va">RainStations_selected</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stations_id"</span>, <span class="st">"Distance_km"</span><span class="op">)</span><span class="op">]</span>, by<span class="op">=</span><span class="st">"Stations_id"</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># interpolate the weather data for the location</span></span>
 <span>  <span class="va">IntPolDWDHistorical</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/InterpolateFromDWD.html">InterpolateFromDWD</a></span><span class="op">(</span>df_DWD_core <span class="op">=</span> <span class="va">weather_historic_core</span>, stationlist <span class="op">=</span> <span class="va">stationlist</span>, </span>
@@ -443,7 +462,7 @@ values.</p>
 <span>  <span class="va">ThisYear</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"%Y"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="va">FirstDayOfYear</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">ThisYear</span><span class="op">-</span><span class="fl">1</span>,<span class="st">"-01-01"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="va">ExcelFirstDayofYear</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">FirstDayOfYear</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"1899-12-30"</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="va">IntPolDWDdataHistorical</span> <span class="op">&lt;-</span> <span class="va">IntPolDWDdataHistorical</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">Time</span> <span class="op">&lt;</span> <span class="va">ExcelFirstDayofYear</span><span class="op">)</span></span>
+<span>  <span class="va">IntPolDWDdataHistorical</span> <span class="op">&lt;-</span> <span class="va">IntPolDWDdataHistorical</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">Time</span> <span class="op">&lt;</span> <span class="va">ExcelFirstDayofYear</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="co"># Add longitude and latitude to the data frame</span></span>
 <span>  <span class="va">IntPolDWDdataHistorical</span><span class="op">$</span><span class="va">Longitude</span> <span class="op">&lt;-</span> <span class="va">geoLaenge</span></span>
@@ -452,7 +471,7 @@ values.</p>
 <span>  </span>
 <span>  <span class="va">usedstations</span> <span class="op">&lt;-</span> <span class="va">IntPolDWDHistorical</span><span class="op">$</span><span class="va">df.wf</span></span>
 <span>  <span class="va">usedstations</span><span class="op">$</span><span class="va">Distance</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">/</span><span class="va">usedstations</span><span class="op">$</span><span class="va">InvDist</span></span>
-<span>  <span class="va">Diststations</span> <span class="op">&lt;-</span> <span class="va">usedstations</span> <span class="op">%&gt;%</span> <span class="fu">group_by</span><span class="op">(</span><span class="va">variable</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>Distance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">Distance</span>, na.rm <span class="op">=</span> <span class="cn">T</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="va">Diststations</span> <span class="op">&lt;-</span> <span class="va">usedstations</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">variable</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>Distance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">Distance</span>, na.rm <span class="op">=</span> <span class="cn">T</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="va">Diststations</span></span></code></pre></div>
 </div>
 <div class="section level4">
@@ -461,7 +480,7 @@ values.</p>
 <p>In a next step the recent weather data is interpolated for the
 location. Here, the data for the most actual date(s) may be
 incomplete.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span>  </span>
 <span><span class="co"># recent data #######</span></span>
@@ -471,11 +490,11 @@ incomplete.</p>
 <span>  <span class="va">stationlist</span> <span class="op">&lt;-</span> <span class="va">DWDrecent</span><span class="op">$</span><span class="va">stationlist</span></span>
 <span></span>
 <span>  <span class="co"># make an sf object from stationlist data frame</span></span>
-<span>  <span class="va">stationlist</span> <span class="op">&lt;-</span> <span class="fu">st_as_sf</span><span class="op">(</span><span class="va">stationlist</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geoLaenge"</span>, <span class="st">"geoBreite"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>    <span class="fu">st_set_crs</span><span class="op">(</span>value <span class="op">=</span> <span class="st">"+proj=longlat +datum=WGS84"</span><span class="op">)</span></span>
+<span>  <span class="va">stationlist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_as_sf.html" class="external-link">st_as_sf</a></span><span class="op">(</span><span class="va">stationlist</span>, coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"geoLaenge"</span>, <span class="st">"geoBreite"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_crs.html" class="external-link">st_set_crs</a></span><span class="op">(</span>value <span class="op">=</span> <span class="st">"+proj=longlat +datum=WGS84"</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co"># add the distance to the location to the stationlist data frame</span></span>
-<span>  <span class="va">stationlist</span><span class="op">$</span><span class="va">Distance_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu">st_distance</span><span class="op">(</span><span class="va">stationlist</span>, <span class="va">Location</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># minimum distance is 1 m because</span></span>
+<span>  <span class="va">stationlist</span><span class="op">$</span><span class="va">Distance_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_measures.html" class="external-link">st_distance</a></span><span class="op">(</span><span class="va">stationlist</span>, <span class="va">Location</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="co"># minimum distance is 1 m because</span></span>
 <span>  <span class="va">stationlist</span><span class="op">$</span><span class="va">Distance_km</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">stationlist</span><span class="op">$</span><span class="va">Distance_m</span> <span class="op">/</span><span class="fl">1000</span>, digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span>  <span class="co"># remove the geometry column</span></span>
 <span>  <span class="va">stationlist</span><span class="op">$</span><span class="va">geometry</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
@@ -505,7 +524,7 @@ incomplete.</p>
 <span>  </span>
 <span>  <span class="co"># add the distance to the rain station to the data frame</span></span>
 <span></span>
-<span>  <span class="va">df_Rain</span> <span class="op">&lt;-</span> <span class="fu">left_join</span><span class="op">(</span><span class="va">df_Rain</span>, <span class="va">RainStations_selected</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stations_id"</span>, <span class="st">"Distance_km"</span><span class="op">)</span><span class="op">]</span>, by<span class="op">=</span><span class="st">"Stations_id"</span><span class="op">)</span></span>
+<span>  <span class="va">df_Rain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">df_Rain</span>, <span class="va">RainStations_selected</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stations_id"</span>, <span class="st">"Distance_km"</span><span class="op">)</span><span class="op">]</span>, by<span class="op">=</span><span class="st">"Stations_id"</span><span class="op">)</span></span>
 <span></span>
 <span></span>
 <span>  <span class="co">#</span></span>
@@ -528,7 +547,7 @@ incomplete.</p>
 </h3>
 <p>The data from the historical and recent data is combined in one data
 frame.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  </span>
 <span>  <span class="va">DWDdata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">IntPolDWDdataHistorical</span>, <span class="va">IntPolDWDdatarecent</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">DWDdata</span><span class="op">)</span></span></code></pre></div>
