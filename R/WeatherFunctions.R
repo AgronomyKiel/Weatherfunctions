@@ -63,7 +63,7 @@ DWDRain_ftp_recent <- "ftp://opendata.dwd.de/climate_environment/CDC/observation
 
 
 # some constants
-#' @export lat_h_v_water
+#' @export l_h_v_water
 l_h_v_water <- 2.477 * 1E6 # latent evaporation energy of  water at  10 °C in [J/Kg] }
 #' @export
 Psycro      <- 0.000662    # Psychrometric "constant" [1/°K] }
@@ -75,7 +75,7 @@ Karman_const <- 0.41       # { von Karman-constant [-] }
 sigma <- 4.903e-9 # Stefan-Boltzmann-Constant in [MJ m-2 d-1 K-4]
 
 ##' @export Kelvin0
-#Kelvin0 <- 273.15 # Kelvin 0
+Kelvin0 <- 273.15 # Kelvin 0
 
 
 
@@ -236,15 +236,21 @@ longNames_DWD_core_en <- c( "AIRTEMPERATURE",
 
 
 
-
+#' @export RainDataColumns
 RainDataColumns <- c("STATIONS_ID", "MESS_DATUM", "QN_6", "RS", "RSF", "SH_TAG", "NSH_TAG")
 
+#' @export RainDataColumnsLong
 RainDataColumnsLong <- c("Station_id", "MESS_DATUM", "QUALITAETS_NIVEAU",
                          "NIEDERSCHLAGSHOEHE", "NIEDERSCHLAGSFORM", "SCHNEEHOEHE", "NEUSCHNEEHOEHE")
+
+#' @export RainDataUnits
 RainDataUnits <- c("", "YYYYMMDD", "code", "mm", "code", "cm", "cm")
 
+#' @export RainDataColumnsLong_en
 RainDataColumnsLong_en <- c("Station_id", "Date", "Quality_level",
                          "Rainfall", "Rainfall_type", "Snow_height", "New_snow_height")
+
+#' @export RainDataUnits_en
 RainDataUnits_en <- c("", "YYYYMMDD", "code", "mm", "code", "cm", "cm")
 
 
@@ -252,11 +258,13 @@ RainDataUnits_en <- c("", "YYYYMMDD", "code", "mm", "code", "cm", "cm")
 
 # units of the weather data from original DWD data
 
+#' @export units_DWD
 units_DWD <- c("code","Tagesmittel der Temperatur °C", "Tagesmittel des Luftdrucks hPa",
                "Tagesmittel der Relativen Feuchte %", "Tagesmittel Windgeschwindigkeit m/s",
                "Tagesmaximum der Lufttemperatur in 2m Höhe °C", "Tagesminimum der Lufttemperatur in 2m Höhe °C",
                "tägliche Niederschlagshöhe mm", "tägliche Sonnenscheindauer h")
 
+#' @export units_DWD_en
 units_DWD_en <- c("code","Mean air temperature °C", "Mean air pressure hPa",
                "Mean relative humidity %", "Mean wind speed m/s",
                "Daily maximum air temperature °C", "Daily minimum air temperature °C",
@@ -264,7 +272,9 @@ units_DWD_en <- c("code","Mean air temperature °C", "Mean air pressure hPa",
 
 
 # data frames with names and units for DWD data
+#' @export df_names_DWD
 df_names_DWD <- data.frame(names_DWD, longNames_DWD, units_DWD, longNames_DWD_en)
+
 # add brackets to the units
 df_names_DWD <- df_names_DWD %>% mutate(ylabels = paste0(longNames_DWD, " [", units_DWD, "]"),
                                         ylabels_en = paste0(longNames_DWD_en, " [", units_DWD_en, "]"))
