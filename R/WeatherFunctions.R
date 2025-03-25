@@ -1267,26 +1267,24 @@ windheight <- function(ui, zi, zo) {
 
 
 
-#' rename weather data to long names
+#' Rename columns of DWD weather data
 #'
-#' @param DWDWeather Data frame in DWD name style.
+#' @param DWDWeather Data frame with original DWD weather data
+#' @import dplyr
 #'
-#' @return data frame with readable column names
+#' @returns Data frame with readable column names
 #' @export
 #'
-#' @examples rename.weather(DWDWeather)
+RenameDWDWeather <- function(DWDWeather){
 
-rename.weather <- function(DWDWeather){
   # stopifnot(names(DWDWeather)%in%c("Stations_id", "MESS_DATUM", "FX", "FM",  "QN_3", "WINDGESCHWINDIGKEIT",
   #                                "QN_4", "RSK", "RSKF", "SDK", "SHK_TAG", "NM", "VPM", "PM", "TMK", "UPM", "TXK",
   #                                "TNK", "TGK", "eor",  "MHoeheWind", "Date", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname"))
   # rename columns
-  for (i in 1:length(names_DWD)){
-    oldname <- names_DWD[i]
-    newname <- longNames_DWD[i]
-    names(DWDWeather)[names(DWDWeather)==oldname] <- newname
-  }
 
+
+  rename_vector <- setNames(df_names_DWD$names_DWD, df_names_DWD$longNames_DWD)
+  DWDWeather <- DWDWeather %>% dplyr::rename(!!!rename_vector)
   return(DWDWeather)
 }
 
@@ -1312,15 +1310,15 @@ abr.names <- function(tab){
 
 
 
-#' rename.Rain renames the columns of the DWD rain data
+#' RenameDWDRain renames the columns of the DWD rain data
 #'
 #' @param DWDRain data frame with original DWD rain data
 #'
 #' @return data frame with readable column names
 #' @export
 #'
-#' @examples rename.Rain(DWDRain)
-rename.Rain <- function(DWDRain){
+#' @examples RenameDWDRain(DWDRain)
+RenameDWDRain <- function(DWDRain){
  # stopifnot(names(DWDRain)%in%c("Stations_id", "MESS_DATUM","QN_6", "RS", "RSF","SH_TAG","NSH_TAG","eor",
  #                              "Date", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname"))
   # Umbenennen nach altem Schema
@@ -1753,6 +1751,7 @@ getRadWeather <- function(WeatherTab) {
 #' @param LocalCopy_DWD_ftp_ directory for storing local copy of DWD data
 #' @import httr
 #' @import curl
+#' @import stringr
 #'
 #' @return Nothing
 #' @export
@@ -1871,9 +1870,9 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
       #  i <- 18
       station <- Stationids[i]
       if (isloadnew) {
-        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_recent, local = !isloadnew), silent = F)
+        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_recent), silent = F)
       } else {
-        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = LocalCopy_DWD_ftp_recent, local = !isloadnew), silent = F)
+        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = LocalCopy_DWD_ftp_recent), silent = F)
       }
     }
   }
@@ -1885,9 +1884,9 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
       station <- Stationids[i]
       #  df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical, local = isloadnew), silent = F)
       if (isloadnew) {
-        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical, local = !isloadnew), silent = F)
+        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical), silent = F)
       } else {
-        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = LocalCopy_DWD_ftp_historical, local = !isloadnew), silent = F)
+        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = LocalCopy_DWD_ftp_historical), silent = F)
       }
 
 
@@ -1907,7 +1906,7 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
   df <- df %>% dplyr::filter(Date >= as.Date(startdate))
 
   # rename columns
-  df <- rename.weather(df)
+  df <- RenameDWDWeather(df)
 
   # retrieve stations_id from filename
   df$Stations_id <- sprintf("%05i", type.convert(df$Stations_id, dec = ".", as.is="T"))
@@ -1947,7 +1946,6 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
 #' @param station 5 digit ID of the weather station as character
 #' @param ziplist Character array with the ZIP-Filenames
 #' @param repository ftp Repository address or local directory
-#' @param local Option to use local copy or ftp data
 #' @param quiet echo on/off
 #' @import dplyr
 #' @import utils
@@ -1955,10 +1953,19 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
 #' @export
 #'
 #' @examples getsingleDWDWeather("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
-getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
+getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
 
-  # if tmp directory is not existing, create it
-  path <- path_unzip
+  # check if the repository is local
+  local <- FALSE
+
+  if (repository == LocalCopy_DWD_ftp_historical){
+    local <- TRUE
+    dest_file <- paste0(repository, "/")
+  }
+  if (repository == LocalCopy_DWD_ftp_recent){
+    local <- TRUE
+    dest_file <- paste0(repository, "/")
+  }
 
   # if no local unzip directory is existing, create it
   if (!dir.exists(paste0(path_unzip))){
@@ -1983,13 +1990,15 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
     return <- NULL
   }
 
-  # name of the destination file were the data are stored
-  dest_file <- paste0(path, "/", ZipFilename)
 
   # if not local  download the zip file from the ftp server
   if (!local) {
-    download.file(url=paste0(repository, ZipFilename),
-                destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")}
+    # name of the destination file were the data are stored
+    dest_file <- paste0(path_unzip, "/", ZipFilename)
+    download.file(url=paste0(repository,"/", ZipFilename),
+                destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")} else {
+    dest_file <- paste0(repository, "/", ZipFilename)
+                }
 
   # unzip the file to the unzip directory
   unzip(zipfile = dest_file,
@@ -2002,6 +2011,7 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
   DWDWeather <- read.table(file = paste(path_unzip, DataFilename, sep="/"),
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
+  DWDWeather$STATIONS_ID <- sprintf("%05i", type.convert(DWDWeather$STATIONS_ID, dec = ".", as.is="T"))
 
   # add standard measurement height for wind speed
   DWDWeather$MHoeheWind <- 10 # default value [m]
@@ -2060,11 +2070,20 @@ getsingleDWDWeather <- function(station, ziplist, repository, local=F, quiet=T){
 #' @export
 #'
 #' @examples getsingleDWDRain("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
-getsingleDWDRain <- function(station, ziplist, repository, local=F, quiet=T){
+getsingleDWDRain <- function(station, ziplist, repository, quiet=T){
 
 
-  # if tmp directory is not existing, create it
-  path <- path_unzip
+  # check if the repository is local
+  local <- FALSE
+
+  if (repository == LocalCopy_DWD_Rain_ftp_historical){
+    local <- TRUE
+    dest_file <- paste0(repository, "/")
+  }
+  if (repository == LocalCopy_DWD_Rain_ftp_recent){
+    local <- TRUE
+    dest_file <- paste0(repository, "/")
+  }
 
   # if no local unzip directory is existing, create it
   if (!dir.exists(paste0(path_unzip))){
@@ -2079,7 +2098,6 @@ getsingleDWDRain <- function(station, ziplist, repository, local=F, quiet=T){
     file.remove(f)
   }
 
-
   ZipFilename <- grep(paste0("tageswerte_RR_", station), ziplist, value = TRUE)
 
   if (nchar(ZipFilename)<2) {
@@ -2087,14 +2105,15 @@ getsingleDWDRain <- function(station, ziplist, repository, local=F, quiet=T){
     return <- NULL
   }
 
-  # name of the destination file were the data are stored
-  dest_file <- paste(path, ZipFilename, sep="/")
-
 
   # if not local  download the zip file from the ftp server
   if (!local) {
-    download.file(url=paste0(repository, ZipFilename),
-                  destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")}
+    # name of the destination file were the data are stored
+    dest_file <- paste0(path_unzip, "/", ZipFilename)
+    download.file(url=paste0(repository,"/", ZipFilename),
+                  destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")} else {
+                    dest_file <- paste0(repository, "/", ZipFilename)
+                  }
 
   # unzip the file to the unzip directory
   unzip(zipfile = dest_file,
@@ -2106,6 +2125,7 @@ getsingleDWDRain <- function(station, ziplist, repository, local=F, quiet=T){
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   DWDWeather$Date <- as.Date(as.character(DWDWeather$MESS_DATUM), "%Y%m%d")
+  DWDWeather$STATIONS_ID <- sprintf("%05i", type.convert(DWDWeather$STATIONS_ID, dec = ".", as.is="T"))
 
   DWDWeather <- DWDWeather %>% dplyr::rename(Stations_id = STATIONS_ID)
 
@@ -2132,11 +2152,11 @@ getcombinedDWDWeather <- function(DWD_content, station, local=F,
   station <- as.character(station)
   if(station %in% DWD_content$historical$zipID){
     # if the station is in the historical zipID list, get the historical data
-    data.hist <- getsingleDWDWeather(station, DWD_content$historical$ziplist, repository = historical_repository, local)
+    data.hist <- getsingleDWDWeather(station, DWD_content$historical$ziplist, repository = historical_repository)
   }
   if(station %in% DWD_content$recent$zipID){
     # if the station is in the recent zipID list, get the recent data
-    data.rct <- getsingleDWDWeather(station, DWD_content$recent$ziplist, repository = recent_repository, local)
+    data.rct <- getsingleDWDWeather(station, DWD_content$recent$ziplist, repository = recent_repository)
   }
 
   if(exists("data.hist") & exists("data.rct")){
@@ -2470,7 +2490,6 @@ GetWeatherData_selection <- function(stations_selected,
       weather <- getsingleDWDWeather(station = station,
                                      ziplist = DWD_content$ziplist,
                                      repository = repository,
-                                     local = local,
                                      quiet = T)
       weather$Stations_id <- station
       # add to list of data frames
@@ -2486,7 +2505,7 @@ GetWeatherData_selection <- function(stations_selected,
   # remove data older than start date
   weatherdata <- weatherdata %>% filter(Date >= as.Date(startdate))
   # rename columns
-  weatherdata <- rename.weather(weatherdata)
+  weatherdata <- RenameDWDWeather(weatherdata)
   # add station info
   weatherdata <- weatherdata %>% left_join( stations_selected, by = "Stations_id")
   # add radiation data
@@ -2541,7 +2560,7 @@ GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, reposi
     #    ID <- station_selected$Stations_id[1]
     if (station %in% DWD_content_recent$zipID){
     weather <- getsingleDWDWeather(station = station, ziplist = DWD_content$recent$ziplist,
-                                     repository = repository, local = local, quiet = T)
+                                     repository = repository, quiet = T)
     weather$Stations_id <- station
     df_list[[station]] <- weather}
   }
@@ -2553,7 +2572,7 @@ GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, reposi
   rm(df_list)
   weather_recent <- as.data.frame(weather_recent)
   weather_recent <- weather_recent %>% filter(Date >= as.Date(startdate))
-  weather_recent <- rename.weather(weather_recent)
+  weather_recent <- RenameDWDWeather(weather_recent)
   weather_recent <- weather_recent %>% left_join( stations_selected, by = "Stations_id")
   weather_recent <- getRadWeather(weather_recent)
 
@@ -2627,7 +2646,7 @@ GetRainData_selection <- function(stations_selected,
       raindata <- getsingleDWDRain(station = station,
                                      ziplist = ziplist,
                                      repository = repository,
-                                     local = local,
+                                    # local = local,
                                      quiet = T)
       raindata$Stations_id <- station
       # add to list of data frames
@@ -2811,7 +2830,7 @@ getHUMEWeather <- function(RadWeather){
   AddRainData <- AddRainData[AddRainData$Date >= startdate,]
 
   # rename to more readable column names
-  AddRainData <- rename.Rain(AddRainData)
+  AddRainData <- RenameDWDRain(AddRainData)
   AddRainData$Stations_id <- sprintf("%05i", type.convert(AddRainData$Stations_id, dec = ".", as.is="T"))
 
   # interpolated weather data in HUME format
@@ -3000,6 +3019,7 @@ InterpolateWeatherData <- function(station_selected,
 
 
     df_DWD_core <- df_DWD_core %>% filter(Date >= as.Date(startdate))
+    setDT(df_DWD_core)
 
     # merge the stationlist with the weather data
     stationlist$Distance_km <- as.numeric(stationlist$Distance_km)
@@ -3010,10 +3030,11 @@ InterpolateWeatherData <- function(station_selected,
         df_Rain <- NULL
       }
     }
-    df_DWD_core <- left_join(x = df_DWD_core,
-                         y = stationlist[,c("Stations_id", "Distance_km", "Stationshoehe")], by = "Stations_id")
+
+   df_DWD_core <- merge(x = df_DWD_core, y = stationlist[,c("Stations_id", "Distance_km", "Stationshoehe")], by = "Stations_id")
+#    df_DWD_core <- left_join(x = df_DWD_core,
+#                         y = stationlist[,c("Stations_id", "Distance_km", "Stationshoehe")], by = "Stations_id")
     # set to data table format to increase speed
-    setDT(df_DWD_core)
 
     # calculate the height difference between the location and the station
     df_DWD_core$HeightDifference <- abs(Hoehe_m - df_DWD_core$Stationshoehe)
@@ -3101,7 +3122,7 @@ InterpolateWeatherData <- function(station_selected,
       st_set_crs(value = "+proj=longlat +datum=WGS84")
     # calculate the radiation data
     df <- getRadWeather(xport)
-    # format and rename to HUME-formated data
+    # format and rename to HUME-formatted data
     DWDdata <- getHUMEWeather(df)
     output <- list(DWDdata=DWDdata, df.wf=df.wf)
     return(output)
@@ -3200,7 +3221,7 @@ InterpolateWeatherData <- function(station_selected,
                                         repository=RainRepository,
                                         startdate=startdate)
         # add the distance to the rain station to the data frame
-      df_Rain <- rename.Rain(df_Rain)
+      df_Rain <- RenameDWDRain(df_Rain)
 
       df_Rain <- left_join(x=df_Rain, y=RainStation_selected[,c("Stations_id", "Distance_km")], by="Stations_id")
 #      df_Rain$Distance_km <- RainStation_selected$Distance_km

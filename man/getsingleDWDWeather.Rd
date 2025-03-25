@@ -4,7 +4,7 @@
 \alias{getsingleDWDWeather}
 \title{Title getsingleDWDWeather loads data for a single weather station}
 \usage{
-getsingleDWDWeather(station, ziplist, repository, local = F, quiet = T)
+getsingleDWDWeather(station, ziplist, repository, quiet = T)
 }
 \arguments{
 \item{station}{5 digit ID of the weather station as character}
@@ -12,8 +12,6 @@ getsingleDWDWeather(station, ziplist, repository, local = F, quiet = T)
 \item{ziplist}{Character array with the ZIP-Filenames}
 
 \item{repository}{ftp Repository address or local directory}
-
-\item{local}{Option to use local copy or ftp data}
 
 \item{quiet}{echo on/off}
 }
