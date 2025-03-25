@@ -22,6 +22,3 @@ zipID: 5 digit ZipIDs
 \description{
 getDWDContent gets the content (filenames etc.) of a DWD ftp repository
 }
-\examples{
-getDWDContent("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/")
-}

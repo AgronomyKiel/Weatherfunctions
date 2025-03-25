@@ -349,7 +349,7 @@ df_names <- rbind( df_names_HUME, df_names_CalcVars)
 #' @return A string with replaced characters
 #' @export
 #'
-#' @examples ReplaceProblemChars("Test / Test")
+# @examples ReplaceProblemChars("Test / Test")
 ReplaceProblemChars <- function(InputString=NULL) {
   InputString <- trimws(InputString)
   InputString <- gsub(" / ",replacement = "_", x = InputString)
@@ -426,7 +426,7 @@ set_theme <- function(p, fontsize){
 #' @return A ggplot object
 #' @export
 #'
-#' @examples makeplot(df, "TMPM", BaseSize=18, ylabel="Temperatur [°C]", SelYear=2020, ShiftYears=T, StartMonth=9, smoothing=T, span=0.5)
+# @examples makeplot(df, "TMPM", BaseSize=18, ylabel="Temperatur [°C]", SelYear=2020, ShiftYears=T, StartMonth=9, smoothing=T, span=0.5)
 makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
                      ShiftYears=F, StartMonth=9, smoothing=F, span=0.5){
 
@@ -611,7 +611,7 @@ makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
 #' @return A ggplot object
 #' @export
 #'
-#' @examples makeScenarioplot(df_hist, df_scen, "TMPM", BaseSize=18, ylabel="Temperature [°C]", SelYear=2020, ShiftYears=T, StartMonth=9, StartScenarioDate=NULL, smoothing=T, span=0.5)
+# @examples makeScenarioplot(df_hist, df_scen, "TMPM", BaseSize=18, ylabel="Temperature [°C]", SelYear=2020, ShiftYears=T, StartMonth=9, StartScenarioDate=NULL, smoothing=T, span=0.5)
 makeScenarioplot <- function(df_hist,
                              df_scen,
                              parameter,
@@ -879,7 +879,7 @@ makeScenarioplot <- function(df_hist,
 #' @return A ggplot object
 #' @export
 #'
-#' @examples makeplot2(dfhist, dfscen, "TMPM", BaseSize=18, ylabel="Temperature", SelYear=2020)
+# @examples makeplot2(dfhist, dfscen, "TMPM", BaseSize=18, ylabel="Temperature", SelYear=2020)
 makeplot2 <- function(dfhist, dfscen, parameter, BaseSize=18, ylabel="", SelYear=0){
   # select columns
   selcols <- c("Date", "DOY","Year", parameter)
@@ -995,7 +995,7 @@ makeplot2 <- function(dfhist, dfscen, parameter, BaseSize=18, ylabel="", SelYear
 #' @return A ggplot object
 #' @export
 #'
-#' @examples makeplot3(dfweather, "TMPM", BaseSize=18, ylabel="Temperature", xlabel="Datum", SelYear=2020, IsLegend=TRUE)
+# @examples makeplot3(dfweather, "TMPM", BaseSize=18, ylabel="Temperature", xlabel="Datum", SelYear=2020, IsLegend=TRUE)
 makeplot3 <- function(dfweather, parameter, BaseSize=18, ylabel="", xlabel="Datum", SelYear=0, IsLegend=TRUE){
 
   y_label <- ifelse(ylabel=="", parameter, ylabel)
@@ -1088,7 +1088,7 @@ makeplot3 <- function(dfweather, parameter, BaseSize=18, ylabel="", xlabel="Datu
 #' @return a list of 3 values/arrays angot.value = Daily maximum global radiation in [MJ.m-2.d-1], declination of sun in [rad], daylength in [h]
 #' @export
 #'
-#' @examples calcsolar(200, 54)
+# @examples calcsolar(200, 54)
 calcsolar <- function (dayofyear, latitude)
   {
     if (!is.numeric(dayofyear) || !is.numeric(latitude)) {
@@ -1124,7 +1124,7 @@ calcsolar <- function (dayofyear, latitude)
 #' @return solar radiation per day [MJ/m2/d]
 #' @details function for calculation of daily solar radiation from relative sunshine hours ####
 #' the function uses an empirical model calibrated from DWD data "mod.Angstroem"
-#' @examples estSg_S0(0.8, 6)
+# @examples estSg_S0(0.8, 6)
 estSg_S0 <- function (RelSun, Month)
 {
   if (is.numeric(Month)){Month <- as.integer(Month)}
@@ -1146,7 +1146,7 @@ estSg_S0 <- function (RelSun, Month)
 #' @export
 #' @details New function for calculation of daily solar radiation from relative sunshine hours ####
 #' the function uses directly the parameters  from  "mod.Angstroem"
-#' @examples RelRad(0.8, 6)
+# @examples RelRad(0.8, 6)
 RelRad <- function (RelSun=0.8, Month=6){
 
 
@@ -1201,7 +1201,7 @@ RelRad <- function (RelSun=0.8, Month=6){
 #' @return corrected wind speed data [m/s]
 #' @export
 #'
-#' @examples transWindSpeed(5, 10, 2, 0.5)
+# @examples transWindSpeed(5, 10, 2, 0.5)
 transWindSpeed<-function(inWind,inHeight,outHeight,vegi.height)
 {
 
@@ -1240,7 +1240,7 @@ transWindSpeed<-function(inWind,inHeight,outHeight,vegi.height)
 #' @return uo corrected windspeed [m/s]
 #' @export
 #'
-#' @examples windheight(5, 10, 2)
+# @examples windheight(5, 10, 2)
 windheight <- function(ui, zi, zo) {
   if (zo < 0.2 & zo > (5.42 / 67.8)) {
     warning("Wind-height profile function performs poorly when wind
@@ -1296,7 +1296,7 @@ RenameDWDWeather <- function(DWDWeather){
 #' @return Data frame with shortened column names
 #' @export
 #'
-#' @examples abr.names(tab)
+# @examples abr.names(tab)
 abr.names <- function(tab){
   names(tab)[names(tab)=="LUFTTEMPERATUR"] <- "TMPM"
   names(tab)[names(tab)=="LUFTDRUCK_STATIONSHOEHE"] <- "LD"
@@ -1318,7 +1318,7 @@ abr.names <- function(tab){
 #' @return data frame with readable column names
 #' @export
 #'
-#' @examples RenameDWDRain(DWDRain)
+# @examples RenameDWDRain(DWDRain)
 RenameDWDRain <- function(DWDRain){
  # stopifnot(names(DWDRain)%in%c("Stations_id", "MESS_DATUM","QN_6", "RS", "RSF","SH_TAG","NSH_TAG","eor",
  #                              "Date", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname"))
@@ -1350,7 +1350,7 @@ RenameDWDRain <- function(DWDRain){
 #' zipID: 5 digit ZipIDs
 #' @export
 #'
-#' @examples getDWDContent("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/")
+# @examples getDWDContent("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/")
 getDWDContent <- function(repository, quiet=T, LoadMetaData=F){
 
 fn_KLBeschreibung <- "KL_Tageswerte_Beschreibung_Stationen.txt"
@@ -1475,7 +1475,7 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 #' @import dplyr
 #' @import stringi
 #'
-#' @examples getDWDStationList("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/",
+# @examples getDWDStationList("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/",
 getDWDStationList <- function(historical, recent){
   historical <- getDWDContent(historical)
   recent <- getDWDContent(recent)
@@ -1511,7 +1511,7 @@ getDWDStationList <- function(historical, recent){
 #' zipID: 5 digit ZipIDs as characer vector
 #' @export
 #'
-#' @examples getDWDRainContent("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/")
+# @examples getDWDRainContent("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/")
 getDWDRainContent <- function(repository, quiet=T){
   filelist <- sort(stri_split_lines1(getURL(repository, dirlistonly = TRUE)))
   ziplist <- grep(".zip", filelist, value=TRUE)
@@ -1578,7 +1578,7 @@ getDWDRainContent <- function(repository, quiet=T){
 #' zipID: 5 digit ZipIDs
 #' @export
 #'
-#' @examples getDWDRainStationList("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/",
+# @examples getDWDRainStationList("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/",
 getDWDRainStationList <- function(historical, recent){
   historical <- getDWDRainContent(historical)
   recent <- getDWDRainContent(recent)
@@ -1616,7 +1616,7 @@ getDWDRainStationList <- function(historical, recent){
 #' @return list with stationlist, ziplist, histziplist, recentziplist
 #' @export
 #'
-#' @examples Get_ZipLists_Station_ids("recent", T, "stationdata.RData")
+# @examples Get_ZipLists_Station_ids("recent", T, "stationdata.RData")
 #'
 Get_ZipLists_Station_ids <- function(dataperiod="recent", loadnew=T,
                                      localStationdata_fn = "stationdata.RData")  {
@@ -1677,7 +1677,7 @@ Get_ZipLists_Station_ids <- function(dataperiod="recent", loadnew=T,
 #' @export
 #' @details also saturation deficit is calculated
 #'
-#' @examples getRadWeather(WeatherTab)
+# @examples getRadWeather(WeatherTab)
 getRadWeather <- function(WeatherTab) {
   # Validate input parameter
   if (!is.data.frame(WeatherTab)) {
@@ -1757,7 +1757,6 @@ getRadWeather <- function(WeatherTab) {
 #' @return Nothing
 #' @export
 #'
-#' @examples Copy_DWD_ZipFiles("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/",
 Copy_DWD_ZipFiles <- function(DWD_ftp_, LocalCopy_DWD_ftp_) {
 
   # copy all DWD files, (in particular zip files from the ftp server to the local directory
@@ -1827,7 +1826,7 @@ Copy_DWD_ZipFiles <- function(DWD_ftp_, LocalCopy_DWD_ftp_) {
 #' @return Nothing, a fst file is written to the local directory
 #' @export
 #'
-#' @examples UpdateDWDData_to_fst("recent", "1990-01-01", T, DWD_content=NULL, MinDataset=FALSE)
+# @examples UpdateDWDData_to_fst("recent", "1990-01-01", T, DWD_content=NULL, MinDataset=FALSE)
 #'
 #'
 
@@ -1953,7 +1952,7 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
 #' @return data frame with weather data from DWD for either historical or recent zip files
 #' @export
 #'
-#' @examples getsingleDWDWeather("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
+# @examples getsingleDWDWeather("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
 getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
 
   # check if the repository is local
@@ -2070,7 +2069,7 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
 #' @return data frame with rain data from DWD for either historical or recent zip files
 #' @export
 #'
-#' @examples getsingleDWDRain("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
+# @examples getsingleDWDRain("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
 getsingleDWDRain <- function(station, ziplist, repository, quiet=T){
 
 
@@ -2146,7 +2145,7 @@ getsingleDWDRain <- function(station, ziplist, repository, quiet=T){
 #' @return data frame with DWD observations historical + recent
 #' @export
 #'
-#' @examples getcombinedDWDWeather(DWD_content, "00044", local=F, DWD_ftp_recent, DWD_ftp_historical)
+# @examples getcombinedDWDWeather(DWD_content, "00044", local=F, DWD_ftp_recent, DWD_ftp_historical)
 getcombinedDWDWeather <- function(DWD_content, station, local=F,
                                   recent_repository, historical_repository){
   # stattion ID to character
@@ -2198,7 +2197,7 @@ getcombinedDWDWeather <- function(DWD_content, station, local=F,
 #' @param historical_repository The ftp address of the historical zip files or the local directory
 #'
 #' @return data frame with DWD observations historical + recent
-#' @examples getcombinedDWDRain(DWDRain_content, "00044", local=F, DWDRain_ftp_recent, DWDRain_ftp_historical)
+# @examples getcombinedDWDRain(DWDRain_content, "00044", local=F, DWDRain_ftp_recent, DWDRain_ftp_historical)
 getcombinedDWDRain <- function(DWDRain_content, station, local=F,
                                recent_repository, historical_repository){
   station <- as.character(station)
@@ -2260,7 +2259,6 @@ getcombinedDWDRain <- function(DWDRain_content, station, local=F,
 #' @return data frame with DWD station info for selected stations
 #' @export
 #'
-#' @examples DWDisMeasured(weather_historic)
 DWDisMeasured <- function  (df, Maxpct_miss = 0.3){
 
   selvars <- longNames_DWD[!longNames_DWD %in% c("QUALITAETS_NIVEAU","LUFTDRUCK_STATIONSHOEHE")]
@@ -2294,7 +2292,6 @@ DWDisMeasured <- function  (df, Maxpct_miss = 0.3){
 #' @return data frame with DWD station info for selected stations
 #' @export
 #'
-#' @examples SelectStationsByDataAvailability(50.0, 8.0, 100, stationlist, station_pars, 3, 3, 20, 70000, "1990-01-01", 100)
 SelectStationsByDataAvailability <- function(lat, long,
                                           height_loc=100,
                                           stationlist,
@@ -2396,7 +2393,7 @@ SelectStationsByDataAvailability <- function(lat, long,
 #' @return data frame with DWD station info for selected stations
 #' @export
 #'
-#' @examples SelectStations(50.0, 8.0, 100, stationlist, 3, 20, 70000, "1990-01-01", 100)
+# @examples SelectStations(50.0, 8.0, 100, stationlist, 3, 20, 70000, "1990-01-01", 100)
 SelectStations <- function(lat, long, height_loc=100, stationlist, minstations=7,
                            max_stations=20,
                            radius=70000,
@@ -2466,7 +2463,7 @@ SelectStations <- function(lat, long, height_loc=100, stationlist, minstations=7
 #' @return data frame with weather data for selected stations
 #' @export
 #'
-#' @examples GetWeatherData_selection(stations_selected, DWD_content, local=F, startdate="1990-01-01")
+# @examples GetWeatherData_selection(stations_selected, DWD_content, local=F, startdate="1990-01-01")
 GetWeatherData_selection <- function(stations_selected,
                                      DWD_content,
                                      repository=DWD_ftp_historical,
@@ -2540,7 +2537,7 @@ GetWeatherData_selection <- function(stations_selected,
 #' @return data frame with weather data for selected stations in fst format
 #' @export
 #'
-#' @examples GetWeatherData_selection_fst(stations_selected, DWD_content, local=F, startdate="1990-01-01")
+# @examples GetWeatherData_selection_fst(stations_selected, DWD_content, local=F, startdate="1990-01-01")
 GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, repository=DWD_ftp_recent,
                                          startdate="1990-01-01") {
 
@@ -2614,7 +2611,7 @@ GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, reposi
 #' @return data frame with weather data for selected stations
 #' @export
 #'
-#' @examples GetWeatherData_selection(stations_selected, DWD_content, local=F, startdate="1990-01-01")
+# @examples GetWeatherData_selection(stations_selected, DWD_content, local=F, startdate="1990-01-01")
 GetRainData_selection <- function(stations_selected,
                                      DWDRain_content,
                                      repository=DWDRain_ftp_historical,
@@ -2694,7 +2691,7 @@ GetRainData_selection <- function(stations_selected,
 #' @return Data frame in HUME weather format
 #' @export
 #'
-#' @examples getHUMEWeather(RadWeather)
+# @examples getHUMEWeather(RadWeather)
 getHUMEWeather <- function(RadWeather){
   HUMEWeather <- RadWeather
   HUMEWeather <- subset(HUMEWeather, select = c(ExcelTime, LUFTTEMPERATUR, NIEDERSCHLAGSHOEHE, REL_FEUCHTE,
@@ -2733,7 +2730,7 @@ getHUMEWeather <- function(RadWeather){
 #' @return interpolated weather data in HUME format including radiation data
 #' @export
 #'
-#' @examples LoadDWDDatafromStationlist(station_selected, RainStation_selected, DWD_content, DWDRain_content, weather_historic, weather_recent, local = F, StartYear= 1990, maxError = 2, Max_Height_diff = 100)
+# @examples LoadDWDDatafromStationlist(station_selected, RainStation_selected, DWD_content, DWDRain_content, weather_historic, weather_recent, local = F, StartYear= 1990, maxError = 2, Max_Height_diff = 100)
 #'
   LoadDWDDatafromStationlist <- function(station_selected,
                                        RainStation_selected=NULL,
@@ -2868,7 +2865,7 @@ getHUMEWeather <- function(RadWeather){
 #' @return interpolated data in the HUME formate
 #' @export
 #'
-#' @examples InterpolateWeatherData(station_selected, RainStation_selected, weather_dat, RainData, maxError=2)
+# @examples InterpolateWeatherData(station_selected, RainStation_selected, weather_dat, RainData, maxError=2)
 InterpolateWeatherData <- function(station_selected,
                                    RainStation_selected=NULL,
                                    weather_dat,
@@ -3014,7 +3011,7 @@ InterpolateWeatherData <- function(station_selected,
   #' @return interpolated weather data in HUME format including radiation data
   #' @export
   #'
-  #' @examples InterpolateFromDWD(df_DWD_core, stationlist, geoBreite, geoLaenge, max.Height.Distance_m=100, Hoehe_m = 100, df_Rain=NULL, startdate = "1990-01-01")
+  # @examples InterpolateFromDWD(df_DWD_core, stationlist, geoBreite, geoLaenge, max.Height.Distance_m=100, Hoehe_m = 100, df_Rain=NULL, startdate = "1990-01-01")
   InterpolateFromDWD <- function(df_DWD_core, stationlist, geoBreite, geoLaenge, max.Height.Distance_m=100, Hoehe_m = 100, df_Rain=NULL,
                                  startdate = "1990-01-01") {
 
@@ -3334,7 +3331,6 @@ InterpolateWeatherData <- function(station_selected,
   #' @return A data frame with scenario weather data
   #' @export
   #'
-  #' @examples CreateScenarioWeather(df, scenYear=2024, StartMonthSim=9, startYear=2004, ScenarioStartDay=NULL, EndYear=2024, site_key="L21")
 
 
   CreateScenarioWeather <- function(df=NULL, scenYear=2024, StartMonthSim=9, startYear=2004, ScenarioStartDay=NULL, EndYear=2024, site_key="L21" ) {
@@ -3396,122 +3392,6 @@ InterpolateWeatherData <- function(station_selected,
 
     return(dfscen)
   }
-
-
-# Import functions with rendering ######################################################
-
-
-#' render_Wetter_Analysis
-#'
-#' @param Standort name of the site for which weather data should be estimated
-#' @param geoBreite latitude of the site
-#' @param geoLaenge longitude of the site
-#' @param Hoehe_m height above sea level of the site
-#' @param radius radius from which DWD weather stations should be included
-#' @param minstations minimum number of stations to be included
-#' @param startdate start date (string, format "1990-01-01")
-#' @param maxError maximum deviation (%) of the values of a single weather station from the average of all stations
-#' @param set_title title of the output file
-#' @param out_file name of the output file
-#' @import rmarkdown
-#'
-#' @return none, a html file is generated
-#' @export
-#'
-#' @examples render_Wetter_Analysis(Standort, geoBreite, geoLaenge, Hoehe_m, radius, minstations, startdate, maxError, set_title, out_file)
-render_Wetter_Analysis = function(Standort, geoBreite, geoLaenge, Hoehe_m, radius, minstations, startdate, maxError, set_title, out_file) {
-
-  ScriptFN <- paste0(localpath, "sources/", "AnalyzeWeatherClimate.rmd")
-  rmarkdown::render(input = ScriptFN,
-      params = list(
-      Standort = Standort,
-      set_title=set_title
-    ),
-    output_file = out_file, output_format = "html_document" #,  envir = new.env()
-  )
-}
-
-#' render_Wetter_Import
-#'
-#' @param Standort name of the site for which weather data should be estimated (string)
-#' @param geoBreite latitude of the site (numeric)
-#' @param geoLaenge longitude of the site (numeric)
-#' @param Hoehe_m height above sea level of the site (numeric)
-#' @param radius radius from which DWD weather stations should be included (numeric)
-#' @param minstations minimum number of stations to be included (numeric)
-#' @param startdate start date (string, format "1990-01-01")
-#' @param maxError maximum deviation (%) of the values of a single weather station from the average of all stations
-#' @param set_title title of the output file
-#' @param out_file name of the output file
-#' @import rmarkdown
-#'
-#' @return none, a html file is generated
-#' @export
-#'
-#' @examples render_Wetter_Import(Standort, geoBreite, geoLaenge, Hoehe_m, radius, minstations, startdate, maxError, set_title, out_file)
-#render_Wetter_Import = function(Standort, geoBreite, geoLaenge, Hoehe_m, radius,
-#                                minstations, startdate, maxError, set_title, out_file)
-
-  render_Wetter_Import = function(Standort, geoBreite, geoLaenge, Hoehe_m, radius,
-                                  minstations, startyear, endyear, maxError, set_title)
-
-
-  {
-
-  ScriptFN <- paste0(localpath, "DWD_Wetter_Import_new2.rmd")
-  rmarkdown::render(input = ScriptFN,
-                    params = list(
-                      Standort = Standort,
-                      geoBreite = geoBreite,
-                      geoLaenge = geoLaenge,
-                      Hoehe_m = Hoehe_m,
-                      radius = radius,
-                      minstations = minstations,
-                      startyear = startyear,
-                      endyear = endyear,
-                      maxError = maxError,
-                      set_title=set_title
-                    ),
-                    output_file = out_file, output_format = "html_document" #,  envir = new.env()
-  )
-}
-
-
-
-
-#' WriteHumeWeatherFile
-#'
-#' @param df data frame with weather data
-#' @param fn file name for output
-#'
-#' @return none, a file is written
-#' @export
-#'
-#' @examples WriteHumeWeatherFile(df, fn)
-WriteHumeWeatherFile <- function(df, fn) {
-  # Validate file path
-#  if (!file.exists(fn)) {
-#    stop("The specified file path does not exist.")
-#  }
-  if (!all(namesHUME %in% names(df))) {
-    stop("Not all column names for HUME file in data frame.")
-  }
-
-
-  df <- df[,namesHUME]
-  # Datei öffnen
-  #    fileHUME <- file(fn, open="wt", encoding="latin1")
-  fileHUME <- file(fn, open="wb", encoding="UTF8")
-  # Namen schreiben
-  write(namesHUME, file = fileHUME, ncolumns = length(unitsHUME), append = FALSE, sep=",")
-  # Einheiten schreiben
-  write(unitsHUME, file = fileHUME, ncolumns = length(unitsHUME), append = TRUE, sep=",")
-  # Daten schreiben
-  write.table(df, file=fileHUME, append=TRUE, quote=FALSE, sep=",",#sep="\t",
-              eol="\n", dec=".", row.names=FALSE, col.names=FALSE)
-  # Datei muss explizit geschlossen werden
-  close(fileHUME)
-}
 
 
 #' Title

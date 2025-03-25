@@ -24,6 +24,3 @@ data frame with weather data for selected stations in fst format
 \description{
 GetWeatherData_selection_fst
 }
-\examples{
-GetWeatherData_selection_fst(stations_selected, DWD_content, local=F, startdate="1990-01-01")
-}

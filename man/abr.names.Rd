@@ -15,6 +15,3 @@ Data frame with shortened column names
 \description{
 abr.names shorten long column names
 }
-\examples{
-abr.names(tab)
-}

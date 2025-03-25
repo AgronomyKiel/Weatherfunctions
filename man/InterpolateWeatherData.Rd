@@ -26,6 +26,3 @@ interpolated data in the HUME formate
 \description{
 InterpolateWeatherData interpolates the weather data from the selected station to the location
 }
-\examples{
-InterpolateWeatherData(station_selected, RainStation_selected, weather_dat, RainData, maxError=2)
-}

@@ -35,6 +35,3 @@ A ggplot object
 \description{
 makeplot3 a function to plot scenarios with smoothed variation ranges
 }
-\examples{
-makeplot3(dfweather, "TMPM", BaseSize=18, ylabel="Temperature", xlabel="Datum", SelYear=2020, IsLegend=TRUE)
-}

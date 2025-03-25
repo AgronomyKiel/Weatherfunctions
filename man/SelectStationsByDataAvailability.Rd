@@ -49,6 +49,3 @@ SelectStationsByDataAvailability selects the  weather stations from a list of st
 by data availability, more stations are selected until a minimum number
 of stations is reached which contain the required data
 }
-\examples{
-SelectStationsByDataAvailability(50.0, 8.0, 100, stationlist, station_pars, 3, 3, 20, 70000, "1990-01-01", 100)
-}

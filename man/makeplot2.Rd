@@ -25,6 +25,3 @@ A ggplot object
 \description{
 makeplot2 a function to plot scenarios
 }
-\examples{
-makeplot2(dfhist, dfscen, "TMPM", BaseSize=18, ylabel="Temperature", SelYear=2020)
-}

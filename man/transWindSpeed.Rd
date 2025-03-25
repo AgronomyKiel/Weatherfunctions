@@ -25,6 +25,3 @@ transWindSpeed
 corrects the wind speed for the required height considering
 the measurement height
 }
-\examples{
-transWindSpeed(5, 10, 2, 0.5)
-}

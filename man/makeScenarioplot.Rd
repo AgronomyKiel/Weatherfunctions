@@ -47,6 +47,3 @@ A ggplot object
 makeScenarioplot makes time series plots from a data frame with Time in the first column as Excel date
 and the parameter to be plotted in another selected column
 }
-\examples{
-makeScenarioplot(df_hist, df_scen, "TMPM", BaseSize=18, ylabel="Temperature [°C]", SelYear=2020, ShiftYears=T, StartMonth=9, StartScenarioDate=NULL, smoothing=T, span=0.5)
-}

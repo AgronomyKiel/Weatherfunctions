@@ -17,6 +17,3 @@ Nothing
 \description{
 Copy_DWD_ZipFiles makes a local copy of DWD weather data as zip files
 }
-\examples{
-Copy_DWD_ZipFiles("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/",
-}

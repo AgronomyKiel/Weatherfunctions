@@ -29,8 +29,3 @@ Nothing, a fst file is written to the local directory
 \description{
 UpdateDWDData_to_fst updates the DWD weather data to a local fst file
 }
-\examples{
-UpdateDWDData_to_fst("recent", "1990-01-01", T, DWD_content=NULL, MinDataset=FALSE)
-
-
-}

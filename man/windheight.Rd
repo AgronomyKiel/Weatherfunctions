@@ -19,6 +19,3 @@ uo corrected windspeed [m/s]
 \description{
 Alternative function for correction of windspeed to reference height
 }
-\examples{
-windheight(5, 10, 2)
-}

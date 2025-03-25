@@ -15,6 +15,3 @@ data frame with readable column names
 \description{
 RenameDWDRain renames the columns of the DWD rain data
 }
-\examples{
-RenameDWDRain(DWDRain)
-}

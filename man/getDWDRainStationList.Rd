@@ -30,6 +30,3 @@ getDWDRainStationList gets a station list from the DWD ftp repository
 without ziplists and addtionally returns historical and recent stationlist (metadata)
 as well as filelists, ziplists and zipIDs
 }
-\examples{
-getDWDRainStationList("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/",
-}

@@ -39,7 +39,3 @@ interpolated weather data in HUME format including radiation data
 \description{
 LoadDWDDatafromStationlist
 }
-\examples{
-LoadDWDDatafromStationlist(station_selected, RainStation_selected, DWD_content, DWDRain_content, weather_historic, weather_recent, local = F, StartYear= 1990, maxError = 2, Max_Height_diff = 100)
-
-}

@@ -17,6 +17,3 @@ a list of 3 values/arrays angot.value = Daily maximum global radiation in [MJ.m-
 \description{
 calcsolar: calculation of daily of maximum solar radiation
 }
-\examples{
-calcsolar(200, 54)
-}

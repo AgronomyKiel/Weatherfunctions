@@ -23,7 +23,3 @@ list with stationlist, ziplist, histziplist, recentziplist
 \description{
 Title Get_ZipLists_Station_ids
 }
-\examples{
-Get_ZipLists_Station_ids("recent", T, "stationdata.RData")
-
-}

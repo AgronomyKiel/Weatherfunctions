@@ -18,6 +18,3 @@ getRadWeather calculates radiation from DWD weather data
 \details{
 also saturation deficit is calculated
 }
-\examples{
-getRadWeather(WeatherTab)
-}

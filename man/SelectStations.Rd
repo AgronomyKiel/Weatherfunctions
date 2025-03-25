@@ -39,6 +39,3 @@ data frame with DWD station info for selected stations
 \description{
 SelectStations selects the nearest weather stations from a list of stations
 }
-\examples{
-SelectStations(50.0, 8.0, 100, stationlist, 3, 20, 70000, "1990-01-01", 100)
-}

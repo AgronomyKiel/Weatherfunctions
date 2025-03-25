@@ -29,6 +29,3 @@ data frame with DWD observations historical + recent
 \description{
 getcombinedDWDWeather gets the combined (historic & recent) weather data for a DWD station
 }
-\examples{
-getcombinedDWDWeather(DWD_content, "00044", local=F, DWD_ftp_recent, DWD_ftp_historical)
-}

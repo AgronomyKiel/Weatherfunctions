@@ -15,6 +15,3 @@ data frame with DWD station info for selected stations
 \description{
 Title DWDisMeasured
 }
-\examples{
-DWDisMeasured(weather_historic)
-}

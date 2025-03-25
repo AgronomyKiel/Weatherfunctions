@@ -23,6 +23,3 @@ the model has been fitted with observations from the DWD (relative sunshine and 
 New function for calculation of daily solar radiation from relative sunshine hours ####
 the function uses directly the parameters  from  "mod.Angstroem"
 }
-\examples{
-RelRad(0.8, 6)
-}

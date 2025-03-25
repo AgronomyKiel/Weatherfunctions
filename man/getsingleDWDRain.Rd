@@ -4,7 +4,7 @@
 \alias{getsingleDWDRain}
 \title{getsingleDWDRain loads rainfall data for a single weather station}
 \usage{
-getsingleDWDRain(station, ziplist, repository, local = F, quiet = T)
+getsingleDWDRain(station, ziplist, repository, quiet = T)
 }
 \arguments{
 \item{station}{5 digit string ID of the weather station as character}
@@ -13,16 +13,13 @@ getsingleDWDRain(station, ziplist, repository, local = F, quiet = T)
 
 \item{repository}{ftp Repository address or local directory}
 
-\item{local}{Option to use local copy or ftp data}
-
 \item{quiet}{echo on/off}
+
+\item{local}{Option to use local copy or ftp data}
 }
 \value{
 data frame with rain data from DWD for either historical or recent zip files
 }
 \description{
 getsingleDWDRain loads rainfall data for a single weather station
-}
-\examples{
-getsingleDWDRain("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
 }

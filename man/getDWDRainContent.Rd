@@ -22,6 +22,3 @@ zipID: 5 digit ZipIDs as characer vector
 \description{
 getDWDRainContent gets the content of the DWD ftp repository for additional rain data
 }
-\examples{
-getDWDRainContent("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/")
-}

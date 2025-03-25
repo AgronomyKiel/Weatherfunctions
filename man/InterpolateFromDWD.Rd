@@ -34,6 +34,3 @@ Title InterpolateFromDWD
 Interpolation of weather data using the 3 nearest DWD stations
 in between a defined difference of altitude
 }
-\examples{
-InterpolateFromDWD(df_DWD_core, stationlist, geoBreite, geoLaenge, max.Height.Distance_m=100, Hoehe_m = 100, df_Rain=NULL, startdate = "1990-01-01")
-}

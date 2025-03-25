@@ -15,6 +15,3 @@ Data frame in HUME weather format
 \description{
 getHUMEWeather converts the DWD weather data into the HUME format
 }
-\examples{
-getHUMEWeather(RadWeather)
-}

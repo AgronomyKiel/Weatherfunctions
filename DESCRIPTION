@@ -23,6 +23,7 @@ Imports:
     ggplot2,
     ggnewscale,
     lubridate,
+    rmarkdown,
     here,
     httr,
     purrr,

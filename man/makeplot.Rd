@@ -41,6 +41,3 @@ A ggplot object
 makeplot makes time series plots from a data frame with Time in the first column as Excel date
 and the parameter to be plotted in another selected column
 }
-\examples{
-makeplot(df, "TMPM", BaseSize=18, ylabel="Temperatur [°C]", SelYear=2020, ShiftYears=T, StartMonth=9, smoothing=T, span=0.5)
-}

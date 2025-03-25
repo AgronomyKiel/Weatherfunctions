@@ -15,6 +15,3 @@ A string with replaced characters
 \description{
 Title: ReplaceProblemChars
 }
-\examples{
-ReplaceProblemChars("Test / Test")
-}

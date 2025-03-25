@@ -27,6 +27,3 @@ data frame with weather data for selected stations
 GetRainData_selection gets the rain data for the selected stations
 by downloading the data from the DWD ftp server
 }
-\examples{
-GetWeatherData_selection(stations_selected, DWD_content, local=F, startdate="1990-01-01")
-}

@@ -21,6 +21,3 @@ estSg_S0: calculation of daily solar radiation from relative sunshine
 function for calculation of daily solar radiation from relative sunshine hours ####
 the function uses an empirical model calibrated from DWD data "mod.Angstroem"
 }
-\examples{
-estSg_S0(0.8, 6)
-}

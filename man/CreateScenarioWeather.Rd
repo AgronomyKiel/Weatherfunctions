@@ -35,6 +35,3 @@ A data frame with scenario weather data
 \description{
 CreateScenarioWeather
 }
-\examples{
-CreateScenarioWeather(df, scenYear=2024, StartMonthSim=9, startYear=2004, ScenarioStartDay=NULL, EndYear=2024, site_key="L21")
-}
