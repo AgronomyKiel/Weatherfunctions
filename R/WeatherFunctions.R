@@ -421,6 +421,7 @@ set_theme <- function(p, fontsize){
 #' @import ggnewscale
 #' @import dplyr
 #' @import lubridate
+#' @import tidyr
 #'
 #' @return A ggplot object
 #' @export
