@@ -1,20 +1,28 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
 
 # Weatherfunctions
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of Weatherfunctions is to support download of daily weather
-data from the German weather data service (DWD), to generate
-interpolations of weather data and to calculate some derived variables
-like potential evapotranspiration.
+The goal of Weatherfunctions is to support download of daily weather data from the German weather data service (DWD), to generate interpolations of weather data and to calculate some derived variables like potential evapotranspiration.
 
 ## Installation
 
-You can install the development version of Weatherfunctions from
-[GitHub](https://github.com/) with:
+You can install the development version of Weatherfunctions from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
@@ -23,12 +31,9 @@ pak::pak("AgronomyKiel/Weatherfunctions")
 
 ## Example
 
-This is a basic example which shows you how to download a local copy of
-the historical and recent daily weather data from DWD and to interpolate
-them for a certain location defined by latitude, longitude and height
-above sea level.
+This is a basic example which shows you how to download a local copy of the historical and recent daily weather data from DWD and to interpolate them for a certain location defined by latitude, longitude and height above sea level.
 
-``` r
+```{r example,, message=FALSE, warning=FALSE}
 rm(list = ls())
 library(Weatherfunctions)
 library(here)
@@ -186,71 +191,27 @@ IntPolDWDdataHistorical$Longitude <- geoLaenge
 IntPolDWDdataHistorical$Latitude <- geoBreite
 ```
 
-The interpolation should deliver daily estimates of the weather data for
-the location:
+The interpolation should deliver daily estimates of the weather data for the location:
 
-``` r
+```{r ExampleOutput}
 summary(IntPolDWDdataHistorical)
-#>       Time            TMPM              Rain              LF        
-#>  Min.   :32874   Min.   :-18.300   Min.   : 0.000   Min.   : 33.70  
-#>  1st Qu.:35978   1st Qu.:  4.300   1st Qu.: 0.000   1st Qu.: 72.20  
-#>  Median :39083   Median :  9.600   Median : 0.100   Median : 81.30  
-#>  Mean   :39083   Mean   :  9.536   Mean   : 1.912   Mean   : 79.68  
-#>  3rd Qu.:42187   3rd Qu.: 15.200   3rd Qu.: 2.000   3rd Qu.: 88.80  
-#>  Max.   :45291   Max.   : 28.900   Max.   :56.200   Max.   :100.00  
-#>        VP           Sat_def          Rad_Int         GlobRad     
-#>  Min.   : 1.20   Min.   : 0.000   Min.   : 10.2   Min.   : 0.88  
-#>  1st Qu.: 6.90   1st Qu.: 1.000   1st Qu.: 37.0   1st Qu.: 3.20  
-#>  Median : 9.50   Median : 2.100   Median :100.5   Median : 8.68  
-#>  Mean   :10.05   Mean   : 3.028   Mean   :119.5   Mean   :10.33  
-#>  3rd Qu.:12.90   3rd Qu.: 4.200   3rd Qu.:189.9   3rd Qu.:16.41  
-#>  Max.   :23.30   Max.   :25.100   Max.   :347.0   Max.   :29.98  
-#>       Wind            TMPMN            TMPMX          Longitude    
-#>  Min.   : 0.500   Min.   :-22.40   Min.   :-12.40   Min.   :10.63  
-#>  1st Qu.: 2.000   1st Qu.:  0.70   1st Qu.:  7.30   1st Qu.:10.63  
-#>  Median : 2.700   Median :  5.40   Median : 14.10   Median :10.63  
-#>  Mean   : 3.011   Mean   :  5.21   Mean   : 14.03   Mean   :10.63  
-#>  3rd Qu.: 3.800   3rd Qu.: 10.10   3rd Qu.: 20.70   3rd Qu.:10.63  
-#>  Max.   :12.200   Max.   : 21.00   Max.   : 39.20   Max.   :10.63  
-#>     Latitude    
-#>  Min.   :52.73  
-#>  1st Qu.:52.73  
-#>  Median :52.73  
-#>  Mean   :52.73  
-#>  3rd Qu.:52.73  
-#>  Max.   :52.73
 ```
 
-The average distance for the estimation of the different weather
-variables can be calculated:
-
-``` r
+The average distance for the estimation of the different weather variables can be calculated: 
+```{r}
 usedstations <- IntPolDWDHistorical$df.wf
 usedstations$Distance <- 1/usedstations$InvDist
 Diststations <- usedstations %>% group_by(variable) %>% dplyr::summarise(Distance = mean(Distance, na.rm = T))
 ```
 
-The average distance for the estimation of the different weather
-variables is:
-
-``` r
+The average distance for the estimation of the different weather variables is:
+```{r}
 Diststations
-#> # A tibble: 8 × 2
-#>   variable               Distance
-#>   <fct>                     <dbl>
-#> 1 LUFTTEMPERATUR            25.9 
-#> 2 REL_FEUCHTE               26.0 
-#> 3 WINDGESCHWINDIGKEIT       41.5 
-#> 4 LUFTTEMPERATUR_MAXIMUM    26.7 
-#> 5 LUFTTEMPERATUR_MINIMUM    26.7 
-#> 6 NIEDERSCHLAGSHOEHE         6.43
-#> 7 SONNENSCHEINDAUER         35.1 
-#> 8 MHoeheWind                25.6
 ```
 
 Now the same procedure for the recent data:
 
-``` r
+```{r}
 # recent data #######
 
 ## retrieve the recent station list from the DWD content
@@ -309,83 +270,19 @@ IntPolDWDdatarecent$Longitude <- geoLaenge
 IntPolDWDdatarecent$Latitude <- geoBreite
 ```
 
-Here the summary of the result of the interpolation procedure for the
-recent data:
-
-``` r
+Here the summary of the result of the interpolation procedure for the recent data:
+```{r}
 summary(IntPolDWDdatarecent)
-#>       Time            TMPM             Rain            LF       
-#>  Min.   :45292   Min.   :-7.100   Min.   : 0.0   Min.   :41.10  
-#>  1st Qu.:45404   1st Qu.: 4.200   1st Qu.: 0.0   1st Qu.:73.47  
-#>  Median :45517   Median : 8.900   Median : 0.0   Median :81.55  
-#>  Mean   :45517   Mean   : 9.526   Mean   : 2.2   Mean   :80.01  
-#>  3rd Qu.:45629   3rd Qu.:15.500   3rd Qu.: 2.4   3rd Qu.:88.22  
-#>  Max.   :45741   Max.   :24.500   Max.   :28.0   Max.   :99.00  
-#>                  NA's   :2                       NA's   :2      
-#>        VP           Sat_def          Rad_Int          GlobRad      
-#>  Min.   : 2.80   Min.   : 0.100   Min.   : 10.20   Min.   : 0.880  
-#>  1st Qu.: 6.80   1st Qu.: 1.100   1st Qu.: 31.75   1st Qu.: 2.745  
-#>  Median : 9.20   Median : 2.000   Median : 96.60   Median : 8.345  
-#>  Mean   :10.09   Mean   : 2.939   Mean   :112.98   Mean   : 9.761  
-#>  3rd Qu.:13.15   3rd Qu.: 4.200   3rd Qu.:181.60   3rd Qu.:15.690  
-#>  Max.   :21.90   Max.   :14.700   Max.   :343.30   Max.   :29.660  
-#>  NA's   :2       NA's   :2        NA's   :2        NA's   :2       
-#>       Wind           TMPMN             TMPMX         Longitude    
-#>  Min.   :0.700   Min.   :-10.700   Min.   :-2.60   Min.   :10.63  
-#>  1st Qu.:1.800   1st Qu.:  0.350   1st Qu.: 7.60   1st Qu.:10.63  
-#>  Median :2.500   Median :  4.550   Median :13.10   Median :10.63  
-#>  Mean   :2.692   Mean   :  5.039   Mean   :14.00   Mean   :10.63  
-#>  3rd Qu.:3.400   3rd Qu.: 10.100   3rd Qu.:20.82   3rd Qu.:10.63  
-#>  Max.   :8.000   Max.   : 17.900   Max.   :32.50   Max.   :10.63  
-#>  NA's   :2       NA's   :2         NA's   :2                      
-#>     Latitude    
-#>  Min.   :52.73  
-#>  1st Qu.:52.73  
-#>  Median :52.73  
-#>  Mean   :52.73  
-#>  3rd Qu.:52.73  
-#>  Max.   :52.73  
-#> 
 ```
 
-``` r
+
+```{r}
 DWDdata <- rbind(IntPolDWDdataHistorical, IntPolDWDdatarecent)
 ```
 
 Here the combinded data set:
-
-``` r
+```{r}
 summary(DWDdata)
-#>       Time            TMPM              Rain              LF        
-#>  Min.   :32874   Min.   :-18.300   Min.   : 0.000   Min.   : 33.70  
-#>  1st Qu.:36091   1st Qu.:  4.300   1st Qu.: 0.000   1st Qu.: 72.22  
-#>  Median :39308   Median :  9.600   Median : 0.100   Median : 81.30  
-#>  Mean   :39308   Mean   :  9.536   Mean   : 1.922   Mean   : 79.69  
-#>  3rd Qu.:42524   3rd Qu.: 15.200   3rd Qu.: 2.000   3rd Qu.: 88.80  
-#>  Max.   :45741   Max.   : 28.900   Max.   :56.200   Max.   :100.00  
-#>                  NA's   :2                          NA's   :2       
-#>        VP           Sat_def          Rad_Int          GlobRad     
-#>  Min.   : 1.20   Min.   : 0.000   Min.   : 10.20   Min.   : 0.88  
-#>  1st Qu.: 6.90   1st Qu.: 1.000   1st Qu.: 36.83   1st Qu.: 3.18  
-#>  Median : 9.50   Median : 2.100   Median :100.40   Median : 8.68  
-#>  Mean   :10.05   Mean   : 3.025   Mean   :119.28   Mean   :10.31  
-#>  3rd Qu.:12.90   3rd Qu.: 4.200   3rd Qu.:189.60   3rd Qu.:16.38  
-#>  Max.   :23.30   Max.   :25.100   Max.   :347.00   Max.   :29.98  
-#>  NA's   :2       NA's   :2        NA's   :2        NA's   :2      
-#>       Wind          TMPMN             TMPMX          Longitude    
-#>  Min.   : 0.5   Min.   :-22.400   Min.   :-12.40   Min.   :10.63  
-#>  1st Qu.: 2.0   1st Qu.:  0.700   1st Qu.:  7.30   1st Qu.:10.63  
-#>  Median : 2.7   Median :  5.400   Median : 14.00   Median :10.63  
-#>  Mean   : 3.0   Mean   :  5.204   Mean   : 14.03   Mean   :10.63  
-#>  3rd Qu.: 3.7   3rd Qu.: 10.100   3rd Qu.: 20.70   3rd Qu.:10.63  
-#>  Max.   :12.2   Max.   : 21.000   Max.   : 39.20   Max.   :10.63  
-#>  NA's   :2      NA's   :2         NA's   :2                       
-#>     Latitude    
-#>  Min.   :52.73  
-#>  1st Qu.:52.73  
-#>  Median :52.73  
-#>  Mean   :52.73  
-#>  3rd Qu.:52.73  
-#>  Max.   :52.73  
-#> 
 ```
+
+
