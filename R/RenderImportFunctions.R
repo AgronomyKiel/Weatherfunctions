@@ -78,39 +78,3 @@ render_Wetter_Import = function(Standort, geoBreite, geoLaenge, Hoehe_m, radius,
 }
 
 
-
-
-#' WriteHumeWeatherFile
-#'
-#' @param df data frame with weather data
-#' @param fn file name for output
-#'
-#' @return none, a file is written
-#' @export
-#'
-#' @examples WriteHumeWeatherFile(df, fn)
-WriteHumeWeatherFile <- function(df, fn) {
-  # Validate file path
-  #  if (!file.exists(fn)) {
-  #    stop("The specified file path does not exist.")
-  #  }
-  if (!all(namesHUME %in% names(df))) {
-    stop("Not all column names for HUME file in data frame.")
-  }
-
-
-  df <- df[,namesHUME]
-  # Datei öffnen
-  #    fileHUME <- file(fn, open="wt", encoding="latin1")
-  fileHUME <- file(fn, open="wb", encoding="UTF8")
-  # Namen schreiben
-  write(namesHUME, file = fileHUME, ncolumns = length(unitsHUME), append = FALSE, sep=",")
-  # Einheiten schreiben
-  write(unitsHUME, file = fileHUME, ncolumns = length(unitsHUME), append = TRUE, sep=",")
-  # Daten schreiben
-  write.table(df, file=fileHUME, append=TRUE, quote=FALSE, sep=",",#sep="\t",
-              eol="\n", dec=".", row.names=FALSE, col.names=FALSE)
-  # Datei muss explizit geschlossen werden
-  close(fileHUME)
-}
-

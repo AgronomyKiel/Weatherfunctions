@@ -578,7 +578,7 @@ makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
   p <- p + scale_x_date(labels = date_format("%b"), date_breaks = "1 month")
 #  p <- p + structure(ggplot2::standardise_aes_names("colour"), class = "new_aes")
   p <- p + new_scale_color()
-    p <- p + geom_line(data=SelYearValues, aes(x=Date, y=param, color=Wetterdaten), size=1)
+    p <- p + geom_line(data=SelYearValues, aes(x=Date, y=param, color=Wetterdaten, group=1), size=1)
   p <- p + scale_color_manual(values = SelYearColours)
   p <- p + ylab(y_label) + xlab("Monat")
   p <- p + theme_bw(base_size = BaseSize)
@@ -3487,6 +3487,42 @@ GetForecastDataForStationList <- function(fn) {
   cat(paste("Time for gathering of forecast data:", round(EndTime - starttime, digits=2), " seconds", "\n"))
   return(AllForeCastData)
 
+}
+
+
+
+#' WriteHumeWeatherFile
+#'
+#' @param df data frame with weather data
+#' @param fn file name for output
+#'
+#' @return none, a file is written
+#' @export
+#'
+#' @examples WriteHumeWeatherFile(df, fn)
+WriteHumeWeatherFile <- function(df, fn) {
+  # Validate file path
+  #  if (!file.exists(fn)) {
+  #    stop("The specified file path does not exist.")
+  #  }
+  if (!all(namesHUME %in% names(df))) {
+    stop("Not all column names for HUME file in data frame.")
+  }
+
+
+  df <- df[,namesHUME]
+  # Datei öffnen
+  #    fileHUME <- file(fn, open="wt", encoding="latin1")
+  fileHUME <- file(fn, open="wb", encoding="UTF8")
+  # Namen schreiben
+  write(namesHUME, file = fileHUME, ncolumns = length(unitsHUME), append = FALSE, sep=",")
+  # Einheiten schreiben
+  write(unitsHUME, file = fileHUME, ncolumns = length(unitsHUME), append = TRUE, sep=",")
+  # Daten schreiben
+  write.table(df, file=fileHUME, append=TRUE, quote=FALSE, sep=",",#sep="\t",
+              eol="\n", dec=".", row.names=FALSE, col.names=FALSE)
+  # Datei muss explizit geschlossen werden
+  close(fileHUME)
 }
 
 
