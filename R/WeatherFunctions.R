@@ -287,8 +287,12 @@ df_Rainnames_DWD <- df_Rainnames_DWD %>% mutate(ylabels = paste0(RainDataColumns
 
 
 # Names and units for Hume data
+#' @export namesHUME
 namesHUME <- c("Time", "TMPM", "Rain", "LF", "VP", "Sat_def", "Rad_Int", "GlobRad", "Wind", "TMPMN", "TMPMX")
+#' @export unitsHUME
 unitsHUME <- c("[day]", "[°C]", "[mm/d]", "[%]", "[mbar]", "[mbar]", "[W/m²]", "[MJ/m²/d]", "[m/s]", "[°C]", "[°C]")
+
+#' @export longNamesHUME
 longNamesHUME <- c("Time", "Mittel Lufttemperatur", "Niederschlagshöhe", "Luftfeuchtigkeit",
                    "Dampfdruck", "Sättigungsdampfdruckdefizit", "Globalstrahlung",
                    "Globalstrahlung", "Windgeschwindigkeit", "Minimum Lufttemperatur",

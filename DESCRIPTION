@@ -5,7 +5,7 @@ Version: 0.1.0
 Date: 2024-08-22
 Authors@R: c(
     person("Henning", "Kage", , "kage@pflanzenbau.uni-kiel.de", role = c("aut", "cre")),
-    person("Till", "Rose", , "rose@pflanzenbau.uni-kiel.de", role = c("aut","cre")),
+    person("Till", "Rose", , "rose@pflanzenbau.uni-kiel.de", role = c("aut")),
     person("Ingo", "Pahlmann", , "", role = c("aut")))
 Maintainer: Henning Kage <kage@pflanzenbau.uni-kiel.de>
 Description: Package for downloading weather data from DWD and some other calculations
