@@ -16,7 +16,8 @@ makeScenarioplot(
   StartMonth = 9,
   StartScenarioDate = NULL,
   smoothing = F,
-  span = 0.5
+  span = 0.5,
+  plotly = F
 )
 }
 \arguments{
@@ -39,6 +40,10 @@ makeScenarioplot(
 \item{StartScenarioDate}{The start date for the scenario, i.e. the first day with unkown weather}
 
 \item{smoothing}{Smooth the historic data with a loess function}
+
+\item{span}{The span for the loess function}
+
+\item{plotly}{Use plotly for interactive plots}
 }
 \value{
 A ggplot object

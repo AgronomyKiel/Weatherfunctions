@@ -14,7 +14,8 @@ makeplot(
   ShiftYears = F,
   StartMonth = 9,
   smoothing = F,
-  span = 0.5
+  span = 0.5,
+  plotly = F
 )
 }
 \arguments{
@@ -33,6 +34,10 @@ makeplot(
 \item{StartMonth}{The start month for the cultivation year}
 
 \item{smoothing}{Smooth the historic data with a loess function}
+
+\item{span}{The span for the loess function}
+
+\item{plotly}{Use plotly for interactive plots}
 }
 \value{
 A ggplot object
