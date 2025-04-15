@@ -3,7 +3,7 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   Weatherfunctions: Weatherfunctions.html
-last_built: 2025-04-12T17:17Z
+last_built: 2025-04-15T15:31Z
 urls:
   reference: https://agronomykiel.github.io/Weatherfunctions/reference
   article: https://agronomykiel.github.io/Weatherfunctions/articles
