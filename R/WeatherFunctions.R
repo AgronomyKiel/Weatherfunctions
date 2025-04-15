@@ -23,6 +23,8 @@ library(here)
 library(zoo)
 library(ggnewscale)
 library(purrr)
+library(ggplot2)
+library(plotly)
 
 
 
@@ -410,6 +412,20 @@ set_theme <- function(p, fontsize){
 
 
 
+clean_plotly_leg <- function(.plotly_x, .extract_str) {
+  # Inpects an x$data list in a plotly object, cleans up legend values where appropriate
+  if ("legendgroup" %in% names(.plotly_x)) {
+    # The list includes a legend group
+
+    .plotly_x$legendgroup <- stringr::str_extract(.plotly_x$legendgroup, .extract_str)
+    .plotly_x$name <- stringr::str_extract(.plotly_x$name, .extract_str)
+
+  }
+  .plotly_x
+
+
+}
+
 #' makeplot makes time series plots from a data frame with Time in the first column as Excel date
 #' and the parameter to be plotted in another selected column
 #'
@@ -421,20 +437,15 @@ set_theme <- function(p, fontsize){
 #' @param ShiftYears Shift the years for autumn sown crops
 #' @param StartMonth The start month for the cultivation year
 #' @param smoothing Smooth the historic data with a loess function
-#' @import ggplot2
-#' @import ggnewscale
-#' @import dplyr
-#' @import lubridate
-#' @import tidyr
+#' @param span The span for the loess function
+#' @param plotly Use plotly for interactive plots
 #'
 #' @return A ggplot object
 #' @export
 #'
-# @examples makeplot(df, "TMPM", BaseSize=18, ylabel="Temperatur [°C]", SelYear=2020, ShiftYears=T, StartMonth=9, smoothing=T, span=0.5)
+#' @examples
 makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
-                     ShiftYears=F, StartMonth=9, smoothing=F, span=0.5){
-
-
+                     ShiftYears=F, StartMonth=9, smoothing=F, span=0.5, plotly=F){
   if (is.null(df)) {
     stop("No data frame for plotting")
   }
@@ -516,12 +527,12 @@ makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
 
 
   # calculate 25 and 75% percentile statistics for each julian day of the year and filter for full years
-  df_LT <- df %>% filter(nDays >=365) %>% group_by(Date) %>%
+  df_LT <- df %>% filter(nDays >=364) %>% group_by(Date) %>% #DN statt 365
     summarise(param = quantile(param, c(0.25, 0.75), na.rm=T), q = c(0.25, 0.75)) %>%
     pivot_wider(id_cols = Date, values_from = param, names_from = q, names_prefix = "q")
 
   # calculate the min, max and median for each julian day of the year of the selected paramter
-  dfExtreme <- df %>% group_by(Date) %>% filter(nDays >=365)%>%
+  dfExtreme <- df  %>% filter(nDays >=364) %>% group_by(Date) %>%  #DN statt 365
     summarise(max = max(param), median=median(param), min=min(param))
 
   # combine both data frames for parameter statistics
@@ -566,27 +577,56 @@ makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
   # select the values
   SelYearValues <- df[df$Selected==T, c( "Date", "param")]
   SelYearValues <- as.data.frame(SelYearValues)
-  SelYearValues$Wetterdaten <- SelYearValues$Date >= max(as.Date(Sys.Date()))
-  SelYearValues$Wetterdaten <- ifelse(SelYearValues$Wetterdaten, "Vorhersage", "Messung")
-  SelYearValues$Wetterdaten <- as.factor(SelYearValues$Wetterdaten)
+  # Check if data are forecast data
+  SelYearValues$forecast <- SelYearValues$Date >= max(as.Date(Sys.Date()))
 
 
-  SelYearColours <- c("darkgreen", "blue")
+  SelYearColours <- c("darkgreen", "red", "blue","red","blue")
+
+  # check if there are any forecast data
+  IsAnyForecast <- any(SelYearValues$forecast)
+  if (IsAnyForecast) {
+    ForecastData <- SelYearValues[SelYearValues$forecast==T,]
+    SelYearValues$forecast <- ifelse(SelYearValues$forecast, "Vorhersage", "Messung")
+  }
 
   p <- ggplot()
   p <- p + ggtitle(plot_title)
-  p <- p + geom_ribbon(data = df_ribbon, aes(x=Date, ymax=q0.75, ymin=q0.25), fill="green", alpha=0.3)
+  # p <- p + geom_ribbon(data = df_ribbon, aes(x=Date, ymax=q0.75, ymin=q0.25), fill="green", alpha=0.3)
+  p <- p + geom_ribbon(data = df_ribbon, aes(x=Date, ymax=q0.75, ymin=q0.25, fill = "Quartilsabstand = mittlere 50%"), alpha=0.3)
   p <- p + geom_line(data=df_ribbon, aes(x=Date, y=median), color="darkgreen", size=0.5, lty=1)
   #  p <- p + geom_line(data=dfsmooth, aes(x=Date, y=pred, color=stat, lty=stat), size=0.5)
   p <- p + geom_line(data=dfExtreme, aes(x=Date, y=value, color=stat) , size=0.8, lty="dotted")
+  p <- p + scale_color_discrete(name= "historische Wetterdaten")
+  p <- p + guides(color=guide_legend(direction='vertical'))
   p <- p + scale_x_date(labels = date_format("%b"), date_breaks = "1 month")
-#  p <- p + structure(ggplot2::standardise_aes_names("colour"), class = "new_aes")
-  p <- p + new_scale_color()
-    p <- p + geom_line(data=SelYearValues, aes(x=Date, y=param, color=Wetterdaten, group=1), size=1)
-  p <- p + scale_color_manual(values = SelYearColours)
+  #  p <- p + structure(ggplot2::standardise_aes_names("colour"), class = "new_aes")
+  #  p <- p + new_scale_color()
+  #  browser()
+  #  p <- p + geom_line(data=SelYearValues, aes(x=Date, y=param, color=forecast, group=1), size=1)
+  p <- p + geom_line(data=SelYearValues, aes(x=Date, y=param), color="darkgreen", size=1)
+  if (IsAnyForecast) {
+    p <- p + geom_line(data=ForecastData, aes(x=Date, y=param), color="red", size=1)
+  }
+  p <- p + scale_color_manual(name= "Wetterdaten im akt. Jahr", values = SelYearColours)
+  p <- p + guides(color=guide_legend(direction='vertical'))
+  #  p <- p + guides(color=guide_legend(nrow=3))
+  p <- p + scale_fill_manual(name= "" ,values = c("Quartilsabstand = mittlere 50%"="green"))
   p <- p + ylab(y_label) + xlab("Monat")
   p <- p + theme_bw(base_size = BaseSize)
-  p
+  p <- p + theme(legend.position="bottom",
+                 legend.box="vertical",
+                 legend.box.just = "left",
+                 legend.margin=margin(),
+                 legend.text=element_text(size=12),
+                 legend.title=element_text(size=12))
+  if (plotly==T) {
+    p <- p + guides(color="none", fill="none")
+    p <- ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0.4, y =-0.2)) # %>% layout(autosize=FALSE)
+    p$x$data <- p$x$data %>%
+      map(clean_plotly_leg, "[^\\(][^,]*") # ie remove the opening bracket,
+  }
+  #  p
   return(p)
 }
 
@@ -605,17 +645,13 @@ makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
 #' @param StartMonth The start month for the cultivation year
 #' @param StartScenarioDate The start date for the scenario, i.e. the first day with unkown weather
 #' @param smoothing Smooth the historic data with a loess function
-#' @import purrr
-#' @import ggplot2
-#' @import ggnewscale
-#' @import dplyr
-#' @import lubridate
-#'
+#' @param span The span for the loess function
+#' @param plotly Use plotly for interactive plots
 #'
 #' @return A ggplot object
 #' @export
 #'
-# @examples makeScenarioplot(df_hist, df_scen, "TMPM", BaseSize=18, ylabel="Temperature [°C]", SelYear=2020, ShiftYears=T, StartMonth=9, StartScenarioDate=NULL, smoothing=T, span=0.5)
+#' @examples
 makeScenarioplot <- function(df_hist,
                              df_scen,
                              parameter,
@@ -625,8 +661,10 @@ makeScenarioplot <- function(df_hist,
                              ShiftYears=F,
                              StartMonth=9,
                              StartScenarioDate=NULL,
+                             # LastrecentDateDate = NULL,
                              smoothing=F,
-                             span=0.5){
+                             span=0.5,
+                             plotly=F){
 
 
   if (is.null(df_hist)) {
@@ -651,8 +689,7 @@ makeScenarioplot <- function(df_hist,
   # for calculations of year summation parameters other than the calendar year
   if (ShiftYears) {
     df_hist$SumYear <- ifelse(df_hist$Month >= StartMonth, df_hist$Year+1, df_hist$Year)
-  }
-  else {
+  }else {
     df_hist$SumYear <- df_hist$Year
   }
 
@@ -667,8 +704,7 @@ makeScenarioplot <- function(df_hist,
   # for calculations of year summation parameters other than the calendar year
   if (ShiftYears) {
     df_scen$SumYear <- ifelse(df_scen$Month >= StartMonth, df_scen$Year+1, df_scen$Year)
-  }
-  else {
+  }else {
     df_scen$SumYear <- df_scen$Year
   }
 
@@ -733,7 +769,7 @@ makeScenarioplot <- function(df_hist,
   SelDateRange <- as.Date(SelDateRange, origin="1970-01-01")
 
   # select the data for the selected year
-#  df$Selected <- ifelse(df$Date %in% SelDateRange, T, F)
+  #  df$Selected <- ifelse(df$Date %in% SelDateRange, T, F)
 
   # recalculate the date according to the corrected year and the day of the year
   df_hist$Date <- as.Date(paste0(as.character(df_hist$Year-1),"-12-31"))+df_hist$DOY
@@ -743,12 +779,12 @@ makeScenarioplot <- function(df_hist,
 
 
   # calculate 25 and 75% percentile statistics for each julian day of the year and filter for full years
-  df_LT <- df_hist %>% filter(nDays >=365) %>% group_by(Date) %>%
+  df_LT <- df_hist %>% filter(nDays >=364) %>% group_by(Date) %>% #DN
     summarise(param = quantile(param, c(0.25, 0.75), na.rm=T), q = c(0.25, 0.75)) %>%
     pivot_wider(id_cols = Date, values_from = param, names_from = q, names_prefix = "q")
 
-  # calculate the min, max and median for each julian day of the year of the selected paramter
-  dfExtreme <- df_hist %>% group_by(Date) %>% filter(nDays >=365)%>%
+  # calculate the min, max and median for each julian day of the year of the selected parameter
+  dfExtreme <- df_hist %>% group_by(Date) %>% filter(nDays >=364)%>% #DN
     summarise(max = max(param), median=median(param), min=min(param))
 
   # combine both data frames for parameter statistics
@@ -791,15 +827,16 @@ makeScenarioplot <- function(df_hist,
 
   # select the values
   # calculate the mean values for the scenario data
-  MeanValues <- df_scen %>% group_by(Date) %>% summarise(value=mean(param, na.rm=T))
+  # MeanValues <- df_scen %>% group_by(Date) %>% summarise(value=mean(param, na.rm=T))
+  MeanValues <- df_scen %>% group_by(Date) %>% summarise(value=median(param, na.rm=T))
   # add a column for the type of data, i.e. forecast, known or scenario
-  MeanValues$Wetterdaten <- MeanValues$Date >= max(as.Date(Sys.Date()-1))
-  MeanValues$Wetterdaten <- ifelse(MeanValues$Wetterdaten==T, "Vorhersage", "Messung")
-  MeanValues[MeanValues$Date>=StartScenarioDate, "Wetterdaten"] <- "Szenario"
+  MeanValues$DataSource <- MeanValues$Date >= min(StartScenarioDate, as.Date(Sys.Date()-1))
+  MeanValues$DataSource <- ifelse(MeanValues$DataSource==T, "Vorhersage", "Messung")
+  MeanValues[MeanValues$Date>=min(StartScenarioDate, as.Date(Sys.Date()+7)), "DataSource"] <- "Szenario"
 
   # filter the scenario data for the date being later or equal to the start date of the scenario
-  # calculate 25 and 75% percentile statistics for each julian day of the year and filter for full years
-  df_scen <- df_scen  %>% filter(Date >= StartScenarioDate)
+  # calculate 25 and 75% percentile statistics for each Julian day of the year and filter for full years
+  df_scen <- df_scen  %>% filter(Date >= StartScenarioDate-7)
   df_LT_scen <- df_scen  %>% group_by(Date) %>%
     summarise(param = quantile(param, c(0.25, 0.75), na.rm=T), q = c(0.25, 0.75)) %>%
     pivot_wider(id_cols = Date, values_from = param, names_from = q, names_prefix = "q")
@@ -840,32 +877,136 @@ makeScenarioplot <- function(df_hist,
     df_ribbon_scen <- df_LT_scen
   }
 
-  MeanValues$Wetterdaten <- as.factor(MeanValues$Wetterdaten)
-  MeanValues$Wetterdaten <- factor(MeanValues$Wetterdaten, levels=c("Messung", "Vorhersage", "Szenario"))
   ColorStat <- c("darkgreen",   "blue", "red" )
 
   SelYearColours <- c("red", "blue","darkgreen")
 
+  # check if there are any forecast data
+  ForecastMeanData <- MeanValues[MeanValues$DataSource=="Vorhersage",]
+  ScenarioMeanData <- MeanValues[MeanValues$DataSource=="Szenario",]
+  MeanValues$DataSource <- factor(MeanValues$DataSource, levels=c("Messung", "Vorhersage", "Szenario"))
+  IsAnyForecast <- any(MeanValues$DataSource=="Vorhersage")
+
+
   p <- ggplot()
   p <- p + ggtitle(plot_title)
-  p <- p + geom_ribbon(data = df_ribbon, aes(x=Date, ymax=q0.75, ymin=q0.25), fill="lightgrey", alpha=0.7)
+  # p <- p + geom_ribbon(data = df_ribbon, aes(x=Date, ymax=q0.75, ymin=q0.25), fill="lightgrey", alpha=0.7)
+  p <- p + geom_ribbon(data = df_ribbon, aes(x=Date, ymax=q0.75, ymin=q0.25, fill = "mittlere 50%  der letzten 20 Jahre"), alpha=0.7)
+  p <- p + guides(fill=guide_legend(direction='vertical'))
   p <- p + geom_line(data=df_ribbon, aes(x=Date, y=median), color="darkgrey", size=0.8, lty=1)
-  p <- p + geom_ribbon(data = df_ribbon_scen, aes(x=Date, ymax=q0.75, ymin=q0.25), fill="pink", alpha=0.5)
-  #  p <- p + geom_line(data=dfExtreme, aes(x=Date, y=value ), color="darkgrey" , size=0.8, lty="dotted")
-  p <- p + geom_line(data = MeanValues, aes(x=Date, y=value, color=Wetterdaten) , size=1, lty=1)
+  # p <- p + geom_ribbon(data = df_ribbon_scen, aes(x=Date, ymax=q0.75, ymin=q0.25), fill="pink", alpha=0.7)
+  p <- p + geom_ribbon(data = df_ribbon_scen, aes(x=Date, ymax=q0.75, ymin=q0.25, fill="mittlere 50%  der Wetterszenarien im aktuellen Jahr"), alpha=0.7)
+  # p <- p + guides(fill=guide_legend(direction='vertical'))
+  # p <- p + geom_line(data=dfExtreme_scen, aes(x=Date, y=value ), color="darkgrey" , size=0.8, lty="dotted")
+  p <- p + geom_line(data = MeanValues, aes(x=Date, y=value),color="darkgreen" , size=1, lty=1)
+  if (IsAnyForecast) {
+    p <- p + geom_line(data = ForecastMeanData, aes(x=Date, y=value),color="red" , size=1, lty=1)
+  }
+  p <- p + geom_line(data = ScenarioMeanData, aes(x=Date, y=value),color="blue" , size=1, lty=1)
+  p <- p + guides(color=guide_legend(direction='vertical'))
   p <- p + scale_x_date(labels = date_format("%b"), date_breaks = "1 month")
-  p <- p + scale_color_manual(values = ColorStat)
-#  p <- p + new_scale_color()
-#  p <- p + geom_line(data=df_ribbon_scen, aes(x=Date, y=median), color="darkgreen", size=0.8, lty=1)
-#  p <- p + geom_line(data=dfExtreme_scen, aes(x=Date, y=value, color=stat) , size=0.8, lty="dotted")
-#  p <- p + scale_color_manual(values = SelYearColours)
+  p <- p + scale_color_manual(name="Wetterdaten im akt. Jahr", values = ColorStat)
+  p <- p + scale_fill_manual(name="",values = c( "mittlere 50%  der letzten 20 Jahre" ="lightgrey","mittlere 50%  der Wetterszenarien im aktuellen Jahr"="pink"))
+  #  p <- p + new_scale_color()
+  #  p <- p + geom_line(data=df_ribbon_scen, aes(x=Date, y=median), color="darkgreen", size=0.8, lty=1)
+  #  p <- p + geom_line(data=dfExtreme_scen, aes(x=Date, y=value, color=stat) , size=0.8, lty="dotted")
+  #  p <- p + scale_color_manual(values = SelYearColours)
   p <- p + ylab(y_label) + xlab("Monat")
   p <- p + theme_bw(base_size = BaseSize)
-  p
+  # p <- p + theme(legend.position="bottom", legend.box= "vertical", legend.margin = margin(), legend.text=element_text(size=14))
+  if (plotly == F) {
+    p <- p + theme(legend.position="bottom",
+                   legend.box="vertical",
+                   legend.box.just = "left",
+                   legend.margin=margin(),
+                   legend.text=element_text(size=12),
+                   legend.title=element_text(size=12)) }
+  if (plotly==T) {
+    p <- p + guides(color="none", fill="none")
+    p <- ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0.4, y =-0.2))
+    #    p <- p %>% add_trace()
+    # %>% layout(autosize=FALSE, width=800, height=600)
+    p$x$data <- p$x$data %>%
+      map(clean_plotly_leg, "[^\\(][^,]*") # ie remove the opening bracket,
+
+  }
   return(p)
 }
 
+Calc_Mean <- function(df,
+                      parameter,
+                      ShiftYears=F,
+                      SelYear=0,
+                      StartMonth=9,
+                      StartScenarioDate=NULL){
 
+  if (is.null(df)) {
+    stop("No data frame")
+  }
+  if (is.null(df$Time)){
+    stop("No Time column in data frame")}
+  # add date, month, day of the year and year to the data frame
+  df$Date <- as.Date(df$Time, origin = "1899-12-30")
+  df$Month <- month(df$Date)
+  df$DOY <- yday(df$Date)
+  df$Year <- year(df$Date)
+  # add parameter "SumYear", a time shifted cultivation year, starting in the autumn
+  # before the following harvest year
+  # for calculations of year summation parameters other than the calendar year
+  if (ShiftYears) {
+    df$SumYear <- ifelse(df$Month >= StartMonth, df$Year+1, df$Year)
+  }
+  else {
+    df$SumYear <- df$Year
+  }
+  # format as numeric and use actual year if nothing is selected
+  SelYear <- as.numeric(SelYear)
+  if (SelYear==0) {
+    ThisYear <- substr(as.character(Sys.Date()), 1,4)
+    SelYear <- ThisYear
+  }
+  SelYear <- as.numeric(SelYear)
+  # select and check columns
+  selcols <- c("Date", "Month", "DOY","Year", "SumYear", parameter)
+  stopifnot(parameter %in% names(df))
+  # select the columns
+  df <- as.data.frame(df)
+  df <- df[,selcols]
+  # copy the parameter to a new column
+  # reanme the parameter column to param for the ggplot function
+  df$param <- df[,parameter]
+  # same for the scenario data
+  # calculate the number of days for each year, to filter for full years
+  # especially for summed up parameters
+  tmpnDays <- aggregate(DOY ~ SumYear, data = df, FUN = length)
+  tmpnDays$nDays <- tmpnDays$DOY
+  tmpnDays$DOY <- NULL
+  df <- merge(df, tmpnDays, by="SumYear")
+  rm(tmpnDays)
+
+  # set all years to the selected year and shift back one year if the month is before the start month
+  # in order to have continuous time series for autumn sown crops
+  df$Year <- SelYear
+  if (ShiftYears) {
+    df$Year <- ifelse(df$Month >= StartMonth, df$Year-1, df$Year)
+    SelDateRange <- as.Date(paste0(as.character(SelYear-1),"-", StartMonth,"-01")):(as.Date(paste0(as.character(SelYear),"-", StartMonth,"-01"))-1)
+  } else {
+    SelDateRange <- as.Date(paste0(as.character(SelYear),"-", StartMonth,"-01")):(as.Date(paste0(as.character(SelYear+1),"-", StartMonth,"-01"))-1)
+  }
+  SelDateRange <- as.Date(SelDateRange, origin="1970-01-01")
+
+  # select the data for the selected year
+  #  df$Selected <- ifelse(df$Date %in% SelDateRange, T, F)
+
+  # recalculate the date according to the corrected year and the day of the year
+  df$Date <- as.Date(paste0(as.character(df$Year-1),"-12-31"))+df$DOY
+  # select the values
+  # filter the scenario data for the date being later or equal to the start date of the scenario
+  # calculate the min, max and median for each julian day of the year of the selected paramter
+  dfExtreme <- df%>% group_by(Date) %>%
+    summarise(max = max(param), mean=mean(param, na.rm=T), median=median(param), min=min(param))
+  return(dfExtreme)
+}
 
 
 #' makeplot2 a function to plot scenarios
