@@ -412,6 +412,14 @@ set_theme <- function(p, fontsize){
 
 
 
+#' Utility function to clean up plotly legend entries
+#'
+#' @param .plotly_x
+#' @param .extract_str
+#'
+#' @returns
+#'
+#' @examples
 clean_plotly_leg <- function(.plotly_x, .extract_str) {
   # Inpects an x$data list in a plotly object, cleans up legend values where appropriate
   if ("legendgroup" %in% names(.plotly_x)) {
