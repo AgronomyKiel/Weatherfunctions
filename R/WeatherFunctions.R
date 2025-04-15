@@ -3494,13 +3494,19 @@ InterpolateWeatherData <- function(station_selected,
     df$Year <- year(df$Date)
     df$month <- month(df$Date)
 
+    # the start day is located back one year
     if (is.null(ScenarioStartDay)) {
       ScenarioStartDay <- make_date(year= startYear-1, month=StartMonthSim, day=1)
     }
 
+    # the sequence of simulation years
     SimYears <- seq(startYear, EndYear)
 
+    # the weather data frame is filtered for the site key
     df <- df %>% filter(key==site_key) %>% as.data.frame() %>% arrange(Time)
+
+    # the weather data frame is filtered for the start day, i.e.
+    # the day when simulation scenario starts
     df <- df %>% filter(Date >= ScenarioStartDay)
 
     df$SimYear <- ifelse(df$month < StartMonthSim, df$Year, df$Year+1)
@@ -3508,9 +3514,12 @@ InterpolateWeatherData <- function(station_selected,
     lastTime <- max(df$Time)
     lastDate <- as.Date(lastTime, origin = "1899-12-30")
 
+    # the weather data from the actual simulation year are filtered
     KnownWeather <- df %>% filter(SimYear==scenYear)
 
     nyears <- length(SimYears)
+
+    # a utility function to replicate the known weather data back to the previous simulation years
     nKnownWeather <- lapply(seq_len(nyears), function(i) {
       df <- KnownWeather
       df$SimYear <- SimYears[i]
@@ -3533,7 +3542,9 @@ InterpolateWeatherData <- function(station_selected,
     AllKnownDates <- nKnownWeather$Date
     # filter the data frame for the unknown dates
     df_hist <- df %>% filter(all_of(!(Date %in% AllKnownDates))) %>% arrange(Time)
-    # shift the Date of df_hist one year forward
+    # shift the Date of df_hist one year forward as we are in the next simulation year
+    # i.e. the data frrom the previous year are used to fill up the actual year
+    # towards the end of the simulation
     df_hist$Date <- df_hist$Date + years(1)
     df_hist$SimYear <- df_hist$SimYear + 1
     # combine the known and unknown data
@@ -3541,7 +3552,7 @@ InterpolateWeatherData <- function(station_selected,
     FirstYear <- SimYears[1]
     dfscen <- dfscen[dfscen$SimYear > FirstYear,]
     dfscen$Time <- as.numeric(dfscen$Date - as.Date("1899-12-30"))
-    dfscen <- dfscen %>% arrange(Time)
+    dfscen <- dfscen %>% arrange(Time) %>% filter(!is.na(Date))
 
     return(dfscen)
   }
