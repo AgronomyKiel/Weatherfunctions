@@ -453,7 +453,7 @@ Here, the data for the most actual date(s) may be incomplete.
   
   # get the rain data for the selected stations
   
-  df_Rain <- GetRainData_selection(RainStations_selected,
+  df_Rain <- GetRainData_selection(RainStation_selected,
                                      DWDRain_content,
                                      repository=DWDRain_ftp_recent,
                                      startdate="2023-01-01") 
