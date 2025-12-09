@@ -26,14 +26,66 @@ library(purrr)
 library(ggplot2)
 library(plotly)
 
-
-
-#tools::R_user_dir("Weatherfunctions", which="data")
-## Not run:
-DataDir <- tools::R_user_dir("Weatherfunctions", which="data")
-if (!dir.exists(DataDir)) {
-  dir.create(DataDir, recursive=TRUE)
+#' Internal hook to optionally initialize the data directory when the user opts
+#' in via `options(weatherfunctions.auto_setup = TRUE)`.
+.onLoad <- function(...) {
+  if (isTRUE(getOption("weatherfunctions.auto_setup", FALSE))) {
+    weatherfunctions_data_dir(create = TRUE, ask = FALSE)
+  }
 }
+
+
+
+#' Return the Weatherfunctions data directory path and optionally create it.
+#' 
+#' The directory is not created automatically on package load to avoid CRAN
+#' side effects. Users can call this helper explicitly or opt into automatic
+#' creation by setting `options(weatherfunctions.auto_setup = TRUE)` before
+#' loading the package.
+#' @param create Logical; create the directory if it does not exist.
+#' @param ask Logical; when interactive and creation is requested, ask before
+#'   writing to the file system.
+#' @return A character string with the path used for local cache files.
+#' @export weatherfunctions_data_dir
+weatherfunctions_data_dir <- function(create = FALSE, ask = interactive()) {
+  path <- tools::R_user_dir("Weatherfunctions", which = "data")
+
+  if (create && !dir.exists(path)) {
+    if (ask && interactive()) {
+      prompt <- paste0(
+        "Weatherfunctions would like to create a data directory at \"",
+        path,
+        "\". Create it now?"
+      )
+
+      if (!isTRUE(utils::askYesNo(prompt, default = TRUE))) {
+        warning(
+          "Data directory was not created; functions that cache to disk may fail until setup is completed.",
+          call. = FALSE
+        )
+        return(path)
+      }
+    }
+
+    dir.create(path, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  path
+}
+
+#' Explicitly initialize the Weatherfunctions data directory.
+#'
+#' This is a user-facing helper to establish the cache directory in a way that
+#' avoids performing file system writes during package load. Users can call it
+#' directly (e.g., from their `.Rprofile`) or enable automatic setup via the
+#' `weatherfunctions.auto_setup` option before attaching the package.
+#' @inheritParams weatherfunctions_data_dir
+#' @export initialize_weatherfunctions_data_dir
+initialize_weatherfunctions_data_dir <- function(ask = interactive()) {
+  weatherfunctions_data_dir(create = TRUE, ask = ask)
+}
+
+DataDir <- weatherfunctions_data_dir(create = FALSE)
 
 
 
