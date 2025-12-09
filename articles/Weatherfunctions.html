@@ -350,7 +350,7 @@ used.</p>
 <span></span>
 <span><span class="va">fn_histDWD_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">fn_histDWD_data_str</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fl">1990</span><span class="op">)</span>,<span class="st">".fst"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://here.r-lib.org//reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="va">Local_R_DWD</span>, <span class="va">fn_histDWD_data</span><span class="op">)</span></span>
+<span><span class="va">fn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://here.r-lib.org/reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="va">Local_R_DWD</span>, <span class="va">fn_histDWD_data</span><span class="op">)</span></span>
 <span><span class="va">weather_historic</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://www.fstpackage.org/reference/write_fst.html" class="external-link">read.fst</a></span><span class="op">(</span>path <span class="op">=</span> <span class="va">fn</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># select the columns that are in the core, i.e. essential data set and rename them</span></span>
@@ -381,7 +381,7 @@ used.</p>
 <span></span>
 <span></span>
 <span><span class="va">fn_recentDWD_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"recent_weather_dat_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fl">1990</span><span class="op">)</span>,<span class="st">".fst"</span><span class="op">)</span></span>
-<span><span class="va">weather_recent</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://www.fstpackage.org/reference/write_fst.html" class="external-link">read.fst</a></span><span class="op">(</span>path <span class="op">=</span> <span class="fu"><a href="https://here.r-lib.org//reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="va">Local_R_DWD</span>, <span class="va">fn_recentDWD_data</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">weather_recent</span> <span class="op">&lt;-</span> <span class="fu"><a href="http://www.fstpackage.org/reference/write_fst.html" class="external-link">read.fst</a></span><span class="op">(</span>path <span class="op">=</span> <span class="fu"><a href="https://here.r-lib.org/reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="va">Local_R_DWD</span>, <span class="va">fn_recentDWD_data</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">weather_recent</span>  <span class="op">&lt;-</span> <span class="va">weather_recent</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Stations_id"</span>,<span class="st">"Date"</span>,<span class="va">longNames_DWD_core</span><span class="op">)</span><span class="op">]</span> </span>
 <span></span>
 <span><span class="co"># set the location of the station  </span></span>
@@ -569,7 +569,7 @@ r as.Date(max(DWDdata$</span>Time),origin = “1899-12-30” ).</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
