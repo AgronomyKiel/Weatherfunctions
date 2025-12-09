@@ -99,7 +99,8 @@ DWDRain_content <- getDWDRainStationList(recent = DWDRain_ftp_recent, historical
 
 outputDir <- Local_R_DWD 
 if (!dir.exists(outputDir)) {dir.create(outputDir, recursive = T)}
-fn <- paste0(outputDir, fn_DWDRain_content)
+#fn <- paste0(outputDir, fn_DWDRain_content)
+fn <- here(outputDir, fn_DWDRain_content)
 save(DWDRain_content, file = fn)
 nHistoricalStationlist <- nrow(DWDRain_content$historical$stationlist)
 nRecentStationlist <- nrow(DWDRain_content$recent$stationlist)

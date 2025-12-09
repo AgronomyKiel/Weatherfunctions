@@ -25,6 +25,7 @@ library(ggnewscale)
 library(purrr)
 library(ggplot2)
 library(plotly)
+library(scales)
 
 
 
@@ -607,7 +608,7 @@ makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
   p <- p + geom_line(data=dfExtreme, aes(x=Date, y=value, color=stat) , size=0.8, lty="dotted")
   p <- p + scale_color_discrete(name= "historische Wetterdaten")
   p <- p + guides(color=guide_legend(direction='vertical'))
-  p <- p + scale_x_date(labels = date_format("%b"), date_breaks = "1 month")
+  p <- p + scale_x_date(labels = label_date("%b"), date_breaks = "1 month")
   #  p <- p + structure(ggplot2::standardise_aes_names("colour"), class = "new_aes")
   #  p <- p + new_scale_color()
   #  browser()
@@ -912,7 +913,7 @@ makeScenarioplot <- function(df_hist,
   }
   p <- p + geom_line(data = ScenarioMeanData, aes(x=Date, y=value),color="blue" , size=1, lty=1)
   p <- p + guides(color=guide_legend(direction='vertical'))
-  p <- p + scale_x_date(labels = date_format("%b"), date_breaks = "1 month")
+  p <- p + scale_x_date(labels = label_date("%b"), date_breaks = "1 month")
   p <- p + scale_color_manual(name="Wetterdaten im akt. Jahr", values = ColorStat)
   p <- p + scale_fill_manual(name="",values = c( "mittlere 50%  der letzten 20 Jahre" ="lightgrey","mittlere 50%  der Wetterszenarien im aktuellen Jahr"="pink"))
   #  p <- p + new_scale_color()
@@ -1123,7 +1124,7 @@ makeplot2 <- function(dfhist, dfscen, parameter, BaseSize=18, ylabel="", SelYear
 #  p <- p + geom_line(data=df_LTscen, aes(x=Date, y=min), color="red", size=0.5, lty=1)
 #  p <- p + geom_line(data=df_LTscen, aes(x=Date, y=q0.5), color="red", size=1, lty=1)
   p <- p + geom_line(data=df_LTscen, aes(x=Date, y=mean), color="red", size=1, lty=1)
-  p <- p + scale_x_date(labels = date_format("%b"), date_breaks = "1 month")
+  p <- p + scale_x_date(labels = label_date("%b"), date_breaks = "1 month")
   p <- p + ylab(y_label)
   p <- p + theme_bw(base_size = BaseSize)
   p
@@ -1217,7 +1218,7 @@ makeplot3 <- function(dfweather, parameter, BaseSize=18, ylabel="", xlabel="Datu
   #  p <- p + geom_smooth(data=dfExtreme_l, aes(x=Date, y=value, lty = stat), color="red", size=1.2, se = F,
   #                       method = "loess", span = 0.5)
   p <- p + geom_line(data=SelYearValues, aes(x=Date, y=param), color="red", size=1)
-  p <- p + scale_x_date(labels = date_format("%b"), date_breaks = "1 month")
+  p <- p + scale_x_date(labels = label_date("%b"), date_breaks = "1 month")
   p <- p + ylab(y_label) + xlab(xlabel)
   #  p <- p + scale_color_identity(guide = "legend")
   p <- p + scale_linetype_manual(values = Myltys)
