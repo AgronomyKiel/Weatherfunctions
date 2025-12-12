@@ -77,6 +77,9 @@
   : dens_air function for calculating air density \[Kg/m3\]
 - [`displacement_height()`](https://agronomykiel.github.io/Weatherfunctions/reference/displacement_height.md)
   : Function displacement_height (zero plane displacement height)
+- [`.onLoad()`](https://agronomykiel.github.io/Weatherfunctions/reference/dot-onLoad.md)
+  : Internal hook to optionally initialize the data directory when the
+  user opts in via \`options(weatherfunctions.auto_setup = TRUE)\`.
 - [`estSg_S0()`](https://agronomykiel.github.io/Weatherfunctions/reference/estSg_S0.md)
   : estSg_S0: calculation of daily solar radiation from relative
   sunshine
@@ -109,6 +112,8 @@
   : getsingleDWDRain loads rainfall data for a single weather station
 - [`getsingleDWDWeather()`](https://agronomykiel.github.io/Weatherfunctions/reference/getsingleDWDWeather.md)
   : Title getsingleDWDWeather loads data for a single weather station
+- [`initialize_weatherfunctions_data_dir()`](https://agronomykiel.github.io/Weatherfunctions/reference/initialize_weatherfunctions_data_dir.md)
+  : Explicitly initialize the Weatherfunctions data directory.
 - [`makeScenarioplot()`](https://agronomykiel.github.io/Weatherfunctions/reference/makeScenarioplot.md)
   : makeScenarioplot makes time series plots from a data frame with Time
   in the first column as Excel date and the parameter to be plotted in
@@ -148,8 +153,15 @@
   potential according to Neukam et al. (2018)
 - [`sat_vap_press_f()`](https://agronomykiel.github.io/Weatherfunctions/reference/sat_vap_press_f.md)
   : Title sat_vap_press_f
+- [`set_theme()`](https://agronomykiel.github.io/Weatherfunctions/reference/set_theme.md)
+  : Title
+- [`setplotbackground()`](https://agronomykiel.github.io/Weatherfunctions/reference/setplotbackground.md)
+  : Title
 - [`transWindSpeed()`](https://agronomykiel.github.io/Weatherfunctions/reference/transWindSpeed.md)
   : transWindSpeed corrects the wind speed for the required height
   considering the measurement height
+- [`weatherfunctions_data_dir()`](https://agronomykiel.github.io/Weatherfunctions/reference/weatherfunctions_data_dir.md)
+  : Return the Weatherfunctions data directory path and optionally
+  create it.
 - [`windheight()`](https://agronomykiel.github.io/Weatherfunctions/reference/windheight.md)
   : Alternative function for correction of windspeed to reference height

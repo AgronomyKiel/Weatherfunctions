@@ -30,6 +30,7 @@
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/SelectStationsByDataAvailability.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/TmaxCanopy.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/UpdateDWDData_to_fst.html</loc></url>
+<url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/Weatherfunctions-package.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/WriteHumeWeatherFile.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/abr.names.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/air_saturation_deficit.html</loc></url>
@@ -38,6 +39,7 @@
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/delta_f.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/dens_air.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/displacement_height.html</loc></url>
+<url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/dot-onLoad.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/estSg_S0.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/getDWDContent.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/getDWDRainContent.html</loc></url>
@@ -50,6 +52,7 @@
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/getsingleDWDRain.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/getsingleDWDWeather.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/index.html</loc></url>
+<url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/initialize_weatherfunctions_data_dir.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/makeScenarioplot.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/makeplot.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/makeplot2.html</loc></url>
@@ -64,7 +67,10 @@
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/rs_VPD_psi_r_f.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/rs_f.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/sat_vap_press_f.html</loc></url>
+<url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/set_theme.html</loc></url>
+<url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/setplotbackground.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/transWindSpeed.html</loc></url>
+<url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/weatherfunctions_data_dir.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/windheight.html</loc></url>
 </urlset>
 

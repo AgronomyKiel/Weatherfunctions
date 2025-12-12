@@ -27,3 +27,10 @@ solar radiation per day \[MJ/m2/d\]
 function for calculation of daily solar radiation from relative sunshine
 hours \#### the function uses an empirical model calibrated from DWD
 data "mod.Angstroem"
+
+## Examples
+
+``` r
+estSg_S0(0.8, 6)
+#> Error in estSg_S0(0.8, 6): could not find function "estSg_S0"
+```

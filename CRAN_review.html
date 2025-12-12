@@ -36,7 +36,7 @@
 <div class="section level2">
 <h2 id="critical-issues">Critical issues<a class="anchor" aria-label="anchor" href="#critical-issues"></a></h2>
 <ul><li>
-<strong>Package load side effects.</strong> Directory creation has been moved behind <code>weatherfunctions_data_dir()</code> with an opt-in <code>.onLoad</code> hook controlled by <code>options(weatherfunctions.auto_setup = TRUE)</code>, which aligns with CRAN guidance against unprompted file-system writes during package attach. Ensure the option remains opt-in and avoid other load-time side effects. 【F:R/WeatherFunctions.R†L29-L88】</li>
+<strong>Package load side effects.</strong> Directory creation has been moved behind <code><a href="reference/weatherfunctions_data_dir.html">weatherfunctions_data_dir()</a></code> with an opt-in <code>.onLoad</code> hook controlled by <code>options(weatherfunctions.auto_setup = TRUE)</code>, which aligns with CRAN guidance against unprompted file-system writes during package attach. Ensure the option remains opt-in and avoid other load-time side effects. 【F:R/WeatherFunctions.R†L29-L88】</li>
 <li>
 <strong>Unscoped <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> calls in code.</strong> Multiple <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> calls appear at the top of the file; in packages these should be declared in <code>DESCRIPTION</code>/<code>NAMESPACE</code> and functions should use <code>pkg::fun</code> or roxygen <code>@import</code> statements rather than calling <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> during load, which CRAN discourages. Consider replacing with namespace-qualified calls and imports. 【F:R/WeatherFunctions.R†L10-L27】</li>
 </ul></div>
@@ -44,7 +44,7 @@
 <h2 id="suggested-fixes">Suggested fixes<a class="anchor" aria-label="anchor" href="#suggested-fixes"></a></h2>
 <ul><li>Wrap directory initialization in a dedicated helper (e.g., <code>ensure_data_dir()</code>) that callers invoke explicitly, and avoid performing file system writes during package attachment.</li>
 <li>Replace top-level <code><a href="https://rdrr.io/r/base/library.html" class="external-link">library()</a></code> statements with roxygen <code>@import</code> tags or explicit namespace references to align with CRAN policies and reduce unexpected side effects on attach.</li>
-<li>To keep <code>DataDir</code> widely available while staying CRAN-compatible, expose a user-facing initializer (for example, <code>initialize_weatherfunctions_data_dir()</code>) that sets up the cache on demand, and gate any automatic setup behind an opt-in option (e.g., <code>options(weatherfunctions.auto_setup = TRUE)</code> inside <code>.Rprofile</code>) so the package never writes to disk on load without consent. 【F:R/WeatherFunctions.R†L29-L62】【F:R/WeatherFunctions.R†L1-L27】</li>
+<li>To keep <code>DataDir</code> widely available while staying CRAN-compatible, expose a user-facing initializer (for example, <code><a href="reference/initialize_weatherfunctions_data_dir.html">initialize_weatherfunctions_data_dir()</a></code>) that sets up the cache on demand, and gate any automatic setup behind an opt-in option (e.g., <code>options(weatherfunctions.auto_setup = TRUE)</code> inside <code>.Rprofile</code>) so the package never writes to disk on load without consent. 【F:R/WeatherFunctions.R†L29-L62】【F:R/WeatherFunctions.R†L1-L27】</li>
 </ul></div>
 </div>
 
