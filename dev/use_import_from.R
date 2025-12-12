@@ -1,0 +1,20 @@
+# Helper script to register external function imports with usethis.
+# Run this script from the project root to update NAMESPACE imports.
+
+usethis::use_import_from("tools", "R_user_dir")
+usethis::use_import_from("utils", "askYesNo")
+usethis::use_import_from("stringr", "str_extract")
+usethis::use_import_from("dplyr", "select")
+usethis::use_import_from("dplyr", "rename")
+usethis::use_import_from("dplyr", "bind_rows")
+usethis::use_import_from("dplyr", "group_by")
+usethis::use_import_from("dplyr", "summarise")
+usethis::use_import_from("purrr", "map")
+usethis::use_import_from("stats", "loess")
+usethis::use_import_from("stats", "predict")
+usethis::use_import_from("ggplot2", "standardise_aes_names")
+usethis::use_import_from("readr", "read_delim")
+usethis::use_import_from("httr", "user_agent")
+usethis::use_import_from("data.table", "rbindlist")
+usethis::use_import_from("data.table", "melt")
+usethis::use_import_from("reshape2", "melt")
