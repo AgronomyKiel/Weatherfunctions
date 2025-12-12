@@ -27,3 +27,6 @@ recent or historical weather data. The data are retrieved in the DWD format.
 The measurement height for wind speed is taken from the meta data of the station and
 added to the data frame and wind speed is corrected to a standard height of 10 m.
 }
+\examples{
+getsingleDWDWeather("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
+}

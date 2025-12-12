@@ -23,7 +23,7 @@ library(here)
 library(zoo)
 library(ggnewscale)
 library(purrr)
-library(ggplot2)
+#library(ggplot2)
 library(plotly)
 library(scales)
 
@@ -38,7 +38,7 @@ library(scales)
 
 
 #' Return the Weatherfunctions data directory path and optionally create it.
-#' 
+#'
 #' The directory is not created automatically on package load to avoid CRAN
 #' side effects. Users can call this helper explicitly or opt into automatic
 #' creation by setting `options(weatherfunctions.auto_setup = TRUE)` before
@@ -120,7 +120,8 @@ DWDRain_ftp_recent <- "ftp://opendata.dwd.de/climate_environment/CDC/observation
 # some constants
 #' @export l_h_v_water
 l_h_v_water <- 2.477 * 1E6 # latent evaporation energy of  water at  10 °C in [J/Kg] }
-#' @export
+
+#' @export Psycro
 Psycro      <- 0.000662    # Psychrometric "constant" [1/°K] }
 
 #' @export Karman_const
@@ -422,20 +423,40 @@ ReplaceProblemChars <- function(InputString=NULL) {
 
 # Graphic routines ----------------------------------------------------------------
 
+#' Title
+#'
+#' @param plot a plot to be customized
+#' @param BaseSize the base font size
+#'
+#' @returns a plot with customized design and an adjusted font size
+#' @export
+#' @import ggplot2
+#'
+#' @examples  setplotbackground(p, BaseSize=18)
 setplotbackground <-  function (plot, BaseSize=18){
   #  plot <- plot +  scale_colour_brewer(palette="Set1")
-  plot <- plot + theme_bw(base_size = BaseSize)
-  plot <- plot + theme(plot.background = element_rect(fill = NULL,colour = NA))
-  plot <- plot + theme(axis.line = element_line(size = 1, linetype = "solid", color="black"))
-  plot <- plot + theme(axis.ticks.length = unit(.15, "cm"))
-  plot <- plot + theme(axis.ticks = element_line(colour = 'black', size = 1, linetype = 'solid'))
-  plot <- plot + theme(axis.text=element_text(colour="black"))
-  plot <- plot + theme(panel.border = element_rect(size=1.5, fill=NA, color="black"))
-  plot <- plot + theme(panel.background = element_rect(fill = NULL,colour = NA))
-#  plot <- plot + theme(plot.background = element_rect(fill = "transparent"))
-  plot <- plot + theme(legend.background = element_blank())
+  plot <- plot + ggplot2::theme_bw(base_size = BaseSize)
+  plot <- plot + ggplot2::theme(plot.background = element_rect(fill = NULL,colour = NA))
+  plot <- plot + ggplot2::theme(axis.line = element_line(size = 1, linetype = "solid", color="black"))
+  plot <- plot + ggplot2::theme(axis.ticks.length = unit(.15, "cm"))
+  plot <- plot + ggplot2::theme(axis.ticks = element_line(colour = 'black', size = 1, linetype = 'solid'))
+  plot <- plot + ggplot2::theme(axis.text=element_text(colour="black"))
+  plot <- plot + ggplot2::theme(panel.border = element_rect(size=1.5, fill=NA, color="black"))
+  plot <- plot + ggplot2::theme(panel.background = element_rect(fill = NULL,colour = NA))
+#  plot <- plot + ggplot2::theme(plot.background = element_rect(fill = "transparent"))
+  plot <- plot + ggplot2::theme(legend.background = element_blank())
 }
 
+#' Title
+#'
+#' @param p a plot to be customized
+#' @param fontsize the basic font size
+#'
+#' @returns a plot with customized design and an adusted font size
+#' @export
+#' @import ggplot2
+#'
+#' @examples set_theme(p, fontsize=18)
 set_theme <- function(p, fontsize){
 #  p <- p + theme_bw(base_family = FontFamilie)
   p <- p + theme(text = element_text(size=fontsize))
@@ -471,6 +492,7 @@ set_theme <- function(p, fontsize){
 #' @param .extract_str
 #'
 #' @returns
+#' @import plotly
 #'
 #' @examples
 clean_plotly_leg <- function(.plotly_x, .extract_str) {
@@ -503,6 +525,8 @@ clean_plotly_leg <- function(.plotly_x, .extract_str) {
 #'
 #' @return A ggplot object
 #' @export
+#' @import ggplot2
+#' @import tidyr
 #'
 #' @examples
 makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
@@ -1330,7 +1354,7 @@ calcsolar <- function (dayofyear, latitude)
 #' @return solar radiation per day [MJ/m2/d]
 #' @details function for calculation of daily solar radiation from relative sunshine hours ####
 #' the function uses an empirical model calibrated from DWD data "mod.Angstroem"
-# @examples estSg_S0(0.8, 6)
+#' @examples estSg_S0(0.8, 6)
 estSg_S0 <- function (RelSun, Month)
 {
   if (is.numeric(Month)){Month <- as.integer(Month)}
