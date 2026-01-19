@@ -19,7 +19,6 @@ library(dplyr)
 library(tidyr)
 library(httr)
 library(stringr)
-library(here)
 library(zoo)
 library(ggnewscale)
 library(purrr)
@@ -585,7 +584,7 @@ makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
 
   # calculate the number of days for each year, to filter for full years
   # especially for summed up parameters
-  tmpnDays <- aggregate(DOY ~ SumYear, data = df, FUN = length)
+  tmpnDays <- stats::aggregate(DOY ~ SumYear, data = df, FUN = length)
   tmpnDays$nDays <- tmpnDays$DOY
   tmpnDays$DOY <- NULL
   df <- merge(df, tmpnDays, by="SumYear")
@@ -618,10 +617,10 @@ makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
 
   # calculate the min, max and median for each julian day of the year of the selected paramter
   dfExtreme <- df  %>% filter(nDays >=364) %>% group_by(Date) %>%  #DN statt 365
-    summarise(max = max(param), median=median(param), min=min(param))
+    dplyr::summarise(max = max(param), median=median(param), min=min(param))
 
   # combine both data frames for parameter statistics
-  df_stat <- left_join(x = df_LT, y = dfExtreme, by="Date")
+  df_stat <- dplyr::left_join(x = df_LT, y = dfExtreme, by="Date")
   # copy back to df_LT
   df_LT <- df_stat
 
@@ -873,7 +872,7 @@ makeScenarioplot <- function(df_hist,
     summarise(max = max(param), median=median(param), min=min(param))
 
   # combine both data frames for parameter statistics
-  df_stat <- left_join(x = df_LT, y = dfExtreme, by="Date")
+  df_stat <- dplyr::left_join(x = df_LT, y = dfExtreme, by="Date")
 
   # copy back to df_LT
   df_LT <- df_stat
@@ -931,7 +930,7 @@ makeScenarioplot <- function(df_hist,
     summarise(max = max(param), median=median(param), min=min(param))
 
   # combine both data frames for parameter statistics
-  df_stat_scen <- left_join(x = df_LT_scen, y = dfExtreme_scen, by="Date")
+  df_stat_scen <- dplyr::left_join(x = df_LT_scen, y = dfExtreme_scen, by="Date")
   # copy back to df_LT
   df_LT_scen <- df_stat_scen
 
@@ -1132,7 +1131,7 @@ makeplot2 <- function(dfhist, dfscen, parameter, BaseSize=18, ylabel="", SelYear
     summarise(max = max(param), min=min(param), mean=mean(param, na.rm=T))
 
   # join the extreme values to the statistics
-  df_LT <- left_join(x = df_LT, y = dfExtreme, by="DOY")
+  df_LT <- dplyr::left_join(x = df_LT, y = dfExtreme, by="DOY")
   rm(dfExtreme)
   # create a new column with the date
   df_LT$Date <- as.Date("2022-12-31")+df_LT$DOY
@@ -1155,7 +1154,7 @@ makeplot2 <- function(dfhist, dfscen, parameter, BaseSize=18, ylabel="", SelYear
   dfExtremeScen <- dfscen %>% group_by(DOY) %>%
     summarise(max = max(param), min=min(param), mean=mean(param, na.rm=T))
 
-  df_LTscen <- left_join(x = df_LTscen, y = dfExtremeScen, by="DOY")
+  df_LTscen <- dplyr::left_join(x = df_LTscen, y = dfExtremeScen, by="DOY")
   rm(dfExtremeScen)
   df_LTscen$Date <- as.Date("2022-12-31")+df_LTscen$DOY
   df_LTscen$Date <- ifelse(df_LTscen$Date > as.Date("2023-08-31"),
@@ -1253,7 +1252,7 @@ makeplot3 <- function(dfweather, parameter, BaseSize=18, ylabel="", xlabel="Datu
   dfExtreme <- dfweather %>% group_by(DOY) %>%
     summarise(median=median(param), max = max(param), min=min(param))
 
-  df_stat <- left_join(x = df_LT, y = dfExtreme, by="DOY")
+  df_stat <- dplyr::left_join(x = df_LT, y = dfExtreme, by="DOY")
   dfExtreme <- dfExtreme %>% dplyr::select(-median) %>% pivot_longer(cols = c("max", "min"), names_to = "stat", values_to = "value")
   df_l <- df_stat %>% pivot_longer(cols = c("median", "max", "min", "q0.25","q0.75" ), names_to = "stat", values_to = "value")
   df_l <- df_l %>% mutate(lty=ifelse(stat%in% c("min","max"), 2, 1))
@@ -1702,8 +1701,6 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 #' ziplist: names of the zip files in the repository
 #' zipID: 5 digit ZipIDs
 #' @export
-#' @import dplyr
-#' @import stringi
 #'
 # @examples getDWDStationList("ftp://ftp-cdc.dwd.de/pub/CDC/observations_germany/climate/daily/kl/recent/",
 getDWDStationList <- function(historical, recent){
@@ -2140,7 +2137,7 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
 
   # retrieve stations_id from filename
   df$Stations_id <- sprintf("%05i", type.convert(df$Stations_id, dec = ".", as.is="T"))
-  df <- df %>% left_join( stationlist, by = "Stations_id")
+  df <- df %>% dplyr::left_join( stationlist, by = "Stations_id")
   class(df) <- class(as.data.frame(df))
 
   # remove rows with missing geoBreite which is a necessary information. This is a dirty patch and the basic reasons should be tackled.
@@ -2275,7 +2272,7 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
   # add measurement height for wind speed to the data frame
   if (!is.null(df_mHeight)){
     DWDWeather$MHoeheWind <- NULL
-    DWDWeather <- DWDWeather %>% left_join(x = DWDWeather, y = df_mHeight, by="Date")
+    DWDWeather <- DWDWeather %>% dplyr::left_join(x = DWDWeather, y = df_mHeight, by="Date")
 
     # correct for measurement heigts different to 10m
     DWDWeather$FM <-  windheight( ui = DWDWeather$FM, zi =  DWDWeather$MHoeheWind, zo = 10)
@@ -2497,7 +2494,7 @@ DWDisMeasured <- function  (df, Maxpct_miss = 0.3){
   df <- df %>% select(all_of(selvars))
   dfl <- df %>% pivot_longer(cols = -Stations_id, names_to = "variable", values_to = "value")
   df_missing <- dfl %>% group_by(Stations_id, variable) %>%
-    summarise(n_miss = sum(is.na(value)), n=n(), pct_miss = n_miss/n*100) %>%
+    dplyr::summarise(n_miss = sum(is.na(value)), n=n(), pct_miss = n_miss/n*100) %>%
      mutate(IsMeasured = ifelse(pct_miss < Maxpct_miss, TRUE, FALSE))
 }
 
@@ -2735,7 +2732,7 @@ GetWeatherData_selection <- function(stations_selected,
   # rename columns
   weatherdata <- RenameDWDWeather(weatherdata)
   # add station info
-  weatherdata <- weatherdata %>% left_join( stations_selected, by = "Stations_id")
+  weatherdata <- weatherdata %>% dplyr::left_join( stations_selected, by = "Stations_id")
   # add radiation data
   weatherdata <- getRadWeather(weatherdata)
   stations_selected$Distance_km <- stations_selected$Distance_m / 1000
@@ -2801,7 +2798,7 @@ GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, reposi
   weather_recent <- as.data.frame(weather_recent)
   weather_recent <- weather_recent %>% filter(Date >= as.Date(startdate))
   weather_recent <- RenameDWDWeather(weather_recent)
-  weather_recent <- weather_recent %>% left_join( stations_selected, by = "Stations_id")
+  weather_recent <- weather_recent %>% dplyr::left_join( stations_selected, by = "Stations_id")
   weather_recent <- getRadWeather(weather_recent)
 
 # corrections of wind speed now done in getsingleDWDWeather
@@ -2897,7 +2894,7 @@ GetRainData_selection <- function(stations_selected,
   raindata$Monat <- month(raindata$Date)
   raindata$ExcelTime <- as.integer(difftime(raindata$Date, as.Date("1899-12-30")))
   # add station info
-  raindata <- raindata %>% left_join( stations_selected, by = "Stations_id")
+  raindata <- raindata %>% dplyr::left_join( stations_selected, by = "Stations_id")
   # add radiation data
   raindata <- merge(x = raindata, y = stations_selected[,c("Stations_id", "Distance_m", "Distance_km", "Height.Distance_m")], by="Stations_id")
   ## add additional time indicators, remove Values older than start date
@@ -3160,7 +3157,7 @@ InterpolateWeatherData <- function(station_selected,
 
   # new code has been added at the end of the function
   # add monthly mean values to long weather data
-#  Weatherl <- Weatherl %>% left_join(x=Weatherl, y=MonthlyMeanRegionalWeather_l, by=c("variable", "Jahr", "Monat"))
+#  Weatherl <- Weatherl %>% dplyr::left_join(x=Weatherl, y=MonthlyMeanRegionalWeather_l, by=c("variable", "Jahr", "Monat"))
 
   # replace missing values with mean regional values
 #  Weatherl$Value <- ifelse(is.na(Weatherl$checkedValue), Weatherl$MonthmeanRegionValue, Weatherl$Value)
@@ -3174,7 +3171,7 @@ InterpolateWeatherData <- function(station_selected,
 
   # merge weather data with station data
 #  wetter_long <-  merge(x = wetter_long, y = station_selected[,c("Stationsname", "Distance_m")], by="Stationsname", all.x=T)
-   wetter_long <-  left_join(x = wetter_long, y = station_selected[,c("Stations_id", "Distance_m")], by="Stations_id")
+   wetter_long <-  dplyr::left_join(x = wetter_long, y = station_selected[,c("Stations_id", "Distance_m")], by="Stations_id")
 
   # select rain observations of nearest weather station
   Raindata <- wetter_long %>% filter(variable == "NIEDERSCHLAGSHOEHE", !is.na(Value)) %>% dplyr::select(Stationsname, Date, variable, Value, Distance_m) %>%
@@ -3260,7 +3257,7 @@ InterpolateWeatherData <- function(station_selected,
     }
 
    df_DWD_core <- merge(x = df_DWD_core, y = stationlist[,c("Stations_id", "Distance_km", "Stationshoehe")], by = "Stations_id")
-#    df_DWD_core <- left_join(x = df_DWD_core,
+#    df_DWD_core <- dplyr::left_join(x = df_DWD_core,
 #                         y = stationlist[,c("Stations_id", "Distance_km", "Stationshoehe")], by = "Stations_id")
     # set to data table format to increase speed
 
@@ -3451,7 +3448,7 @@ InterpolateWeatherData <- function(station_selected,
         # add the distance to the rain station to the data frame
       df_Rain <- RenameDWDRain(df_Rain)
 
-      df_Rain <- left_join(x=df_Rain, y=RainStation_selected[,c("Stations_id", "Distance_km")], by="Stations_id")
+      df_Rain <- dplyr::left_join(x=df_Rain, y=RainStation_selected[,c("Stations_id", "Distance_km")], by="Stations_id")
 #      df_Rain$Distance_km <- RainStation_selected$Distance_km
 
       #
@@ -3706,7 +3703,7 @@ GetForecastDataForStationList <- function(fn) {
                 Wind = mean(hourly_wind_speed_10m, na.rm = T),
                 LF = mean(hourly_relative_humidity_2m, na.rm = T))
 
-    daily_forecast <- left_join(daily_forecast, tmp, by = "date")
+    daily_forecast <- dplyr::left_join(daily_forecast, tmp, by = "date")
     #  daily_forecast$Time <-  as.numeric(daily_forecast$date-as.Date("1899-12-30"))
     daily_forecast <- daily_forecast %>% mutate(Date = as.Date(date), Time=as.numeric(Date-as.Date("1899-12-30"))) %>% dplyr::select(-date)
     daily_forecast <- daily_forecast %>% dplyr::rename(TMPMX = daily_temperature_2m_max, TMPMN=daily_temperature_2m_min, Rain=daily_precipitation_sum, GlobRad = daily_shortwave_radiation_sum)

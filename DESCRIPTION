@@ -13,14 +13,14 @@ Description: Package for downloading weather data from DWD and some other calcul
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Suggests: 
     knitr,
     rmarkdown
 VignetteBuilder: knitr
 Imports:
     curl,
-    data.table (>= 1.9.8),
+    data.table,
     dplyr,
     fst,
     ggplot2,
@@ -30,7 +30,7 @@ Imports:
     here,
     httr,
     purrr,
-    RCurl (>= 1.0.0),
+    RCurl,
     scales,
     sf,
     stringi,
@@ -39,7 +39,11 @@ Imports:
     zoo,
     plotly,
     tools,
-    utils
+    utils,
+    stats,
+    readr,
+    reshape2,
+    magrittr
 Depends: 
     R (>= 2.10)
 URL: https://agronomykiel.github.io/Weatherfunctions/
