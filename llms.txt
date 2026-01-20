@@ -517,6 +517,8 @@ summary(DWDdata)
   : ra_f function for calculating aerodynamic resistance
 - [`rc_f()`](https://agronomykiel.github.io/Weatherfunctions/reference/rc_f.md)
   : Title rc_f
+- [`rc_f_vectorized()`](https://agronomykiel.github.io/Weatherfunctions/reference/rc_f_vectorized.md)
+  : Title
 - [`render_Wetter_Analysis()`](https://agronomykiel.github.io/Weatherfunctions/reference/render_Wetter_Analysis.md)
   : render_Wetter_Analysis
 - [`render_Wetter_Import()`](https://agronomykiel.github.io/Weatherfunctions/reference/render_Wetter_Import.md)
