@@ -323,6 +323,15 @@ rc_f <- function (rc0, LAI){
 
 
 
+#' Title
+#'
+#' @param rc0 canopy resistance under well watered condition [s/m]
+#' @param LAI leaf area index [-]
+#'
+#' @returns canopy resistance rc_f_vectorized [s/m]
+#' @export
+#'
+#' @examples
 rc_f_vectorized <- function (rc0, LAI){
 
   # lengthen rc0 to length of LAI
