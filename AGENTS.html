@@ -35,26 +35,104 @@
 
 <div class="section level2">
 <h2 id="project-overview">Project Overview<a class="anchor" aria-label="anchor" href="#project-overview"></a></h2>
-<p>This is an R project dedicated to download weather data from the ftp repository of the german weather service.</p>
+<p>Weatherfunctions is an R package for downloading daily weather and precipitation data from the German Weather Service (DWD), selecting nearby stations, interpolating station observations to locations, and calculating derived variables such as radiation, evapotranspiration, and canopy temperature.</p>
+<p>Treat this repository as an R package. Package metadata and dependencies live in <code>DESCRIPTION</code>; exports and imports are represented in <code>NAMESPACE</code> and are primarily generated from roxygen2 comments in <code>R/</code>.</p>
+<p>Some workflows contact DWD or other remote services and can download substantial data. Do not run network-dependent examples or bulk-download functions unless the task requires it and the user has agreed to the network and storage cost.</p>
 </div>
 <div class="section level2">
 <h2 id="repo-map">Repo Map<a class="anchor" aria-label="anchor" href="#repo-map"></a></h2>
+<ul><li>
+<code>R/WeatherFunctions.R</code>: core DWD download, station selection, interpolation, plotting, cache-directory, and forecast functions. This is a large central source file; keep edits narrowly scoped.</li>
+<li>
+<code>R/EvapFuncs.R</code>: evapotranspiration, radiation, aerodynamic resistance, canopy resistance, and related calculations.</li>
+<li>
+<code>R/RenderImportFunctions.R</code>: helpers that render weather import and analysis reports.</li>
+<li>
+<code>R/Weatherfunctions-package.R</code>: package-level roxygen2 import declarations.</li>
+<li>
+<code>man/</code>: generated Rd reference documentation.</li>
+<li>
+<code>vignettes/Weatherfunctions.Rmd</code>: package vignette.</li>
+<li>
+<code>README.Rmd</code>: source for <code>README.md</code>; edit the Rmd, not the generated Markdown file.</li>
+<li>
+<code>dev/</code>: development helpers, not installed package code.</li>
+<li>
+<code>docs/</code>, <code>doc/</code>, and <code>Meta/</code>: generated build/site artifacts and ignored local output.</li>
+<li>
+<code>.github/workflows/pkgdown.yaml</code>: pkgdown site build and deployment workflow.</li>
+<li>
+<code>CRAN_review.md</code>: known CRAN-check observations and review notes.</li>
+</ul><p>There is currently no committed <code>tests/testthat/</code> suite. Do not imply that automated unit tests exist; add focused tests when introducing logic that can be tested without remote services.</p>
 </div>
 <div class="section level2">
 <h2 id="build-and-verification">Build And Verification<a class="anchor" aria-label="anchor" href="#build-and-verification"></a></h2>
+<p>Run commands from the repository root. Prefer the narrowest useful verification first.</p>
+<ol style="list-style-type: decimal"><li>
+<p>Parse changed R source files:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>Rscript <span class="op">-</span>e <span class="st">"files &lt;- c('R/WeatherFunctions.R'); invisible(lapply(files, parse)); cat('Parse OK\n')"</span></span></code></pre></div>
+<p>Adjust <code>files</code> to cover every changed R file.</p>
+</li>
+<li>
+<p>Regenerate roxygen2 output after changing exported functions, signatures, documentation, imports, or package-level declarations:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>Rscript <span class="op">-</span>e <span class="st">"roxygen2::roxygenise()"</span></span></code></pre></div>
+</li>
+<li>
+<p>Run a package check when dependencies are installed:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>Rscript <span class="op">-</span>e <span class="st">"devtools::check(document = FALSE)"</span></span></code></pre></div>
+<p>An equivalent base workflow is <code>R CMD build .</code> followed by <code>R CMD check &lt;tarball&gt;</code>. Keep generated tarballs and check directories out of commits.</p>
+</li>
+<li>
+<p>If <code>README.Rmd</code> changes, regenerate its derived file:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode powershell"><code class="sourceCode powershell"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>Rscript <span class="op">-</span>e <span class="st">"rmarkdown::render('README.Rmd', output_format = 'github_document')"</span></span></code></pre></div>
+</li>
+<li><p>If the vignette or pkgdown configuration changes, verify the relevant rendered output only after the package-level checks pass. The CI workflow builds the pkgdown site.</p></li>
+</ol><p>Package checks or examples may reach remote services, create user cache data, take considerable time, or fail when offline. Distinguish code failures from unavailable network/data. Never substitute live DWD downloads for small local fixtures in routine tests.</p>
 </div>
 <div class="section level2">
 <h2 id="working-rules">Working Rules<a class="anchor" aria-label="anchor" href="#working-rules"></a></h2>
-</div>
+<ul><li>Preserve the existing public API unless the requested change explicitly calls for a breaking change.</li>
+<li>Keep DWD field names, station identifiers, date conventions, units, and historical/recent repository distinctions intact. Document any conversion at the point where it occurs.</li>
+<li>Prefer explicit namespace calls such as <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter()</a></code> in new code where package conflicts are plausible. If imports change, update roxygen2 declarations and regenerate <code>NAMESPACE</code>.</li>
+<li>Match the surrounding style in legacy code; avoid unrelated whole-file formatting in the large source files.</li>
+<li>Use <code>TRUE</code> and <code>FALSE</code> in new code rather than <code>T</code> and <code>F</code>, and use clear argument names for non-obvious calls.</li>
+<li>Do not add package-load or attach-time writes, prompts, or downloads. Cache creation must remain explicit or opt-in through the existing data-directory helpers.</li>
+<li>Treat remote directory layouts and filenames as external inputs: validate assumptions, handle missing data, and keep diagnostics useful.</li>
+<li>Do not silently change default cache locations or write downloaded data inside the repository.</li>
+<li>Keep changes focused. Do not update generated documentation or the website unless their source changed.</li>
+</ul></div>
 <div class="section level2">
 <h2 id="generated-and-high-risk-files">Generated And High-Risk Files<a class="anchor" aria-label="anchor" href="#generated-and-high-risk-files"></a></h2>
-</div>
+<ul><li>
+<code>.RData</code> and <code>.Rhistory</code> are large/local workspace state. Never inspect, modify, regenerate, or commit them as part of normal package work.</li>
+<li>
+<code>LocalCopyDWD/</code>, <code>DWD_tmp/</code>, downloaded ZIP files, FST datasets, and user cache directories may contain large external datasets. Do not commit them.</li>
+<li>
+<code>man/*.Rd</code> and <code>NAMESPACE</code> are generated by roxygen2. Change the roxygen comments in <code>R/</code>, then regenerate these files.</li>
+<li>
+<code>README.md</code> is generated from <code>README.Rmd</code>.</li>
+<li>
+<code>docs/</code>, <code>doc/</code>, <code>Meta/</code>, <code>inst/doc/</code>, package tarballs, and <code>*.Rcheck/</code> directories are build products unless a task explicitly targets published artifacts.</li>
+<li>DWD download/update functions and forecast retrieval are network-dependent and may perform bulk writes. Use them only when explicitly needed.</li>
+<li>Functions that write HUME files or initialize cache directories have filesystem side effects. Test them with temporary paths, never with a user’s real data directory.</li>
+</ul></div>
 <div class="section level2">
 <h2 id="documentation-workflow">Documentation Workflow<a class="anchor" aria-label="anchor" href="#documentation-workflow"></a></h2>
-</div>
+<ul><li>For a function change, update its adjacent roxygen2 block, including parameters, return value, units, side effects, and a runnable example where practical.</li>
+<li>Keep examples deterministic and lightweight. Wrap examples requiring network access, large downloads, or user-specific files so they are not run during routine checks, or replace them with local examples.</li>
+<li>Run <code>roxygen2::roxygenise()</code> and review resulting changes to <code>man/</code> and <code>NAMESPACE</code>; do not hand-edit generated Rd files.</li>
+<li>Edit <code>README.Rmd</code> before regenerating <code>README.md</code> and keep both changes together.</li>
+<li>Update the vignette when a user-facing workflow changes materially.</li>
+</ul></div>
 <div class="section level2">
 <h2 id="change-notes">Change Notes<a class="anchor" aria-label="anchor" href="#change-notes"></a></h2>
-</div>
+<p>In the final handoff, report:</p>
+<ul><li>the user-visible behavior changed;</li>
+<li>source and generated files changed;</li>
+<li>verification commands run and their results;</li>
+<li>checks not run, especially those skipped because dependencies, network access, or DWD data were unavailable;</li>
+<li>any compatibility, cache, storage, or data-format implications.</li>
+</ul></div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

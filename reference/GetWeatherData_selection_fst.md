@@ -21,7 +21,8 @@ GetWeatherData_selection_fst(
 
 - DWD_content:
 
-  list structure of available DWD stations
+  Period-specific DWD content, such as the recent or historical element
+  returned by getDWDStationList, containing zipID and ziplist.
 
 - startdate:
 
