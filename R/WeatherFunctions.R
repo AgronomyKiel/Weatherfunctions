@@ -133,6 +133,10 @@ sigma <- 4.903e-9 # Stefan-Boltzmann-Constant in [MJ m-2 d-1 K-4]
 Kelvin0 <- 273.15 # Kelvin 0
 
 
+#' @export StandardWindHeight
+StandardWindHeight <- 10
+
+
 
 
 ## Local directories for DWD data ####
@@ -315,13 +319,13 @@ RainDataUnits_en <- c("", "YYYYMMDD", "code", "mm", "code", "cm", "cm")
 
 #' @export units_DWD
 units_DWD <- c("code","Tagesmittel der Temperatur °C", "Tagesmittel des Luftdrucks hPa",
-               "Tagesmittel der Relativen Feuchte %", "Tagesmittel Windgeschwindigkeit m/s",
+               "Tagesmittel der Relativen Feuchte %", "Tagesmittel Windgeschwindigkeit (10m) m/s",
                "Tagesmaximum der Lufttemperatur in 2m Höhe °C", "Tagesminimum der Lufttemperatur in 2m Höhe °C",
                "tägliche Niederschlagshöhe mm", "tägliche Sonnenscheindauer h")
 
 #' @export units_DWD_en
 units_DWD_en <- c("code","Mean air temperature °C", "Mean air pressure hPa",
-               "Mean relative humidity %", "Mean wind speed m/s",
+               "Mean relative humidity %", "Mean wind speed (10m) m/s",
                "Daily maximum air temperature °C", "Daily minimum air temperature °C",
                  "Rainfall rate mm", "Sunshine duration h")
 
@@ -1461,6 +1465,8 @@ transWindSpeed<-function(inWind,inHeight,outHeight,vegi.height)
 
 
 #' Alternative function for correction of windspeed to reference height
+#' rearranged form of the FAO wind-speed height adjustment
+#' (https://www.fao.org/3/x0490e/x0490e07.htm)
 #'
 #' @param ui original windspeed [m/s]]
 #' @param zi measurement height [m]
@@ -2208,14 +2214,23 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
   }
 
   # name of file with measurement height of wind data
-  df_mHeight <- NULL
+#  df_mHeight <- NULL
 
   # select the file name for to be zipfile to be downloaded/unzipped from ziplist
-  ZipFilename <- grep(paste0("tageswerte_KL_", station), ziplist, value = TRUE)
-  if (nchar(ZipFilename)<2) {
-    stop()
-    return <- NULL
+
+  ZipFilename <- grep(
+    paste0("tageswerte_KL_", station),
+    ziplist,
+    value = TRUE
+  )
+
+  if (length(ZipFilename) == 0L) {
+    stop(
+      sprintf("No ZIP file found for station '%s'.", station),
+      call. = FALSE
+    )
   }
+
 
 
   # if not local  download the zip file from the ftp server
@@ -2274,8 +2289,8 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
     DWDWeather$MHoeheWind <- NULL
     DWDWeather <- DWDWeather %>% dplyr::left_join(x = DWDWeather, y = df_mHeight, by="Date")
 
-    # correct for measurement heigts different to 10m
-    DWDWeather$FM <-  windheight( ui = DWDWeather$FM, zi =  DWDWeather$MHoeheWind, zo = 10)
+    # correct for measurement heights different to 10m
+    DWDWeather$FM <-  windheight( ui = DWDWeather$FM, zi =  DWDWeather$MHoeheWind, zo = StandardWindHeight)
   }
 
   }

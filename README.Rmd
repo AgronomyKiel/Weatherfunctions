@@ -280,7 +280,7 @@ summary(IntPolDWDdatarecent)
 DWDdata <- rbind(IntPolDWDdataHistorical, IntPolDWDdatarecent)
 ```
 
-Here the combinded data set:
+Here the combined data set:
 ```{r}
 summary(DWDdata)
 ```
