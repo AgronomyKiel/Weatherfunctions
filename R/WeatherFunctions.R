@@ -1979,6 +1979,51 @@ getRadWeather <- function(WeatherTab) {
 ## Download functions for DWD weather data --------------------------------------------------
 
 
+# Normalize a DWD station identifier to the five-digit representation used in
+# DWD archive filenames. Kept internal so every download path applies the same
+# validation without adding another public API function.
+normalize_dwd_station_id <- function(station) {
+  if (length(station) != 1L || is.na(station)) {
+    stop("'station' must contain exactly one non-missing station ID.", call. = FALSE)
+  }
+
+  station <- trimws(as.character(station))
+  if (!grepl("^[0-9]{1,5}$", station)) {
+    stop("'station' must contain between one and five digits.", call. = FALSE)
+  }
+
+  sprintf("%05d", as.integer(station))
+}
+
+
+# Select exactly one archive by its filename station ID. Matching the complete
+# ID field avoids accidental partial matches and is independent of date suffixes.
+find_dwd_zip_file <- function(station, ziplist, product = c("KL", "RR")) {
+  product <- match.arg(product)
+  station <- normalize_dwd_station_id(station)
+  ziplist <- as.character(ziplist)
+  pattern <- paste0("^tageswerte_", product, "_", station, "_.*[.]zip$")
+  matches <- ziplist[grepl(pattern, basename(ziplist), ignore.case = TRUE)]
+
+  if (length(matches) == 0L) {
+    stop(sprintf("No %s ZIP file found for station '%s'.", product, station), call. = FALSE)
+  }
+  if (length(matches) > 1L) {
+    stop(
+      sprintf(
+        "Multiple %s ZIP files found for station '%s': %s",
+        product,
+        station,
+        paste(basename(matches), collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+
+  matches[[1L]]
+}
+
+
 #' Copy_DWD_ZipFiles makes a local copy of DWD weather data as zip files
 #'
 #' @param DWD_ftp_ ftp address of DWD  weather data
@@ -2188,17 +2233,10 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
 # @examples getsingleDWDWeather("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
 getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
 
-  # check if the repository is local
-  local <- FALSE
+  station <- normalize_dwd_station_id(station)
 
-  if (repository == LocalCopy_DWD_ftp_historical){
-    local <- TRUE
-    dest_file <- paste0(repository, "/")
-  }
-  if (repository == LocalCopy_DWD_ftp_recent){
-    local <- TRUE
-    dest_file <- paste0(repository, "/")
-  }
+  # check if the repository is local
+  local <- dir.exists(repository)
 
   # if no local unzip directory is existing, create it
   if (!dir.exists(paste0(path_unzip))){
@@ -2218,18 +2256,7 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
 
   # select the file name for to be zipfile to be downloaded/unzipped from ziplist
 
-  ZipFilename <- grep(
-    paste0("tageswerte_KL_", station),
-    ziplist,
-    value = TRUE
-  )
-
-  if (length(ZipFilename) == 0L) {
-    stop(
-      sprintf("No ZIP file found for station '%s'.", station),
-      call. = FALSE
-    )
-  }
+  ZipFilename <- find_dwd_zip_file(station, ziplist, product = "KL")
 
 
 
@@ -2249,11 +2276,34 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
   # construct the name of the data file
   DataFilename <- grep("produkt_klima_tag_", list.files(path_unzip), value = TRUE)
 
+  if (length(DataFilename) != 1L) {
+    stop(
+      sprintf(
+        "Expected one weather data file in ZIP '%s', found %d.",
+        basename(ZipFilename),
+        length(DataFilename)
+      ),
+      call. = FALSE
+    )
+  }
+
   # read weather data from temporary file
   DWDWeather <- read.table(file = paste(path_unzip, DataFilename, sep="/"),
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   DWDWeather$STATIONS_ID <- sprintf("%05i", type.convert(DWDWeather$STATIONS_ID, dec = ".", as.is="T"))
+  reported_ids <- unique(DWDWeather$STATIONS_ID[!is.na(DWDWeather$STATIONS_ID)])
+  if (length(reported_ids) != 1L || !identical(reported_ids, station)) {
+    warning(
+      sprintf(
+        "ZIP '%s' was requested for station '%s' but contains STATIONS_ID: %s. Using the requested station ID.",
+        basename(ZipFilename),
+        station,
+        if (length(reported_ids)) paste(reported_ids, collapse = ", ") else "<missing>"
+      ),
+      call. = FALSE
+    )
+  }
 
   # add standard measurement height for wind speed
   DWDWeather$MHoeheWind <- 10 # default value [m]
@@ -2294,7 +2344,8 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
   }
 
   }
-  DWDWeather <- DWDWeather %>% dplyr::rename(Stations_id = STATIONS_ID)
+  DWDWeather$Stations_id <- station
+  DWDWeather$STATIONS_ID <- NULL
   return(DWDWeather)
 }
 
@@ -2314,18 +2365,11 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
 # @examples getsingleDWDRain("00044", ziplist, DWD_ftp_recent, local=F, quiet=T)
 getsingleDWDRain <- function(station, ziplist, repository, quiet=T){
 
+  station <- normalize_dwd_station_id(station)
+
 
   # check if the repository is local
-  local <- FALSE
-
-  if (repository == LocalCopy_DWD_Rain_ftp_historical){
-    local <- TRUE
-    dest_file <- paste0(repository, "/")
-  }
-  if (repository == LocalCopy_DWD_Rain_ftp_recent){
-    local <- TRUE
-    dest_file <- paste0(repository, "/")
-  }
+  local <- dir.exists(repository)
 
   # if no local unzip directory is existing, create it
   if (!dir.exists(paste0(path_unzip))){
@@ -2340,12 +2384,7 @@ getsingleDWDRain <- function(station, ziplist, repository, quiet=T){
     file.remove(f)
   }
 
-  ZipFilename <- grep(paste0("tageswerte_RR_", station), ziplist, value = TRUE)
-
-  if (nchar(ZipFilename)<2) {
-    stop()
-    return <- NULL
-  }
+  ZipFilename <- find_dwd_zip_file(station, ziplist, product = "RR")
 
 
   # if not local  download the zip file from the ftp server
@@ -2363,13 +2402,37 @@ getsingleDWDRain <- function(station, ziplist, repository, quiet=T){
 
   DataFileName <- grep("produkt_nieder_tag_", list.files(path_unzip), value = TRUE)
 
+  if (length(DataFileName) != 1L) {
+    stop(
+      sprintf(
+        "Expected one precipitation data file in ZIP '%s', found %d.",
+        basename(ZipFilename),
+        length(DataFileName)
+      ),
+      call. = FALSE
+    )
+  }
+
   DWDWeather <- read.table(file = paste(path_unzip, DataFileName, sep="/"),
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   DWDWeather$Date <- as.Date(as.character(DWDWeather$MESS_DATUM), "%Y%m%d")
   DWDWeather$STATIONS_ID <- sprintf("%05i", type.convert(DWDWeather$STATIONS_ID, dec = ".", as.is="T"))
+  reported_ids <- unique(DWDWeather$STATIONS_ID[!is.na(DWDWeather$STATIONS_ID)])
+  if (length(reported_ids) != 1L || !identical(reported_ids, station)) {
+    warning(
+      sprintf(
+        "ZIP '%s' was requested for station '%s' but contains STATIONS_ID: %s. Using the requested station ID.",
+        basename(ZipFilename),
+        station,
+        if (length(reported_ids)) paste(reported_ids, collapse = ", ") else "<missing>"
+      ),
+      call. = FALSE
+    )
+  }
 
-  DWDWeather <- DWDWeather %>% dplyr::rename(Stations_id = STATIONS_ID)
+  DWDWeather$Stations_id <- station
+  DWDWeather$STATIONS_ID <- NULL
 
   return(DWDWeather)
 }
@@ -2390,8 +2453,11 @@ getsingleDWDRain <- function(station, ziplist, repository, quiet=T){
 # @examples getcombinedDWDWeather(DWD_content, "00044", local=F, DWD_ftp_recent, DWD_ftp_historical)
 getcombinedDWDWeather <- function(DWD_content, station, local=F,
                                   recent_repository, historical_repository){
-  # stattion ID to character
-  station <- as.character(station)
+  station <- normalize_dwd_station_id(station)
+  data.hist <- NULL
+  data.rct <- NULL
+  data.sum <- NULL
+
   if(station %in% DWD_content$historical$zipID){
     # if the station is in the historical zipID list, get the historical data
     data.hist <- getsingleDWDWeather(station, DWD_content$historical$ziplist, repository = historical_repository)
@@ -2401,26 +2467,28 @@ getcombinedDWDWeather <- function(DWD_content, station, local=F,
     data.rct <- getsingleDWDWeather(station, DWD_content$recent$ziplist, repository = recent_repository)
   }
 
-  if(exists("data.hist") & exists("data.rct")){
+  if(!is.null(data.hist) && !is.null(data.rct)){
     # detect the last date of the historical data
-    t1 <- data.hist$Date[length(data.hist$Date)]
+    t1 <- max(data.hist$Date, na.rm = TRUE)
     # combine the historical and recent data filtered first by the last date of the historical data
     data.sum <- rbind(data.hist, data.rct[data.rct$Date > t1,])
   }else{
-    if(exists("data.hist")){
+    if(!is.null(data.hist)){
       # if only historical data is available
       data.sum <- data.hist
     }else{
-      if(exists("data.rct")){
+      if(!is.null(data.rct)){
       # if only recent data is available
       data.sum <- data.rct
       }
     }
   }
-  if (exists("data.sum")) {
-    # add the meta data of the station to the data frame
-    data.sum <- cbind(data.sum,
-                    DWD_content$stations[DWD_content$stations$Stations_id==station, c("Stationshoehe", "geoBreite", "geoLaenge", "Stationsname")])
+  if (!is.null(data.sum)) {
+    station_metadata <- DWD_content$stations %>%
+      dplyr::filter(Stations_id == station) %>%
+      dplyr::distinct(Stations_id, .keep_all = TRUE) %>%
+      dplyr::select(Stations_id, Stationshoehe, geoBreite, geoLaenge, Stationsname)
+    data.sum <- dplyr::left_join(data.sum, station_metadata, by = "Stations_id")
     # remove empty last row
     data.sum <- subset(data.sum, !is.na(Stations_id))
   }else{
@@ -2442,47 +2510,47 @@ getcombinedDWDWeather <- function(DWD_content, station, local=F,
 # @examples getcombinedDWDRain(DWDRain_content, "00044", local=F, DWDRain_ftp_recent, DWDRain_ftp_historical)
 getcombinedDWDRain <- function(DWDRain_content, station, local=F,
                                recent_repository, historical_repository){
-  station <- as.character(station)
+  station <- normalize_dwd_station_id(station)
+  data.hist <- NULL
+  data.rct <- NULL
+  data.sum <- NULL
+
   if(station %in% DWDRain_content$historical$zipID){
     # if the station is in the historical zipID list, get the historical data
-    data.hist <- getsingleDWDRain(station, DWDRain_content$historical$ziplist, DWDRain_ftp_historical)
+    data.hist <- getsingleDWDRain(station, DWDRain_content$historical$ziplist, historical_repository)
   }
   if(station %in% DWDRain_content$recent$zipID){
     # if the station is in the recent zipID list, get the recent data
-    data.rct <- getsingleDWDRain(station, DWDRain_content$recent$ziplist, DWDRain_ftp_recent)
+    data.rct <- getsingleDWDRain(station, DWDRain_content$recent$ziplist, recent_repository)
   }
 
-  if(exists("data.hist") & exists("data.rct")){
+  if(!is.null(data.hist) && !is.null(data.rct)){
     # detect the last date of the historical data
-    t1 <- data.hist$Date[length(data.hist$Date)]
+    t1 <- max(data.hist$Date, na.rm = TRUE)
     # combine the historical and recent data filtered first by the last date of the historical data
     data.sum <- rbind(data.hist, data.rct[data.rct$Date > t1,])
   }else{
     # if only historical data is available
-    if(exists("data.hist")){
+    if(!is.null(data.hist)){
       data.sum <- data.hist
     }else{
       # if only recent data is available
-      if(exists("data.rct")){
+      if(!is.null(data.rct)){
         data.sum <- data.rct
       }
     }
   }
-  if (exists("data.sum")) {
-    DWDRain_content$stations$Stations_id <- as.integer(DWDRain_content$stations$Stations_id)
-#    data.sum <- cbind(data.sum,
-#                      DWDRain_content$stations[DWDRain_content$stations$Stations_id==station, c("Stationshoehe", "geoBreite", "geoLaenge", "Stationsname")])
-    SStations <- DWDRain_content$stations
-    #    data.sum <- merge(x = data.sum, y=as.data.frame(DWDRain_content$stations[,c("Stations_id","Stationshoehe", "geoBreite", "geoLaenge", "Stationsname")]),
-    #                  by.x="Stations_id",by.y="Stations_id")
-
-    # rename the column name of the station id
-    if ("STATIONS_ID" %in% names(data.sum)) {
-      names(data.sum)[names(data.sum)=="STATIONS_ID"] <- "Stations_id"}
-
-    # add the meta data of the station to the data frame
-    data.sum <- merge(x = data.sum, y=SStations[,c("Stations_id","Stationshoehe", "geoBreite", "geoLaenge", "Stationsname")],
-                      by="Stations_id")
+  if (!is.null(data.sum)) {
+    station_metadata <- DWDRain_content$stations
+    station_metadata$Stations_id <- sprintf(
+      "%05i",
+      type.convert(station_metadata$Stations_id, dec = ".", as.is = TRUE)
+    )
+    station_metadata <- station_metadata %>%
+      dplyr::filter(Stations_id == station) %>%
+      dplyr::distinct(Stations_id, .keep_all = TRUE) %>%
+      dplyr::select(Stations_id, Stationshoehe, geoBreite, geoLaenge, Stationsname)
+    data.sum <- dplyr::left_join(data.sum, station_metadata, by = "Stations_id")
     # remove empty last row
     data.sum <- subset(data.sum, !is.na(Stations_id))
   }else{
@@ -2721,6 +2789,7 @@ GetWeatherData_selection <- function(stations_selected,
   weatherdata <- NULL
   # loop over selected stations
   for (station in stations_selected$Stations_id) {
+    station <- normalize_dwd_station_id(station)
     # for debugging
     #    ID <- station_selected$Stations_id[1]
     # is station in the list of available zip files?
@@ -2731,7 +2800,6 @@ GetWeatherData_selection <- function(stations_selected,
                                      ziplist = DWD_content$ziplist,
                                      repository = repository,
                                      quiet = T)
-      weather$Stations_id <- station
       # add to list of data frames
       df_list[[station]] <- weather}
   }
@@ -2772,7 +2840,9 @@ GetWeatherData_selection <- function(stations_selected,
 #' GetWeatherData_selection_fst
 #'
 #' @param stations_selected selected stations
-#' @param DWD_content list structure of available DWD stations
+#' @param DWD_content Period-specific DWD content, such as the recent or
+#'   historical element returned by getDWDStationList, containing zipID and
+#'   ziplist.
 #' @param startdate start date for selection of data
 #' @import dplyr
 #'
@@ -2797,11 +2867,11 @@ GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, reposi
   #  Length <- EndDate-as.Date(startdate)+1
 
   for (station in stations_selected$Stations_id) {
+    station <- normalize_dwd_station_id(station)
     #    ID <- station_selected$Stations_id[1]
-    if (station %in% DWD_content_recent$zipID){
-    weather <- getsingleDWDWeather(station = station, ziplist = DWD_content$recent$ziplist,
-                                     repository = repository, quiet = T)
-    weather$Stations_id <- station
+    if (station %in% DWD_content$zipID){
+    weather <- getsingleDWDWeather(station = station, ziplist = DWD_content$ziplist,
+                                      repository = repository, quiet = T)
     df_list[[station]] <- weather}
   }
   ## remove empty data frames (no valid names etc.)
@@ -2877,6 +2947,7 @@ GetRainData_selection <- function(stations_selected,
   raindata <- NULL
   # loop over selected stations
   for (station in stations_selected$Stations_id) {
+    station <- normalize_dwd_station_id(station)
     # for debugging
     #    ID <- station_selected$Stations_id[1]
     # is station in the list of available zip files?
@@ -2888,7 +2959,6 @@ GetRainData_selection <- function(stations_selected,
                                      repository = repository,
                                     # local = local,
                                      quiet = T)
-      raindata$Stations_id <- station
       # add to list of data frames
       df_list[[station]] <- raindata}
   }
