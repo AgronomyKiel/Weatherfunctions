@@ -11,6 +11,7 @@ You can install the development version of Weatherfunctions from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("AgronomyKiel/Weatherfunctions")
 ```
@@ -23,6 +24,7 @@ them for a certain location defined by latitude, longitude and height
 above sea level.
 
 ``` r
+
 rm(list = ls())
 library(Weatherfunctions)
 library(here)
@@ -184,6 +186,7 @@ The interpolation should deliver daily estimates of the weather data for
 the location:
 
 ``` r
+
 summary(IntPolDWDdataHistorical)
 #>       Time            TMPM              Rain              LF        
 #>  Min.   :32874   Min.   :-18.300   Min.   : 0.000   Min.   : 33.70  
@@ -219,6 +222,7 @@ The average distance for the estimation of the different weather
 variables can be calculated:
 
 ``` r
+
 usedstations <- IntPolDWDHistorical$df.wf
 usedstations$Distance <- 1/usedstations$InvDist
 Diststations <- usedstations %>% group_by(variable) %>% dplyr::summarise(Distance = mean(Distance, na.rm = T))
@@ -228,6 +232,7 @@ The average distance for the estimation of the different weather
 variables is:
 
 ``` r
+
 Diststations
 #> # A tibble: 8 × 2
 #>   variable               Distance
@@ -245,6 +250,7 @@ Diststations
 Now the same procedure for the recent data:
 
 ``` r
+
 # recent data #######
 
 ## retrieve the recent station list from the DWD content
@@ -307,6 +313,7 @@ Here the summary of the result of the interpolation procedure for the
 recent data:
 
 ``` r
+
 summary(IntPolDWDdatarecent)
 #>       Time            TMPM             Rain            LF       
 #>  Min.   :45292   Min.   :-7.100   Min.   : 0.0   Min.   :41.10  
@@ -343,12 +350,14 @@ summary(IntPolDWDdatarecent)
 ```
 
 ``` r
+
 DWDdata <- rbind(IntPolDWDdataHistorical, IntPolDWDdatarecent)
 ```
 
 Here the combinded data set:
 
 ``` r
+
 summary(DWDdata)
 #>       Time            TMPM              Rain              LF        
 #>  Min.   :32874   Min.   :-18.300   Min.   : 0.000   Min.   : 33.70  

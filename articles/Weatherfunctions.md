@@ -1,6 +1,7 @@
 # Weatherfunctions
 
 ``` r
+
 rm(list=ls())
 library(Weatherfunctions)
 library(stringi)
@@ -89,6 +90,7 @@ get the station meta data for the historical and recent observations.
 
 ``` r
 
+
 DWDhistorical <- getDWDContent(DWD_ftp_historical)
 DWDrecent     <- getDWDContent(DWD_ftp_recent)
 str(DWDhistorical)
@@ -121,6 +123,7 @@ lists of the historical and recent weather station information the
 function “getDWDContent” returns (see section above).
 
 ``` r
+
 DWD_content <- getDWDStationList(historical = DWD_ftp_historical, recent = DWD_ftp_recent)
 str(DWD_content)
 ```
@@ -164,6 +167,7 @@ DWD ftp service or its local copy using the function
 getsingleDWDWeather.
 
 ``` r
+
 selstation <-  as.character(DWD_content$recent$zipID[3])
 recent_data <- NULL
 recent_data <- getsingleDWDWeather(station = selstation, ziplist = DWD_content$recent$ziplist,
@@ -171,12 +175,14 @@ recent_data <- getsingleDWDWeather(station = selstation, ziplist = DWD_content$r
 ```
 
 ``` r
+
 selstation <-  as.character(DWDRain_content$recent$zipID[3])
 test <- getsingleDWDRain(station = selstation, ziplist = DWDRain_content$recent$ziplist,
                             repository = DWDRain_ftp_recent, quiet = F)
 ```
 
 ``` r
+
 test <- RenameDWDRain(test)
 head(test)
 ```
@@ -190,13 +196,16 @@ Note that the windspeed data is given for a height of 10 m above ground
 level. If wind speed was measured at a different height the correction
 is made with the function “windheight”.
 
-$$u_{o} = u_{i} \cdot \frac{log\left( 67.8 \cdot z_{o} - 5.42 \right)}{log\left( 67.8*z_{i} - 5.42 \right)}$$
+``` math
+u_o = u_i \cdot \frac{ log(67.8 \cdot z_o - 5.42)} { log(67.8 * z_i - 5.42)}
+```
 
 The downloaded data have column names according to the code of DWD, for
 which in a first step also readable names are defined. in the data frame
 df_names_DWD.
 
 ``` r
+
 df_names_DWD
 ```
 
@@ -207,6 +216,7 @@ particular station the function “getcombinedDWDWeather” can be used. It
 also adds station information to the returned data frame.
 
 ``` r
+
 selstation <-  as.character(DWD_content$recent$zipID[3])
 combined_data <- NULL
 combined_data <- getcombinedDWDWeather(DWD_content = DWD_content, station = selstation,
@@ -221,6 +231,7 @@ The function getRadWeather uses the DWD-data in long name format and
 adds several derived parameters.
 
 ``` r
+
 RadWeather <- NULL
 RadWeather <- getRadWeather(combined_data)
 str(RadWeather)
@@ -254,6 +265,7 @@ once a year.
 
 ``` r
 
+
 UpdateDWDData_to_fst(dataperiod = "recent", startdate = "1990-01-01", isloadnew = T)
 ```
 
@@ -261,6 +273,7 @@ A saved file can be read using the function read.fst from the package
 fst.
 
 ``` r
+
 fn <- "recent_weather_dat_1990.fst"
 path <- paste(Local_R_DWD, fn, sep="/")
 if (file.exists(path)){
@@ -274,6 +287,7 @@ downloaded. This process is time consuming and should be done only once
 a year.
 
 ``` r
+
 UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1990-01-01", isloadnew = T)
 ```
 
@@ -302,6 +316,7 @@ used.
 #### Retrieval of the weather data for interpolation
 
 ``` r
+
 
 
 # load historic weather data from local fst file ####
@@ -368,6 +383,7 @@ In a next step the historic weather data is interpolated for the
 location. If all gets ok then the data frame should have no NA values.
 
 ``` r
+
 
   
 ### interpolate the historic weather data for the location  
@@ -444,6 +460,7 @@ Here, the data for the most actual date(s) may be incomplete.
 
 ``` r
 
+
   
 # recent data #######
 
@@ -510,6 +527,7 @@ The data from the historical and recent data is combined in one data
 frame.
 
 ``` r
+
   
   DWDdata <- rbind(IntPolDWDdataHistorical, IntPolDWDdatarecent)
   summary(DWDdata)
