@@ -186,11 +186,27 @@ path_unzip <- file.path(DataDir, "DWD_tmp")
 
 
 
-### local RData file names ####
-#' @export HistoricalDWD
+#' Legacy DWD RData filenames
+#'
+#' These exported constants are retained for compatibility with workflows from
+#' an earlier development stage that stored complete downloads as RData files.
+#' New code should use \code{\link{dwd_fst_filename}()} for the current
+#' FST-based workflow.
+#'
+#' @section Deprecated:
+#' These RData filename constants are deprecated and must not be repurposed as
+#' FST filenames. They remain exported only for backward compatibility.
+#'
+#' @format A character scalar containing a legacy RData filename.
+#' @name legacy_dwd_rdata_filenames
+NULL
+
+#' @rdname legacy_dwd_rdata_filenames
+#' @export
 HistoricalDWD <- "historicalDWDweather.RData"
 
-#' @export HistoricalDWDRain
+#' @rdname legacy_dwd_rdata_filenames
+#' @export
 HistoricalDWDRain <- "historicalDWDRain.RData"
 
 ### outputpath ####
@@ -211,14 +227,68 @@ fn_DWDRain_content_recent <- "DWDRain_content_recent.Rdata"
 #' @export fn_DWDRain_content
 fn_DWDRain_content <- "DWDRainStationlist.RData"
 
-#' @export fn_histDWD_data_str
+#' Legacy historical DWD FST filename prefix
+#'
+#' Retained for compatibility with code that constructs year-only filenames
+#' such as \code{weather_dat_1990.fst}. New code should use
+#' \code{\link{dwd_fst_filename}()}, which includes the complete start date.
+#'
+#' @section Deprecated:
+#' This prefix is retained only for locating legacy year-only FST files.
+#'
+#' @format A character scalar containing a filename prefix.
+#' @export
 fn_histDWD_data_str <- "weather_dat_"
 
-#' @export fn_HistoricalDWD
+#' @rdname legacy_dwd_rdata_filenames
+#' @export
 fn_HistoricalDWD <- "historicalDWDweather.RData"
 
-#' @export fn_HistoricalDWDRain
+#' @rdname legacy_dwd_rdata_filenames
+#' @export
 fn_HistoricalDWDRain <- "historicalDWDRain.RData"
+
+
+#' Construct a DWD FST filename
+#'
+#' Creates the filename used by both FST writers and readers. The complete
+#' start date is included so datasets beginning on different dates in the same
+#' year cannot silently overwrite one another.
+#'
+#' @param dataperiod Character scalar; either \code{"historical"} or
+#'   \code{"recent"}.
+#' @param startdate A single value coercible to \code{Date} giving the first
+#'   date included in the dataset.
+#' @return A character scalar containing a filename, without a directory.
+#' @export
+#' @examples
+#' dwd_fst_filename("historical", "1990-01-01")
+#' dwd_fst_filename("recent", as.Date("2025-07-01"))
+dwd_fst_filename <- function(dataperiod = c("historical", "recent"),
+                             startdate = "1990-01-01") {
+  dataperiod <- match.arg(dataperiod)
+
+  if (length(startdate) != 1L) {
+    stop("startdate must contain exactly one date.", call. = FALSE)
+  }
+
+  startdate <- tryCatch(
+    as.Date(startdate),
+    error = function(e) NA_Date_
+  )
+
+  if (is.na(startdate)) {
+    stop("startdate must be coercible to a valid Date.", call. = FALSE)
+  }
+
+  prefix <- switch(
+    dataperiod,
+    historical = "weather_dat_",
+    recent = "recent_weather_dat_"
+  )
+
+  paste0(prefix, format(startdate, "%Y-%m-%d"), ".fst")
+}
 
 
 
@@ -2098,26 +2168,28 @@ Copy_DWD_ZipFiles <- function(DWD_ftp_, LocalCopy_DWD_ftp_) {
 #' UpdateDWDData_to_fst updates the DWD weather data to a local fst file
 #'
 #' @param dataperiod choose recent or historical weather data
-#' @param startdate start date for the weather data
+#' @param startdate start date for the weather data; the complete date becomes
+#'   part of the output filename
 #' @param isloadnew option to load data from DWD ftp server
 #' @param DWD_content list with stationlist, ziplist, zipID
 #' @param MinDataset option to load only the minimum dataset
 #' @import fst
 #' @import lubridate
 #'
-#' @return Nothing, a fst file is written to the local directory
+#' @return The path of the written FST file, invisibly.
 #' @export
 #'
-# @examples UpdateDWDData_to_fst("recent", "1990-01-01", T, DWD_content=NULL, MinDataset=FALSE)
+# @examples UpdateDWDData_to_fst("recent", "1990-01-01", TRUE, DWD_content=NULL, MinDataset=FALSE)
 #'
 #'
 
-UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", isloadnew=T,
-                                 DWD_content=NULL, MinDataset=FALSE) {
+UpdateDWDData_to_fst <- function(dataperiod = "recent", startdate = "1990-01-01",
+                                 isloadnew = TRUE, DWD_content = NULL,
+                                 MinDataset = FALSE) {
 
-  # check if dataperiod parameter is valid
-  stopifnot(dataperiod %in% c("recent", "historical"))
-  startyear <- year(as.Date(startdate))
+  dataperiod <- match.arg(dataperiod, c("recent", "historical"))
+  output_filename <- dwd_fst_filename(dataperiod, startdate)
+  startdate <- as.Date(startdate)
 
   ### load station data if not given as parameter
   if (is.null(DWD_content)){
@@ -2210,12 +2282,10 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
 
   # save data to fst file
   dir.create(Local_Rdata_path, recursive = TRUE, showWarnings = FALSE)
-  if (dataperiod == "recent") {
-    fn <- file.path(Local_Rdata_path, paste0("recent_weather_dat_", as.character(startyear), ".fst"))
-    write.fst(x = df, path = fn)}
-  if (dataperiod == "historical") {
-    fn <- file.path(Local_Rdata_path, paste0("weather_dat_", as.character(startyear), ".fst"))
-    write.fst(x = df, path = fn)}
+  output_path <- file.path(Local_Rdata_path, output_filename)
+  write.fst(x = df, path = output_path)
+
+  invisible(output_path)
 }
 
 
@@ -2858,6 +2928,33 @@ GetWeatherData_selection <- function(stations_selected,
 GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, repository=DWD_ftp_recent,
                                          startdate="1990-01-01") {
 
+  fn_historical <- file.path(
+    Local_Rdata_path,
+    dwd_fst_filename("historical", startdate)
+  )
+
+  if (!file.exists(fn_historical)) {
+    legacy_fn_historical <- file.path(
+      Local_Rdata_path,
+      paste0(fn_histDWD_data_str, format(as.Date(startdate), "%Y"), ".fst")
+    )
+
+    if (file.exists(legacy_fn_historical)) {
+      warning(
+        sprintf(
+          "Using legacy year-only historical FST file '%s'. Recreate it with UpdateDWDData_to_fst() to use date-specific filenames.",
+          legacy_fn_historical
+        ),
+        call. = FALSE
+      )
+      fn_historical <- legacy_fn_historical
+    } else {
+      stop(
+        sprintf("Historical DWD FST file not found: '%s'.", fn_historical),
+        call. = FALSE
+      )
+    }
+  }
 
   local <- ifelse(repository == DWD_ftp_recent, F, T)
   n_df <- length(stations_selected$Stations_id)
@@ -2902,10 +2999,6 @@ GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, reposi
   ) %>%
     dplyr::select(c(all_of(idvars), "Date", "Jahr","Monat","ExcelTime", all_of(measvars)))
 
-  fn_historical <- file.path(
-    Local_Rdata_path,
-    paste0("weather_dat_", as.character(startdate), ".fst")
-  )
   weather_historical <- read.fst(fn_historical)
   weather_historical$Jahr <- year(weather_historical$Date)
   selcols <- names(weather_recent)

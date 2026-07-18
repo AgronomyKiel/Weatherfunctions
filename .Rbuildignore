@@ -1,14 +1,13 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^data-raw$
-^tests$
 ^_pkgdown\.yml$
-^docs$
+^docs($|/)
 ^pkgdown$
 ^Weatherfunctions$
 ^WeatherFunctions$
 ^\.github$
-^doc$
-^Meta$
+^doc($|/)
+^Meta($|/)
 ^LICENSE\.md$
 ^README\.Rmd$
