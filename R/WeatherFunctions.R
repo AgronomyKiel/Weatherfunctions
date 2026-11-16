@@ -25,9 +25,7 @@ library(purrr)
 #library(ggplot2)
 library(plotly)
 library(scales)
-library(ropenmeteo)
-source("R/get_daily_forecast.R")
-source("R/GetForecastDataForStationList.R")
+#source("R/GetForecastDataForStationList.R")
 
 #' Internal hook to optionally initialize the data directory when the user opts
 #' in via `options(weatherfunctions.auto_setup = TRUE)`.
