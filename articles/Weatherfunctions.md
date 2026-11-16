@@ -146,13 +146,16 @@ parameters twice.
 
 For further processing of the data and to save disk space the data can
 be saved in a more compact format using the function
-“UpdateDWDData_to_fst”. The parameter isloadnew is used to load the data
-from the DWD ftp server, if FALSE the local zip-files will be used, if
-available. Again this process is time consuming, as the data is read
-from the zip files and saved in a fst file. The parameter startdate is
-used to define the start date of the data to be processed. The file size
-may still be large, the data in fst format for the historical data from
-1970 on is about 1 GB.
+[`UpdateDWDData_to_fst()`](https://agronomykiel.github.io/Weatherfunctions/reference/UpdateDWDData_to_fst.md).
+The parameter `isloadnew` is used to load the data from the DWD FTP
+server; if `FALSE`, the local ZIP files will be used when available.
+Again this process is time consuming, as the data is read from the ZIP
+files and saved in an FST file. The `startdate` parameter defines the
+first date to process. Historical filenames include that date, for
+example `weather_dat_1990-01-01.fst`, while recent observations are
+refreshed in the stable file `recent_weather_dat.fst`. The file size may
+still be large; historical data from 1970 onward require about 1 GB in
+FST format.
 
 ### Download DWD data
 
@@ -255,29 +258,40 @@ months in Germany based on DWD data.
 ### Saving data to local files in fst-format (UpdateDWDData_to_fst)
 
 In order to save the downloaded data in a more compact and pre-computed
-format the function UpdateDWDData_to_fst can be used.The parameter
-‘*isloadnew*’ is used to load the data from the DWD ftp server, if FALSE
-the local zip-files will be used, if available. This again is a time
-consuming process, as the data is read from the zip files and saved in a
-fst file. For further analysis it is often sufficient to download the
-historical data only to the fst file, as these data are updated only
-once a year.
+format, the function
+[`UpdateDWDData_to_fst()`](https://agronomykiel.github.io/Weatherfunctions/reference/UpdateDWDData_to_fst.md)
+can be used. The parameter `isloadnew` is used to load the data from the
+DWD FTP server; if `FALSE`, local ZIP files will be used when available.
+This again is a time consuming process, as the data is read from the zip
+files and saved in a fst file. For further analysis it is often
+sufficient to download the historical data only to the fst file, as
+these data are updated only once a year.
 
 ``` r
 
 
-UpdateDWDData_to_fst(dataperiod = "recent", startdate = "1990-01-01", isloadnew = T)
+recent_path <- UpdateDWDData_to_fst(
+  dataperiod = "recent",
+  startdate = "1990-01-01",
+  isloadnew = TRUE
+)
 ```
 
-A saved file can be read using the function read.fst from the package
-fst.
+A saved file can be read using the returned path. Alternatively,
+construct its name later with
+[`dwd_fst_filename()`](https://agronomykiel.github.io/Weatherfunctions/reference/dwd_fst_filename.md).
+Recent observations always resolve to the same filename, regardless of
+the selected start date.
 
 ``` r
 
-fn <- "recent_weather_dat_1990.fst"
-path <- paste(Local_R_DWD, fn, sep="/")
-if (file.exists(path)){
-  weather_recent <- read.fst(path = path)}
+path <- file.path(
+  Local_R_DWD,
+  dwd_fst_filename("recent", "1990-01-01")
+)
+if (file.exists(path)) {
+  weather_recent <- read.fst(path = path)
+}
 ```
 
 The function UpdateDWDData_to_fst can also be used to update the
@@ -288,7 +302,7 @@ a year.
 
 ``` r
 
-UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1990-01-01", isloadnew = T)
+UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1990-01-01", isloadnew = TRUE)
 ```
 
 ### Interpolation of weather data for a selected location
@@ -320,13 +334,13 @@ used.
 
 
 # load historic weather data from local fst file ####
-# the filename is constructed from two strings for the actual path of the project
-# and a filename which are both pre defined.
-
-fn_histDWD_data <- paste0(fn_histDWD_data_str, as.character(1990),".fst")
-
-fn <- here(Local_R_DWD, fn_histDWD_data)
-weather_historic <- read.fst(path = fn)
+# the filename is constructed from its data period and start date
+historical_startdate <- "1990-01-01"
+historical_path <- file.path(
+  Local_R_DWD,
+  dwd_fst_filename("historical", historical_startdate)
+)
+weather_historic <- read.fst(path = historical_path)
 
 # select the columns that are in the core, i.e. essential data set and rename them
 weather_historic_core <- weather_historic[,c("Stations_id", "Date",longNames_DWD_core)]
@@ -342,21 +356,27 @@ ThisYear <- as.numeric(format(Sys.Date(), "%Y"))
 # take the data frame with meta data for recent stations to a separate variable
 RecentRainStationList <- DWDRain_content$recent$stationlist
 
-UpdateRecentDWDdata <- F
+UpdateRecentDWDdata <- FALSE
+recent_startdate <- paste0(as.character(ThisYear - 1), "-01-01")
 if (UpdateRecentDWDdata) {
   StartTime <- Sys.time()
-  UpdateDWDData_to_fst(dataperiod = "recent", 
-                       isloadnew = T,
-                       DWD_content = DWD_content,
-                       startdate = paste0(as.character(ThisYear-1),"-01-01"))
+  recent_path <- UpdateDWDData_to_fst(
+    dataperiod = "recent",
+    isloadnew = TRUE,
+    DWD_content = DWD_content,
+    startdate = recent_startdate
+  )
   
   EndTime <- Sys.time()
   print(paste("Time for UpdateDWDData_to_fst:", EndTime - StartTime))
+} else {
+  recent_path <- file.path(
+    Local_R_DWD,
+    dwd_fst_filename("recent", recent_startdate)
+  )
 }
 
-
-fn_recentDWD_data <- paste0("recent_weather_dat_", as.character(1990),".fst")
-weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
+weather_recent <- read.fst(path = recent_path)
 weather_recent  <- weather_recent[,c("Stations_id","Date",longNames_DWD_core)] 
 
 # set the location of the station  

@@ -1,5 +1,9 @@
 # Weatherfunctions
 
+------------------------------------------------------------------------
+
+editor_options: markdown: wrap: 72 —
+
 The goal of Weatherfunctions is to support download of daily weather
 data from the German weather data service (DWD), to generate
 interpolations of weather data and to calculate some derived variables
@@ -27,7 +31,6 @@ above sea level.
 
 rm(list = ls())
 library(Weatherfunctions)
-library(here)
 library(fst)
 library(dplyr)
 library(tidyr)
@@ -43,10 +46,10 @@ DWDRain_content <- getDWDRainStationList(recent = DWDRain_ftp_recent, historical
 outputDir <- Local_R_DWD
 
 # save the meta data to local files
-if (!dir.exists(outputDir)) {dir.create(outputDir, recursive = T)}
-fn <- paste0(outputDir, fn_DWD_content)
+if (!dir.exists(outputDir)) {dir.create(outputDir, recursive = TRUE)}
+fn <- file.path(outputDir, fn_DWD_content)
 save(DWD_content, file = fn)
-fn <- paste0(outputDir, fn_DWDRain_content)
+fn <- file.path(outputDir, fn_DWDRain_content)
 save(DWDRain_content, file = fn)
 
 
@@ -68,13 +71,16 @@ save(DWDRain_content, file = fn)
 
 # update the data to local fst file from the local zip files (isloadnew = F) or directly from the DWD ftp server (isloadnew = T)
 # weather data interpolation uses the fst format
-#UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1990-01-01", isloadnew = T)
+#UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1990-01-01", isloadnew = TRUE)
 
 
 # if the data have been stored locally, they can be read from the local fst files
-fn_histDWD_data <- paste0(fn_histDWD_data_str, as.character(1990),".fst")
-fn <- here(Local_R_DWD, fn_histDWD_data)
-weather_historic <- read.fst(path = fn)
+historical_startdate <- "1990-01-01"
+historical_path <- file.path(
+  Local_R_DWD,
+  dwd_fst_filename("historical", historical_startdate)
+)
+weather_historic <- read.fst(path = historical_path)
 
 # select the columns that are in the core, i.e. essential data set and rename them
 weather_historic_core <- weather_historic[,c("Stations_id", "Date",longNames_DWD_core)]
@@ -86,21 +92,28 @@ RecentRainStationList <- DWDRain_content$recent$stationlist
 
 # update the recent data to local fst file from the local zip files (isloadnew = F) or directly from the DWD ftp server (isloadnew = T)
 # if you want to update the recent data, set UpdateRecentDWDdata <- T
-UpdateRecentDWDdata <- F
+UpdateRecentDWDdata <- FALSE
+recent_startdate <- paste0(as.character(ThisYear - 1), "-01-01")
 if (UpdateRecentDWDdata) {
   StartTime <- Sys.time()
-  UpdateDWDData_to_fst(dataperiod = "recent",
-                       isloadnew = T,
-                       DWD_content = DWD_content,
-                       startdate = paste0(as.character(ThisYear-1),"-01-01"))
+  recent_path <- UpdateDWDData_to_fst(
+    dataperiod = "recent",
+    isloadnew = TRUE,
+    DWD_content = DWD_content,
+    startdate = recent_startdate
+  )
 
   EndTime <- Sys.time()
   print(paste("Time for UpdateDWDData_to_fst:", EndTime - StartTime))
+} else {
+  recent_path <- file.path(
+    Local_R_DWD,
+    dwd_fst_filename("recent", recent_startdate)
+  )
 }
 
-# the name of the file is generated
-fn_recentDWD_data <- paste0("recent_weather_dat_", as.character(1990),".fst")
-weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
+# the filename is generated from the same start date used for the update
+weather_recent <- read.fst(path = recent_path)
 weather_recent  <- weather_recent[,c("Stations_id","Date",longNames_DWD_core)]
 
 # For estimation of weather data the coordinates and height asl of the location are needed
@@ -475,9 +488,13 @@ summary(DWDdata)
 - [`.onLoad()`](https://agronomykiel.github.io/Weatherfunctions/reference/dot-onLoad.md)
   : Internal hook to optionally initialize the data directory when the
   user opts in via \`options(weatherfunctions.auto_setup = TRUE)\`.
+- [`dwd_fst_filename()`](https://agronomykiel.github.io/Weatherfunctions/reference/dwd_fst_filename.md)
+  : Construct a DWD FST filename
 - [`estSg_S0()`](https://agronomykiel.github.io/Weatherfunctions/reference/estSg_S0.md)
   : estSg_S0: calculation of daily solar radiation from relative
   sunshine
+- [`fn_histDWD_data_str`](https://agronomykiel.github.io/Weatherfunctions/reference/fn_histDWD_data_str.md)
+  : Legacy historical DWD FST filename prefix
 - [`getDWDContent()`](https://agronomykiel.github.io/Weatherfunctions/reference/getDWDContent.md)
   : getDWDContent gets the content (filenames etc.) of a DWD ftp
   repository
@@ -509,6 +526,11 @@ summary(DWDdata)
   : Title getsingleDWDWeather loads data for a single weather station
 - [`initialize_weatherfunctions_data_dir()`](https://agronomykiel.github.io/Weatherfunctions/reference/initialize_weatherfunctions_data_dir.md)
   : Explicitly initialize the Weatherfunctions data directory.
+- [`HistoricalDWD`](https://agronomykiel.github.io/Weatherfunctions/reference/legacy_dwd_rdata_filenames.md)
+  [`HistoricalDWDRain`](https://agronomykiel.github.io/Weatherfunctions/reference/legacy_dwd_rdata_filenames.md)
+  [`fn_HistoricalDWD`](https://agronomykiel.github.io/Weatherfunctions/reference/legacy_dwd_rdata_filenames.md)
+  [`fn_HistoricalDWDRain`](https://agronomykiel.github.io/Weatherfunctions/reference/legacy_dwd_rdata_filenames.md)
+  : Legacy DWD RData filenames
 - [`makeScenarioplot()`](https://agronomykiel.github.io/Weatherfunctions/reference/makeScenarioplot.md)
   : makeScenarioplot makes time series plots from a data frame with Time
   in the first column as Excel date and the parameter to be plotted in
@@ -562,6 +584,8 @@ summary(DWDdata)
   create it.
 - [`windheight()`](https://agronomykiel.github.io/Weatherfunctions/reference/windheight.md)
   : Alternative function for correction of windspeed to reference height
+  rearranged form of the FAO wind-speed height adjustment
+  (https://www.fao.org/3/x0490e/x0490e07.htm)
 
 # Articles
 

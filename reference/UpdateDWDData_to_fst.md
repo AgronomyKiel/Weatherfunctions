@@ -8,7 +8,7 @@ UpdateDWDData_to_fst updates the DWD weather data to a local fst file
 UpdateDWDData_to_fst(
   dataperiod = "recent",
   startdate = "1990-01-01",
-  isloadnew = T,
+  isloadnew = TRUE,
   DWD_content = NULL,
   MinDataset = FALSE
 )
@@ -22,7 +22,8 @@ UpdateDWDData_to_fst(
 
 - startdate:
 
-  start date for the weather data
+  start date for the weather data; the complete date becomes part of the
+  output filename
 
 - isloadnew:
 
@@ -38,4 +39,4 @@ UpdateDWDData_to_fst(
 
 ## Value
 
-Nothing, a fst file is written to the local directory
+The path of the written FST file, invisibly.

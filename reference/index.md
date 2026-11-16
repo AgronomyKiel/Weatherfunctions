@@ -80,9 +80,13 @@
 - [`.onLoad()`](https://agronomykiel.github.io/Weatherfunctions/reference/dot-onLoad.md)
   : Internal hook to optionally initialize the data directory when the
   user opts in via \`options(weatherfunctions.auto_setup = TRUE)\`.
+- [`dwd_fst_filename()`](https://agronomykiel.github.io/Weatherfunctions/reference/dwd_fst_filename.md)
+  : Construct a DWD FST filename
 - [`estSg_S0()`](https://agronomykiel.github.io/Weatherfunctions/reference/estSg_S0.md)
   : estSg_S0: calculation of daily solar radiation from relative
   sunshine
+- [`fn_histDWD_data_str`](https://agronomykiel.github.io/Weatherfunctions/reference/fn_histDWD_data_str.md)
+  : Legacy historical DWD FST filename prefix
 - [`getDWDContent()`](https://agronomykiel.github.io/Weatherfunctions/reference/getDWDContent.md)
   : getDWDContent gets the content (filenames etc.) of a DWD ftp
   repository
@@ -114,6 +118,11 @@
   : Title getsingleDWDWeather loads data for a single weather station
 - [`initialize_weatherfunctions_data_dir()`](https://agronomykiel.github.io/Weatherfunctions/reference/initialize_weatherfunctions_data_dir.md)
   : Explicitly initialize the Weatherfunctions data directory.
+- [`HistoricalDWD`](https://agronomykiel.github.io/Weatherfunctions/reference/legacy_dwd_rdata_filenames.md)
+  [`HistoricalDWDRain`](https://agronomykiel.github.io/Weatherfunctions/reference/legacy_dwd_rdata_filenames.md)
+  [`fn_HistoricalDWD`](https://agronomykiel.github.io/Weatherfunctions/reference/legacy_dwd_rdata_filenames.md)
+  [`fn_HistoricalDWDRain`](https://agronomykiel.github.io/Weatherfunctions/reference/legacy_dwd_rdata_filenames.md)
+  : Legacy DWD RData filenames
 - [`makeScenarioplot()`](https://agronomykiel.github.io/Weatherfunctions/reference/makeScenarioplot.md)
   : makeScenarioplot makes time series plots from a data frame with Time
   in the first column as Excel date and the parameter to be plotted in
@@ -167,3 +176,5 @@
   create it.
 - [`windheight()`](https://agronomykiel.github.io/Weatherfunctions/reference/windheight.md)
   : Alternative function for correction of windspeed to reference height
+  rearranged form of the FAO wind-speed height adjustment
+  (https://www.fao.org/3/x0490e/x0490e07.htm)

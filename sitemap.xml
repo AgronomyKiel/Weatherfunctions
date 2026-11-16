@@ -41,7 +41,9 @@
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/dens_air.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/displacement_height.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/dot-onLoad.html</loc></url>
+<url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/dwd_fst_filename.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/estSg_S0.html</loc></url>
+<url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/fn_histDWD_data_str.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/getDWDContent.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/getDWDRainContent.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/getDWDRainStationList.html</loc></url>
@@ -54,6 +56,7 @@
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/getsingleDWDWeather.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/index.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/initialize_weatherfunctions_data_dir.html</loc></url>
+<url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/legacy_dwd_rdata_filenames.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/makeScenarioplot.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/makeplot.html</loc></url>
 <url><loc>https://agronomykiel.github.io/Weatherfunctions/reference/makeplot2.html</loc></url>
