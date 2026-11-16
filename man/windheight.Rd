@@ -2,7 +2,9 @@
 % Please edit documentation in R/WeatherFunctions.R
 \name{windheight}
 \alias{windheight}
-\title{Alternative function for correction of windspeed to reference height}
+\title{Alternative function for correction of windspeed to reference height
+rearranged form of the FAO wind-speed height adjustment
+(https://www.fao.org/3/x0490e/x0490e07.htm)}
 \usage{
 windheight(ui, zi, zo)
 }
@@ -18,4 +20,6 @@ uo corrected windspeed [m/s]
 }
 \description{
 Alternative function for correction of windspeed to reference height
+rearranged form of the FAO wind-speed height adjustment
+(https://www.fao.org/3/x0490e/x0490e07.htm)
 }

@@ -25,6 +25,9 @@ library(purrr)
 #library(ggplot2)
 library(plotly)
 library(scales)
+library(ropenmeteo)
+source("R/get_daily_forecast.R")
+source("R/GetForecastDataForStationList.R")
 
 #' Internal hook to optionally initialize the data directory when the user opts
 #' in via `options(weatherfunctions.auto_setup = TRUE)`.
@@ -48,7 +51,11 @@ library(scales)
 #' @return A character string with the path used for local cache files.
 #' @export weatherfunctions_data_dir
 weatherfunctions_data_dir <- function(create = FALSE, ask = interactive()) {
-  path <- tools::R_user_dir("Weatherfunctions", which = "data")
+  path <- normalizePath(
+    tools::R_user_dir("Weatherfunctions", which = "data"),
+    winslash = "/",
+    mustWork = FALSE
+  )
 
   if (create && !dir.exists(path)) {
     if (ask && interactive()) {
@@ -143,58 +150,74 @@ StandardWindHeight <- 10
 
 ### Local folders for copies of DWD data ####
 #' @export LocalCopy_DWD_ftp_historical
-LocalCopy_DWD_ftp_historical <- paste(DataDir,"LocalCopyDWD","kl","historical", sep = "/")
+LocalCopy_DWD_ftp_historical <- file.path(DataDir, "LocalCopyDWD", "kl", "historical")
 
 #' @export LocalCopy_DWD_ftp_recent
-LocalCopy_DWD_ftp_recent <- paste(DataDir, "LocalCopyDWD","kl","recent", sep = "/")
+LocalCopy_DWD_ftp_recent <- file.path(DataDir, "LocalCopyDWD", "kl", "recent")
 
 ### Local folders for copies of additional DWD rainfall data ####
 #' @export LocalCopy_DWD_Rain_ftp_historical
-LocalCopy_DWD_Rain_ftp_historical <- paste(DataDir, "LocalCopyDWD","more_precip","historical", sep = "/")
+LocalCopy_DWD_Rain_ftp_historical <- file.path(DataDir, "LocalCopyDWD", "more_precip", "historical")
 
 #' @export LocalCopy_DWD_Rain_ftp_recent
-LocalCopy_DWD_Rain_ftp_recent <- paste(DataDir,  "LocalCopyDWD","more_precip","recent", sep = "/")
+LocalCopy_DWD_Rain_ftp_recent <- file.path(DataDir, "LocalCopyDWD", "more_precip", "recent")
 
 ### local DWD Rdata paths ####
 #' @export Local_DWD
-Local_DWD <- paste(DataDir, "LocalCopyDWD", sep = "/")
+Local_DWD <- file.path(DataDir, "LocalCopyDWD")
 
 #' @export Local_R_DWD
-Local_R_DWD <- paste(DataDir, "LocalCopyDWD","Rdata", sep = "/")
+Local_R_DWD <- file.path(DataDir, "LocalCopyDWD", "Rdata")
 
 #' @export Local_DWD_historical
-Local_DWD_historical <- paste(DataDir, "historical", sep = "/")
+Local_DWD_historical <- file.path(DataDir, "historical")
 
 #' @export Local_DWD_recent
-Local_DWD_recent <- paste(DataDir, "recent", sep = "/")
+Local_DWD_recent <- file.path(DataDir, "recent")
 
 #' @export Local_Rain_DWD_historical
-Local_Rain_DWD_historical <- paste(DataDir, "historical", sep = "/")
+Local_Rain_DWD_historical <- file.path(DataDir, "historical")
 
 #' @export Local_Rain_DWD_recent
-Local_Rain_DWD_recent <- paste(DataDir, "recent", sep = "/")
+Local_Rain_DWD_recent <- file.path(DataDir, "recent")
 
 #' @export Local_Rdata_path
-Local_Rdata_path <- paste(DataDir, "LocalCopyDWD","Rdata", sep = "/")
+Local_Rdata_path <- file.path(DataDir, "LocalCopyDWD", "Rdata")
 
 #' @export path_unzip
-path_unzip <- paste(DataDir, "DWD_tmp", sep="/")
+path_unzip <- file.path(DataDir, "DWD_tmp")
 
 
 
-### local RData file names ####
-#' @export HistoricalDWD
+#' Legacy DWD RData filenames
+#'
+#' These exported constants are retained for compatibility with workflows from
+#' an earlier development stage that stored complete downloads as RData files.
+#' New code should use \code{\link{dwd_fst_filename}()} for the current
+#' FST-based workflow.
+#'
+#' @section Deprecated:
+#' These RData filename constants are deprecated and must not be repurposed as
+#' FST filenames. They remain exported only for backward compatibility.
+#'
+#' @format A character scalar containing a legacy RData filename.
+#' @name legacy_dwd_rdata_filenames
+NULL
+
+#' @rdname legacy_dwd_rdata_filenames
+#' @export
 HistoricalDWD <- "historicalDWDweather.RData"
 
-#' @export HistoricalDWDRain
+#' @rdname legacy_dwd_rdata_filenames
+#' @export
 HistoricalDWDRain <- "historicalDWDRain.RData"
 
 ### outputpath ####
 #' @export datapath
-datapath <- paste(DataDir, "data")
+datapath <- file.path(DataDir, "data")
 
 #' @export figurepath
-figurepath <- paste(DataDir, "figures")
+figurepath <- file.path(DataDir, "figures")
 
 
 ## local RData file names
@@ -207,14 +230,75 @@ fn_DWDRain_content_recent <- "DWDRain_content_recent.Rdata"
 #' @export fn_DWDRain_content
 fn_DWDRain_content <- "DWDRainStationlist.RData"
 
-#' @export fn_histDWD_data_str
+#' Legacy historical DWD FST filename prefix
+#'
+#' Retained for compatibility with code that constructs year-only filenames
+#' such as \code{weather_dat_1990.fst}. New code should use
+#' \code{\link{dwd_fst_filename}()}, which includes the complete start date.
+#'
+#' @section Deprecated:
+#' This prefix is retained only for locating legacy year-only FST files.
+#'
+#' @format A character scalar containing a filename prefix.
+#' @export
 fn_histDWD_data_str <- "weather_dat_"
 
-#' @export fn_HistoricalDWD
+#' @rdname legacy_dwd_rdata_filenames
+#' @export
 fn_HistoricalDWD <- "historicalDWDweather.RData"
 
-#' @export fn_HistoricalDWDRain
+#' @rdname legacy_dwd_rdata_filenames
+#' @export
 fn_HistoricalDWDRain <- "historicalDWDRain.RData"
+
+
+#' Construct a DWD FST filename
+#'
+#' Creates the filename used by both FST writers and readers. Historical
+#' filenames include the complete start date so datasets beginning on different
+#' dates cannot silently overwrite one another. Recent observations always use
+#' the stable filename \code{recent_weather_dat.fst}, because that file is
+#' refreshed in place.
+#'
+#' @param dataperiod Character scalar; either \code{"historical"} or
+#'   \code{"recent"}.
+#' @param startdate A single value coercible to \code{Date} giving the first
+#'   date included in the dataset. It affects the historical filename; recent
+#'   data use a stable filename without a date suffix.
+#' @return A character scalar containing a filename, without a directory.
+#' @export
+#' @examples
+#' dwd_fst_filename("historical", "1990-01-01")
+#' dwd_fst_filename("recent", as.Date("2025-07-01"))
+dwd_fst_filename <- function(dataperiod = c("historical", "recent"),
+                             startdate = "1990-01-01") {
+  dataperiod <- match.arg(dataperiod)
+
+  if (length(startdate) != 1L) {
+    stop("startdate must contain exactly one date.", call. = FALSE)
+  }
+
+  startdate <- tryCatch(
+    as.Date(startdate),
+    error = function(e) NA_Date_
+  )
+
+  if (is.na(startdate)) {
+    stop("startdate must be coercible to a valid Date.", call. = FALSE)
+  }
+
+  prefix <- switch(
+    dataperiod,
+    historical = "weather_dat_",
+    recent = "recent_weather_dat"
+  )
+
+  if (dataperiod == "recent") {
+    return(paste0(prefix, ".fst"))
+  }
+
+  paste0(prefix, format(startdate, "%Y-%m-%d"), ".fst")
+}
 
 
 
@@ -1602,7 +1686,7 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 
   dir.create(path_unzip, showWarnings = FALSE, recursive = T)
 
-  dest_file <- paste0(path_unzip, "/Stationlist.txt")
+  dest_file <- file.path(path_unzip, "Stationlist.txt")
   # Hier wird es kompliziert, da der DWD ständig das File-Format ändert...
   download.file(url=paste0(repository, fn_KLBeschreibung),
                 #		destfile="/DWD_tmp/Stationlist.txt", mode = "wb")
@@ -1631,12 +1715,12 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
     if(fn %in% ziplist){
 
 
-    if (dir.exists(paste0(path_unzip))==F){
-      dir.create(path_unzip, recursive = T)
+    if (!dir.exists(path_unzip)) {
+      dir.create(path_unzip, recursive = TRUE)
     }
 
     # download the zip file
-    dest_file <- paste(path_unzip, fn, sep="/")
+    dest_file <- file.path(path_unzip, fn)
     download.file(url=paste0(repository, fn),
                   destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")
 
@@ -1644,7 +1728,7 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
     if (file.exists(dest_file)){
       unzip(zipfile = dest_file, exdir = path_unzip)
     # get the name of the unzipped file with the weather data
-      fn_Meta <- paste(DataDir, path_unzip, paste0(fn_Metadaten, id, ".txt"))
+      fn_Meta <- file.path(path_unzip, paste0(fn_Metadaten, id, ".txt"))
       if(file.exists(fn_Meta)){
 
   # read weather data from temporary file
@@ -1753,7 +1837,7 @@ getDWDRainContent <- function(repository, quiet=T){
 
   dir.create(path_unzip, showWarnings = FALSE, recursive = T)
 
-  dest_file <- paste(path_unzip,"RainStationlist.txt", sep="/")
+  dest_file <- file.path(path_unzip, "RainStationlist.txt")
   # Hier wird es kompliziert, da der DWD ständig das File-Format ändert...
   download.file(url=paste0(repository, "RR_Tageswerte_Beschreibung_Stationen.txt"),
                 #		destfile="/DWD_tmp/Stationlist.txt", mode = "wb")
@@ -1862,7 +1946,7 @@ Get_ZipLists_Station_ids <- function(dataperiod="recent", loadnew=T,
       recent     <- getDWDContent(DWD_ftp_recent)
     } else
     {
-      load(paste(Local_R_DWD, localStationdata_fn, sep = "/"))
+      load(file.path(Local_R_DWD, localStationdata_fn))
     }
   }
 
@@ -1871,7 +1955,7 @@ Get_ZipLists_Station_ids <- function(dataperiod="recent", loadnew=T,
       historical <- getDWDContent(DWD_ftp_historical)
     } else
     {
-      load(paste(Local_R_DWD, localStationdata_fn, sep = "/"))
+      load(file.path(Local_R_DWD, localStationdata_fn))
     }
   }
 
@@ -2024,6 +2108,35 @@ find_dwd_zip_file <- function(station, ziplist, product = c("KL", "RR")) {
 }
 
 
+# Select exactly one product data file from the extracted archive contents.
+# Some high-altitude DWD stations use the klima_zug_tag product name while
+# exposing the same daily KL column schema as the regular klima_tag product.
+find_dwd_product_file <- function(files, archive, product = c("KL", "RR")) {
+  product <- match.arg(product)
+  files <- as.character(files)
+  pattern <- switch(
+    product,
+    KL = "^produkt_klima(_zug)?_tag_.*[.]txt$",
+    RR = "^produkt_nieder_tag_.*[.]txt$"
+  )
+  matches <- files[grepl(pattern, basename(files), ignore.case = TRUE)]
+
+  if (length(matches) != 1L) {
+    stop(
+      sprintf(
+        "Expected one %s data file in ZIP '%s', found %d.",
+        if (product == "KL") "weather" else "precipitation",
+        basename(archive),
+        length(matches)
+      ),
+      call. = FALSE
+    )
+  }
+
+  matches[[1L]]
+}
+
+
 #' Copy_DWD_ZipFiles makes a local copy of DWD weather data as zip files
 #'
 #' @param DWD_ftp_ ftp address of DWD  weather data
@@ -2077,7 +2190,7 @@ Copy_DWD_ZipFiles <- function(DWD_ftp_, LocalCopy_DWD_ftp_) {
   # Download each file from the FTP server to the local directory
   for (i in seq_along(filelist)) {
     filename <- filelist[i]
-    dest_file <- paste(LocalCopy_DWD_ftp_,filename, sep="/" )
+    dest_file <- file.path(LocalCopy_DWD_ftp_, filename)
     cat(i, "\n")
     if (nchar(dest_file) > 1) {
       tryCatch({
@@ -2094,26 +2207,28 @@ Copy_DWD_ZipFiles <- function(DWD_ftp_, LocalCopy_DWD_ftp_) {
 #' UpdateDWDData_to_fst updates the DWD weather data to a local fst file
 #'
 #' @param dataperiod choose recent or historical weather data
-#' @param startdate start date for the weather data
+#' @param startdate start date for the weather data; the complete date becomes
+#'   part of the output filename
 #' @param isloadnew option to load data from DWD ftp server
 #' @param DWD_content list with stationlist, ziplist, zipID
 #' @param MinDataset option to load only the minimum dataset
 #' @import fst
 #' @import lubridate
 #'
-#' @return Nothing, a fst file is written to the local directory
+#' @return The path of the written FST file, invisibly.
 #' @export
 #'
-# @examples UpdateDWDData_to_fst("recent", "1990-01-01", T, DWD_content=NULL, MinDataset=FALSE)
+# @examples UpdateDWDData_to_fst("recent", "1990-01-01", TRUE, DWD_content=NULL, MinDataset=FALSE)
 #'
 #'
 
-UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", isloadnew=T,
-                                 DWD_content=NULL, MinDataset=FALSE) {
+UpdateDWDData_to_fst <- function(dataperiod = "recent", startdate = "1990-01-01",
+                                 isloadnew = TRUE, DWD_content = NULL,
+                                 MinDataset = FALSE) {
 
-  # check if dataperiod parameter is valid
-  stopifnot(dataperiod %in% c("recent", "historical"))
-  startyear <- year(as.Date(startdate))
+  dataperiod <- match.arg(dataperiod, c("recent", "historical"))
+  output_filename <- dwd_fst_filename(dataperiod, startdate)
+  startdate <- as.Date(startdate)
 
   ### load station data if not given as parameter
   if (is.null(DWD_content)){
@@ -2142,38 +2257,47 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
   # prepare list of data frames for weather data import
   df_list <- vector(mode = "list", n_df)
 
-  ## loop over the stations and get the weather data
-  if (dataperiod == "recent") {
-    for (i in 1:length(Stationids)){
-      #  i <- 18
-      station <- Stationids[i]
-      if (isloadnew) {
-        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_recent), silent = F)
-      } else {
-        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = LocalCopy_DWD_ftp_recent), silent = F)
-      }
-    }
+  repository <- if (isloadnew) {
+    if (dataperiod == "recent") DWD_ftp_recent else DWD_ftp_historical
+  } else {
+    if (dataperiod == "recent") LocalCopy_DWD_ftp_recent else LocalCopy_DWD_ftp_historical
   }
 
-  # same for historical data
-  if (dataperiod == "historical") {
-    for (i in 1:length(Stationids)){
-      #  i <- 18
-      station <- Stationids[i]
-      #  df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical, local = isloadnew), silent = F)
-      if (isloadnew) {
-        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical), silent = F)
-      } else {
-        df_list[[i]] <- try(getsingleDWDWeather(station = station, ziplist = ziplist, repository = LocalCopy_DWD_ftp_historical), silent = F)
+  ## Loop over the stations. A DWD directory listing can temporarily contain
+  ## an archive that is missing, incomplete, or uses an unsupported layout.
+  ## Skip only that station so one upstream archive cannot abort the full run.
+  for (i in seq_along(Stationids)) {
+    station <- Stationids[i]
+    df_list[[i]] <- tryCatch(
+      getsingleDWDWeather(
+        station = station,
+        ziplist = ziplist,
+        repository = repository
+      ),
+      error = function(error) {
+        warning(
+          sprintf(
+            "Skipping DWD station '%s': %s",
+            station,
+            conditionMessage(error)
+          ),
+          call. = FALSE
+        )
+        NULL
       }
-
-
-#      df_list[[i]] <- getsingleDWDWeather(station = station, ziplist = ziplist, repository = DWD_ftp_historical, local = F)
-    }
+    )
   }
 
-  # remove empty data frames (no valid names etc.)
-  df_list <-   df_list[lapply(df_list, length) > 1]
+  # Remove missing or empty station results.
+  valid_result <- vapply(
+    df_list,
+    function(data) is.data.frame(data) && nrow(data) > 0L,
+    logical(1)
+  )
+  df_list <- df_list[valid_result]
+  if (length(df_list) == 0L) {
+    stop("No valid DWD station data could be loaded.", call. = FALSE)
+  }
 
   # convert list of data frames in one
   df <- try(data.table::rbindlist(df_list, use.names = T, fill = TRUE), silent = T)
@@ -2205,12 +2329,11 @@ UpdateDWDData_to_fst <- function(dataperiod="recent", startdate="1990-01-01", is
   #  df <- df %>% select( -FX, -RSKF, -SHK_TAG, -NM, -VPM,-eor, -TGK)
 
   # save data to fst file
-  if (dataperiod == "recent") {
-    fn <- paste0(Local_Rdata_path,"/recent_weather_dat_",as.character(startyear),".fst")
-    write.fst(x = df, path = fn)}
-  if (dataperiod == "historical") {
-    fn <- paste0(Local_Rdata_path,"/weather_dat_",as.character(startyear),".fst")
-    write.fst(x = df, path = fn)}
+  dir.create(Local_Rdata_path, recursive = TRUE, showWarnings = FALSE)
+  output_path <- file.path(Local_Rdata_path, output_filename)
+  write.fst(x = df, path = output_path)
+
+  invisible(output_path)
 }
 
 
@@ -2239,7 +2362,7 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
   local <- dir.exists(repository)
 
   # if no local unzip directory is existing, create it
-  if (!dir.exists(paste0(path_unzip))){
+  if (!dir.exists(path_unzip)) {
     # if unzip directory is not existing, create it
     dir.create(path_unzip, recursive = T)
   } else {
@@ -2263,32 +2386,26 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
   # if not local  download the zip file from the ftp server
   if (!local) {
     # name of the destination file were the data are stored
-    dest_file <- paste0(path_unzip, "/", ZipFilename)
+    dest_file <- file.path(path_unzip, ZipFilename)
     download.file(url=paste0(repository,"/", ZipFilename),
                 destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")} else {
-    dest_file <- paste0(repository, "/", ZipFilename)
+    dest_file <- file.path(repository, ZipFilename)
                 }
 
   # unzip the file to the unzip directory
   unzip(zipfile = dest_file,
             exdir = path_unzip)
 
-  # construct the name of the data file
-  DataFilename <- grep("produkt_klima_tag_", list.files(path_unzip), value = TRUE)
-
-  if (length(DataFilename) != 1L) {
-    stop(
-      sprintf(
-        "Expected one weather data file in ZIP '%s', found %d.",
-        basename(ZipFilename),
-        length(DataFilename)
-      ),
-      call. = FALSE
-    )
-  }
+  # Select the daily product file. DWD currently uses both
+  # produkt_klima_tag_* and produkt_klima_zug_tag_* for KL archives.
+  DataFilename <- find_dwd_product_file(
+    list.files(path_unzip),
+    archive = ZipFilename,
+    product = "KL"
+  )
 
   # read weather data from temporary file
-  DWDWeather <- read.table(file = paste(path_unzip, DataFilename, sep="/"),
+  DWDWeather <- read.table(file = file.path(path_unzip, DataFilename),
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   DWDWeather$STATIONS_ID <- sprintf("%05i", type.convert(DWDWeather$STATIONS_ID, dec = ".", as.is="T"))
@@ -2312,8 +2429,8 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
   # read meta data for wind speed measurement height
   MetaWindfn <- paste0("Metadaten_Geraete_Windgeschwindigkeit_", station,".txt")
 
-  if(file.exists(paste0(path_unzip, "/",MetaWindfn))){
-  MetaWinddata <- read.table(file = paste(path_unzip, MetaWindfn, sep="/"),
+  if (file.exists(file.path(path_unzip, MetaWindfn))) {
+  MetaWinddata <- read.table(file = file.path(path_unzip, MetaWindfn),
                              header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                              stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   # letzte Zeile raus
@@ -2372,7 +2489,7 @@ getsingleDWDRain <- function(station, ziplist, repository, quiet=T){
   local <- dir.exists(repository)
 
   # if no local unzip directory is existing, create it
-  if (!dir.exists(paste0(path_unzip))){
+  if (!dir.exists(path_unzip)) {
     # if unzip directory is not existing, create it
     dir.create(path_unzip, recursive = T)
   } else {
@@ -2390,30 +2507,23 @@ getsingleDWDRain <- function(station, ziplist, repository, quiet=T){
   # if not local  download the zip file from the ftp server
   if (!local) {
     # name of the destination file were the data are stored
-    dest_file <- paste0(path_unzip, "/", ZipFilename)
+    dest_file <- file.path(path_unzip, ZipFilename)
     download.file(url=paste0(repository,"/", ZipFilename),
                   destfile=dest_file, mode = "wb", quiet = quiet, method = "auto")} else {
-                    dest_file <- paste0(repository, "/", ZipFilename)
+                    dest_file <- file.path(repository, ZipFilename)
                   }
 
   # unzip the file to the unzip directory
   unzip(zipfile = dest_file,
         exdir = path_unzip)
 
-  DataFileName <- grep("produkt_nieder_tag_", list.files(path_unzip), value = TRUE)
+  DataFileName <- find_dwd_product_file(
+    list.files(path_unzip),
+    archive = ZipFilename,
+    product = "RR"
+  )
 
-  if (length(DataFileName) != 1L) {
-    stop(
-      sprintf(
-        "Expected one precipitation data file in ZIP '%s', found %d.",
-        basename(ZipFilename),
-        length(DataFileName)
-      ),
-      call. = FALSE
-    )
-  }
-
-  DWDWeather <- read.table(file = paste(path_unzip, DataFileName, sep="/"),
+  DWDWeather <- read.table(file = file.path(path_unzip, DataFileName),
                            header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
                            stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
   DWDWeather$Date <- as.Date(as.character(DWDWeather$MESS_DATUM), "%Y%m%d")
@@ -2853,6 +2963,33 @@ GetWeatherData_selection <- function(stations_selected,
 GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, repository=DWD_ftp_recent,
                                          startdate="1990-01-01") {
 
+  fn_historical <- file.path(
+    Local_Rdata_path,
+    dwd_fst_filename("historical", startdate)
+  )
+
+  if (!file.exists(fn_historical)) {
+    legacy_fn_historical <- file.path(
+      Local_Rdata_path,
+      paste0(fn_histDWD_data_str, format(as.Date(startdate), "%Y"), ".fst")
+    )
+
+    if (file.exists(legacy_fn_historical)) {
+      warning(
+        sprintf(
+          "Using legacy year-only historical FST file '%s'. Recreate it with UpdateDWDData_to_fst() to use date-specific filenames.",
+          legacy_fn_historical
+        ),
+        call. = FALSE
+      )
+      fn_historical <- legacy_fn_historical
+    } else {
+      stop(
+        sprintf("Historical DWD FST file not found: '%s'.", fn_historical),
+        call. = FALSE
+      )
+    }
+  }
 
   local <- ifelse(repository == DWD_ftp_recent, F, T)
   n_df <- length(stations_selected$Stations_id)
@@ -2897,7 +3034,6 @@ GetWeatherData_selection_fst <- function(stations_selected,  DWD_content, reposi
   ) %>%
     dplyr::select(c(all_of(idvars), "Date", "Jahr","Monat","ExcelTime", all_of(measvars)))
 
-  fn_historical <- paste0("./LocalCopyDWD/Rdata/weather_dat_", as.character(startdate), ".fst")
   weather_historical <- read.fst(fn_historical)
   weather_historical$Jahr <- year(weather_historical$Date)
   selcols <- names(weather_recent)
@@ -3716,101 +3852,6 @@ InterpolateWeatherData <- function(station_selected,
     return(dfscen)
   }
 
-
-#' Title
-#'
-#' @param fn file name of the stationlist file
-#' @import dplyr
-#'
-#' @return a data frame with the forecast data for all station in the list
-#' @export
-#'
-GetForecastDataForStationList <- function(fn) {
-
-
-  # read the list of location for which weather data should be interpolated
-  df.locations <- read_csv(fn)
-
-  #sites <- df$Stationsname
-  df.locations <- as.data.frame(df.locations)
-  sites <- df.locations$ID
-  df.locations$Stationsname <- df.locations$ID
-
-  i <- 1
-  AllForeCastData <- data.frame()
-  for (site in sites){
-    #      site <- sites[1]
-    #  site <- "Nomborn"
-
-    cat(site, "Site Nr.",as.character(i), "/n")
-    i <- i + 1
-    starttime <- Sys.time()
-    cat(site, "\n")
-
-    geoBreite <- df.locations %>%  filter(ID==site) %>% dplyr::select(Latitude)  #[df$Stationsname=="site", "geoBreite"]
-    geoLaenge <- df.locations %>%  filter(ID==site) %>% dplyr::select(Longitude)  #[df$Stationsname=="site", "geoBreite"]
-    #Hoehe_m <- df[df$Stationsname==site, "Stationshoehe"]
-    Hoehe_m <- as.numeric(df.locations[df.locations$ID==site, "Hoehe_m"])
-
-    Location <- data.frame(Latitude=as.numeric(geoBreite), Longitude=as.numeric(geoLaenge))
-    Location <- st_as_sf(Location, coords = c("Longitude", "Latitude")) %>%
-      st_set_crs(value = "+proj=longlat +datum=WGS84")
-
-    # create a location object as numeric vector of Latitude and Longitude
-    location <- c(as.numeric(geoBreite), as.numeric(geoLaenge))
-
-    forecast_start <- LatestRecentDate+1
-    forecast_end <- as.Date(Sys.Date())+7
-    # get the weather forecast data
-    forecast <- weather_forecast(
-      location = location,
-      start = forecast_start,
-      end = forecast_end,
-      hourly = c("temperature_2m", "shortwave_radiation", "wind_speed_10m", "relative_humidity_2m"),
-      daily = c("temperature_2m_max", "temperature_2m_min","precipitation_sum", "shortwave_radiation_sum", "sunshine_duration" ),
-      response_units = list(
-        temperature_unit = "celsius",
-        precipitation_unit = "mm",
-        #        wind_unit = "m/s"
-        wind_speed_unit = "ms"
-      ),
-      #      daily = NULL,
-      model = NULL,#"icon_d2",#NULL, "icon_eu",#
-      timezone = "Europe/Berlin"
-    )
-    daily_forecast <- forecast[is.na(forecast$time),c("date","daily_temperature_2m_max","daily_temperature_2m_min","daily_precipitation_sum","daily_shortwave_radiation_sum","daily_sunshine_duration")]
-    tmp <- forecast %>% filter(!is.na(time)) %>% dplyr::select("date","time","hourly_temperature_2m","hourly_shortwave_radiation","hourly_wind_speed_10m","hourly_relative_humidity_2m") %>%
-      mutate(Sat_def = air_saturation_deficit(hourly_temperature_2m, hourly_relative_humidity_2m)) %>%
-      mutate(date = as.Date(date)) %>% group_by(date) %>%
-      summarise(TMPM = mean(hourly_temperature_2m, na.rm = T),
-                Sat_def = mean(Sat_def, na.rm = T),
-                LF = mean(hourly_relative_humidity_2m, na.rm = T),
-                Wind = mean(hourly_wind_speed_10m, na.rm = T),
-                LF = mean(hourly_relative_humidity_2m, na.rm = T))
-
-    daily_forecast <- dplyr::left_join(daily_forecast, tmp, by = "date")
-    #  daily_forecast$Time <-  as.numeric(daily_forecast$date-as.Date("1899-12-30"))
-    daily_forecast <- daily_forecast %>% mutate(Date = as.Date(date), Time=as.numeric(Date-as.Date("1899-12-30"))) %>% dplyr::select(-date)
-    daily_forecast <- daily_forecast %>% dplyr::rename(TMPMX = daily_temperature_2m_max, TMPMN=daily_temperature_2m_min, Rain=daily_precipitation_sum, GlobRad = daily_shortwave_radiation_sum)
-    daily_forecast <- daily_forecast %>%  mutate(VP = 6.1078 * exp(17.269 * TMPM / (TMPM + 237.3)), Sat_def = 6.1078 * exp(17.269 * TMPM / (TMPM + 237.3) - LF / 100 * 17.269 * TMPM / (TMPM + 237.3))) %>%
-      dplyr::select(-daily_sunshine_duration, -Date)
-
-    summary(daily_forecast)
-    daily_forecast$ID <- site
-    daily_forecast$Longitude <- geoLaenge$Longitude
-    daily_forecast$Latitude <- geoBreite$Latitude
-    daily_forecast$Rad_Int <- daily_forecast$GlobRad * 1e6/86400
-
-    AllForeCastData <- rbind(AllForeCastData, daily_forecast)
-
-    endtime <- Sys.time()
-    cat(paste0("Time for ", site, " : ", round(endtime - starttime, digits=2)," seconds", "\n"))
-  }
-  EndTime <- Sys.time()
-  cat(paste("Time for gathering of forecast data:", round(EndTime - starttime, digits=2), " seconds", "\n"))
-  return(AllForeCastData)
-
-}
 
 
 

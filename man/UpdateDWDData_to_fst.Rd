@@ -7,7 +7,7 @@
 UpdateDWDData_to_fst(
   dataperiod = "recent",
   startdate = "1990-01-01",
-  isloadnew = T,
+  isloadnew = TRUE,
   DWD_content = NULL,
   MinDataset = FALSE
 )
@@ -15,7 +15,8 @@ UpdateDWDData_to_fst(
 \arguments{
 \item{dataperiod}{choose recent or historical weather data}
 
-\item{startdate}{start date for the weather data}
+\item{startdate}{start date for the weather data; the complete date becomes
+part of the output filename}
 
 \item{isloadnew}{option to load data from DWD ftp server}
 
@@ -24,7 +25,7 @@ UpdateDWDData_to_fst(
 \item{MinDataset}{option to load only the minimum dataset}
 }
 \value{
-Nothing, a fst file is written to the local directory
+The path of the written FST file, invisibly.
 }
 \description{
 UpdateDWDData_to_fst updates the DWD weather data to a local fst file

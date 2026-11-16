@@ -6,6 +6,8 @@ Weatherfunctions is an R package for downloading daily weather and precipitation
 
 Treat this repository as an R package. Package metadata and dependencies live in `DESCRIPTION`; exports and imports are represented in `NAMESPACE` and are primarily generated from roxygen2 comments in `R/`.
 
+This is an early-stage R package and is not related to RAD Studio, Delphi, or Pascal. Do not use RAD Studio/Kai integration or Pascal-specific workflows in this repository; use standard R-package and filesystem tooling instead.
+
 Some workflows contact DWD or other remote services and can download substantial data. Do not run network-dependent examples or bulk-download functions unless the task requires it and the user has agreed to the network and storage cost.
 
 ## Repo Map

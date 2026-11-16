@@ -1,20 +1,20 @@
+------------------------------------------------------------------------
+
+editor_options: markdown: wrap: 72 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # Weatherfunctions
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
-The goal of Weatherfunctions is to support download of daily weather
-data from the German weather data service (DWD), to generate
-interpolations of weather data and to calculate some derived variables
-like potential evapotranspiration.
+The goal of Weatherfunctions is to support download of daily weather data from the German weather data service (DWD), to generate interpolations of weather data and to calculate some derived variables like potential evapotranspiration.
 
 ## Installation
 
-You can install the development version of Weatherfunctions from
-[GitHub](https://github.com/) with:
+You can install the development version of Weatherfunctions from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
@@ -23,15 +23,11 @@ pak::pak("AgronomyKiel/Weatherfunctions")
 
 ## Example
 
-This is a basic example which shows you how to download a local copy of
-the historical and recent daily weather data from DWD and to interpolate
-them for a certain location defined by latitude, longitude and height
-above sea level.
+This is a basic example which shows you how to download a local copy of the historical and recent daily weather data from DWD and to interpolate them for a certain location defined by latitude, longitude and height above sea level.
 
 ``` r
 rm(list = ls())
 library(Weatherfunctions)
-library(here)
 library(fst)
 library(dplyr)
 library(tidyr)
@@ -47,10 +43,10 @@ DWDRain_content <- getDWDRainStationList(recent = DWDRain_ftp_recent, historical
 outputDir <- Local_R_DWD
 
 # save the meta data to local files
-if (!dir.exists(outputDir)) {dir.create(outputDir, recursive = T)}
-fn <- paste0(outputDir, fn_DWD_content)
+if (!dir.exists(outputDir)) {dir.create(outputDir, recursive = TRUE)}
+fn <- file.path(outputDir, fn_DWD_content)
 save(DWD_content, file = fn)
-fn <- paste0(outputDir, fn_DWDRain_content)
+fn <- file.path(outputDir, fn_DWDRain_content)
 save(DWDRain_content, file = fn)
 
 
@@ -72,13 +68,16 @@ save(DWDRain_content, file = fn)
 
 # update the data to local fst file from the local zip files (isloadnew = F) or directly from the DWD ftp server (isloadnew = T)
 # weather data interpolation uses the fst format
-#UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1990-01-01", isloadnew = T)
+#UpdateDWDData_to_fst(dataperiod = "historical", startdate = "1990-01-01", isloadnew = TRUE)
 
 
 # if the data have been stored locally, they can be read from the local fst files
-fn_histDWD_data <- paste0(fn_histDWD_data_str, as.character(1990),".fst")
-fn <- here(Local_R_DWD, fn_histDWD_data)
-weather_historic <- read.fst(path = fn)
+historical_startdate <- "1990-01-01"
+historical_path <- file.path(
+  Local_R_DWD,
+  dwd_fst_filename("historical", historical_startdate)
+)
+weather_historic <- read.fst(path = historical_path)
 
 # select the columns that are in the core, i.e. essential data set and rename them
 weather_historic_core <- weather_historic[,c("Stations_id", "Date",longNames_DWD_core)]
@@ -90,21 +89,28 @@ RecentRainStationList <- DWDRain_content$recent$stationlist
 
 # update the recent data to local fst file from the local zip files (isloadnew = F) or directly from the DWD ftp server (isloadnew = T)
 # if you want to update the recent data, set UpdateRecentDWDdata <- T
-UpdateRecentDWDdata <- F
+UpdateRecentDWDdata <- FALSE
+recent_startdate <- paste0(as.character(ThisYear - 1), "-01-01")
 if (UpdateRecentDWDdata) {
   StartTime <- Sys.time()
-  UpdateDWDData_to_fst(dataperiod = "recent",
-                       isloadnew = T,
-                       DWD_content = DWD_content,
-                       startdate = paste0(as.character(ThisYear-1),"-01-01"))
+  recent_path <- UpdateDWDData_to_fst(
+    dataperiod = "recent",
+    isloadnew = TRUE,
+    DWD_content = DWD_content,
+    startdate = recent_startdate
+  )
 
   EndTime <- Sys.time()
   print(paste("Time for UpdateDWDData_to_fst:", EndTime - StartTime))
+} else {
+  recent_path <- file.path(
+    Local_R_DWD,
+    dwd_fst_filename("recent", recent_startdate)
+  )
 }
 
-# the name of the file is generated
-fn_recentDWD_data <- paste0("recent_weather_dat_", as.character(1990),".fst")
-weather_recent <- read.fst(path = here(Local_R_DWD, fn_recentDWD_data))
+# the filename is generated from the same start date used for the update
+weather_recent <- read.fst(path = recent_path)
 weather_recent  <- weather_recent[,c("Stations_id","Date",longNames_DWD_core)]
 
 # For estimation of weather data the coordinates and height asl of the location are needed
@@ -186,8 +192,7 @@ IntPolDWDdataHistorical$Longitude <- geoLaenge
 IntPolDWDdataHistorical$Latitude <- geoBreite
 ```
 
-The interpolation should deliver daily estimates of the weather data for
-the location:
+The interpolation should deliver daily estimates of the weather data for the location:
 
 ``` r
 summary(IntPolDWDdataHistorical)
@@ -221,8 +226,7 @@ summary(IntPolDWDdataHistorical)
 #>  Max.   :52.73
 ```
 
-The average distance for the estimation of the different weather
-variables can be calculated:
+The average distance for the estimation of the different weather variables can be calculated:
 
 ``` r
 usedstations <- IntPolDWDHistorical$df.wf
@@ -230,8 +234,7 @@ usedstations$Distance <- 1/usedstations$InvDist
 Diststations <- usedstations %>% group_by(variable) %>% dplyr::summarise(Distance = mean(Distance, na.rm = T))
 ```
 
-The average distance for the estimation of the different weather
-variables is:
+The average distance for the estimation of the different weather variables is:
 
 ``` r
 Diststations
@@ -309,8 +312,7 @@ IntPolDWDdatarecent$Longitude <- geoLaenge
 IntPolDWDdatarecent$Latitude <- geoBreite
 ```
 
-Here the summary of the result of the interpolation procedure for the
-recent data:
+Here the summary of the result of the interpolation procedure for the recent data:
 
 ``` r
 summary(IntPolDWDdatarecent)
