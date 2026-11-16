@@ -143,7 +143,7 @@ Copy_DWD_ZipFiles(DWD_ftp_historical, LocalCopy_DWD_ftp_historical)
 
 
 ```
-For further processing of the data and to save disk space the data can be saved in a more compact format using the function `UpdateDWDData_to_fst()`. The parameter `isloadnew` is used to load the data from the DWD FTP server; if `FALSE`, the local ZIP files will be used when available. Again this process is time consuming, as the data is read from the ZIP files and saved in an FST file. The `startdate` parameter defines the first date to process and is included in the output filename, for example `weather_dat_1990-01-01.fst`. The file size may still be large; historical data from 1970 onward require about 1 GB in FST format.
+For further processing of the data and to save disk space the data can be saved in a more compact format using the function `UpdateDWDData_to_fst()`. The parameter `isloadnew` is used to load the data from the DWD FTP server; if `FALSE`, the local ZIP files will be used when available. Again this process is time consuming, as the data is read from the ZIP files and saved in an FST file. The `startdate` parameter defines the first date to process. Historical filenames include that date, for example `weather_dat_1990-01-01.fst`, while recent observations are refreshed in the stable file `recent_weather_dat.fst`. The file size may still be large; historical data from 1970 onward require about 1 GB in FST format.
 
 
 
@@ -250,7 +250,8 @@ recent_path <- UpdateDWDData_to_fst(
 ```
 
 A saved file can be read using the returned path. Alternatively, construct its
-name later with `dwd_fst_filename()` and the same start date.
+name later with `dwd_fst_filename()`. Recent observations always resolve to the
+same filename, regardless of the selected start date.
  
 ```{r, eval=FALSE}
 path <- file.path(

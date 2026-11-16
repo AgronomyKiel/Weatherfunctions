@@ -1,19 +1,20 @@
+------------------------------------------------------------------------
+
+editor_options: markdown: wrap: 72 ---
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # Weatherfunctions
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
-The goal of Weatherfunctions is to support download of daily weather
-data from the German weather data service (DWD), to generate
-interpolations of weather data and to calculate some derived variables
-like potential evapotranspiration.
+The goal of Weatherfunctions is to support download of daily weather data from the German weather data service (DWD), to generate interpolations of weather data and to calculate some derived variables like potential evapotranspiration.
 
 ## Installation
 
-You can install the development version of Weatherfunctions from
-[GitHub](https://github.com/) with:
+You can install the development version of Weatherfunctions from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
@@ -22,10 +23,7 @@ pak::pak("AgronomyKiel/Weatherfunctions")
 
 ## Example
 
-This is a basic example which shows you how to download a local copy of
-the historical and recent daily weather data from DWD and to interpolate
-them for a certain location defined by latitude, longitude and height
-above sea level.
+This is a basic example which shows you how to download a local copy of the historical and recent daily weather data from DWD and to interpolate them for a certain location defined by latitude, longitude and height above sea level.
 
 ``` r
 rm(list = ls())
@@ -194,8 +192,7 @@ IntPolDWDdataHistorical$Longitude <- geoLaenge
 IntPolDWDdataHistorical$Latitude <- geoBreite
 ```
 
-The interpolation should deliver daily estimates of the weather data for
-the location:
+The interpolation should deliver daily estimates of the weather data for the location:
 
 ``` r
 summary(IntPolDWDdataHistorical)
@@ -229,8 +226,7 @@ summary(IntPolDWDdataHistorical)
 #>  Max.   :52.73
 ```
 
-The average distance for the estimation of the different weather
-variables can be calculated:
+The average distance for the estimation of the different weather variables can be calculated:
 
 ``` r
 usedstations <- IntPolDWDHistorical$df.wf
@@ -238,8 +234,7 @@ usedstations$Distance <- 1/usedstations$InvDist
 Diststations <- usedstations %>% group_by(variable) %>% dplyr::summarise(Distance = mean(Distance, na.rm = T))
 ```
 
-The average distance for the estimation of the different weather
-variables is:
+The average distance for the estimation of the different weather variables is:
 
 ``` r
 Diststations
@@ -317,8 +312,7 @@ IntPolDWDdatarecent$Longitude <- geoLaenge
 IntPolDWDdatarecent$Latitude <- geoBreite
 ```
 
-Here the summary of the result of the interpolation procedure for the
-recent data:
+Here the summary of the result of the interpolation procedure for the recent data:
 
 ``` r
 summary(IntPolDWDdatarecent)
@@ -355,6 +349,7 @@ summary(IntPolDWDdatarecent)
 #>  Max.   :52.73  
 #> 
 ```
+
 ``` r
 DWDdata <- rbind(IntPolDWDdataHistorical, IntPolDWDdatarecent)
 ```

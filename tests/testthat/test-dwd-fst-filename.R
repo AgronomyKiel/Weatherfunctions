@@ -1,11 +1,15 @@
-test_that("DWD FST filenames include the complete start date", {
+test_that("DWD FST filenames follow period-specific naming", {
   expect_identical(
     dwd_fst_filename("historical", "1990-01-01"),
     "weather_dat_1990-01-01.fst"
   )
   expect_identical(
     dwd_fst_filename("recent", as.Date("2025-07-01")),
-    "recent_weather_dat_2025-07-01.fst"
+    "recent_weather_dat.fst"
+  )
+  expect_identical(
+    dwd_fst_filename("recent", as.Date("2026-01-01")),
+    "recent_weather_dat.fst"
   )
 })
 
