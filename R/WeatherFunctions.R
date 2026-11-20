@@ -614,6 +614,12 @@ clean_plotly_leg <- function(.plotly_x, .extract_str) {
 #' @import tidyr
 #'
 #' @examples
+vegetationYear <- function(date = Sys.Date(), StartMonth = 9L) {
+  date <- as.Date(date)
+  as.integer(format(date, "%Y")) +
+    as.integer(as.integer(format(date, "%m")) >= StartMonth)
+}
+
 makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
                      ShiftYears=F, StartMonth=9, smoothing=F, span=0.5, plotly=F){
   if (is.null(df)) {
@@ -641,8 +647,8 @@ makeplot <- function(df, parameter, BaseSize=18, ylabel="", SelYear=0,
   # format as numeric and use actual year if nothing is selected
   SelYear <- as.numeric(SelYear)
   if (SelYear==0) {
-    ThisYear <- substr(as.character(Sys.Date()), 1,4)
-    SelYear <- ThisYear
+    SelYear <- if (ShiftYears) vegetationYear(StartMonth = StartMonth) else
+      as.integer(format(Sys.Date(), "%Y"))
   }
   SelYear <- as.numeric(SelYear)
 
@@ -1693,9 +1699,15 @@ fn_Metadaten <- "Metadaten_Parameter_klima_tag_"
 #  tmp <- stri_encode(stri_read_raw(dest_file),
 #                     from="latin1", to="UTF-8")
 #  tmp <- readr::read_delim(file = dest_file, delim = " ", col_names = TRUE, quote = "", escape_double = FALSE)
-  tmp <- read.fwf(file = dest_file, widths = c(5, -1, 8, -1, 8,-1, 14,-3, 7, -5, 7, -1, 40,-1, 40, -1, 4), skip=2,
+  # Decode explicitly before fixed-width parsing. On Windows, read.fwf's
+  # internal readLines can otherwise reject the Latin-1 header in a UTF-8 locale.
+  station_text <- iconv(readLines(dest_file, encoding = "latin1", warn = FALSE),
+                        from = "latin1", to = "UTF-8")
+  station_connection <- textConnection(station_text)
+  on.exit(close(station_connection), add = TRUE)
+  tmp <- read.fwf(file = station_connection, widths = c(5, -1, 8, -1, 8,-1, 14,-3, 7, -5, 7, -1, 40,-1, 40, -1, 4), skip=2,
            col.names = c("Stations_id", "von_datum", "bis_datum", "Stationshoehe", "geoBreite", "geoLaenge", "Stationsname", "Bundesland", "Abgabe"),
-           fileEncoding = "latin1", stringsAsFactors = FALSE, na.strings = "-999")
+           stringsAsFactors = FALSE, na.strings = "-999")
 
   tmp$Stationsname <- trimws(tmp$Stationsname, which = c("both"))
   tmp$Bundesland <- trimws(tmp$Bundesland, which = c("both"))
@@ -2421,16 +2433,21 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
   }
 
   # add standard measurement height for wind speed
-  DWDWeather$MHoeheWind <- 10 # default value [m]
+  DWDWeather$MHoeheWind <- rep(10, nrow(DWDWeather)) # default value [m]
   DWDWeather$Date <- as.Date(as.character(DWDWeather$MESS_DATUM), "%Y%m%d")
 
   # read meta data for wind speed measurement height
   MetaWindfn <- paste0("Metadaten_Geraete_Windgeschwindigkeit_", station,".txt")
 
   if (file.exists(file.path(path_unzip, MetaWindfn))) {
-  MetaWinddata <- read.table(file = file.path(path_unzip, MetaWindfn),
+  wind_text <- iconv(readLines(file.path(path_unzip, MetaWindfn),
+                              encoding = "latin1", warn = FALSE),
+                     from = "latin1", to = "UTF-8")
+  wind_connection <- textConnection(wind_text)
+  on.exit(close(wind_connection), add = TRUE)
+  MetaWinddata <- read.table(file = wind_connection,
                              header=TRUE, sep=";", quote="", dec=".", na.strings=c("-999", "\032"),
-                             stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE, fileEncoding="latin1")
+                             stringsAsFactors=FALSE, strip.white=TRUE, fill=TRUE)
   # letzte Zeile raus
   MetaWinddata <- MetaWinddata[-nrow(MetaWinddata),]
   MetaWinddata <- MetaWinddata %>% mutate(Von_Datum = as.Date(as.character(Von_Datum), format="%Y%m%d"),
@@ -2439,7 +2456,9 @@ getsingleDWDWeather <- function(station, ziplist, repository, quiet=T){
   # extract the measurement height for wind speed
   dateseq <- NULL#Date()
   Heightseq <- NULL
-  for (i in 1:nrow(MetaWinddata)){
+  for (i in seq_len(nrow(MetaWinddata))){
+    if (is.na(MetaWinddata$Von_Datum[i]) || is.na(MetaWinddata$Bis_Datum[i]) ||
+        MetaWinddata$Von_Datum[i] > MetaWinddata$Bis_Datum[i]) next
     dateseqi <- seq(MetaWinddata[i, "Von_Datum"], MetaWinddata[i, "Bis_Datum"], "1 day" )
     dateseq <- c(dateseq, dateseqi)
     Heightseqi <- rep(MetaWinddata[i, "Geberhoehe.ueber.Grund..m."], length(dateseqi))
@@ -3100,14 +3119,24 @@ GetRainData_selection <- function(stations_selected,
   df_list <-   df_list[lapply(df_list, length) > 1]
   ## convert list of data frames in one
   # convert list of data frames in one
-  raindata <- try(data.table::rbindlist(df_list, use.names = T), silent = T)
+  raindata <- data.table::rbindlist(df_list, use.names = T)
   rm(df_list)
   raindata <- as.data.frame(raindata)
+  if (nrow(raindata) == 0L) {
+    warning("No rainfall records found for the selected stations in ", repository,
+            ". Continuing without additional rainfall stations.", call. = FALSE)
+    raindata <- as.data.frame(stations_selected)[0, , drop = FALSE]
+    raindata$Date <- as.Date(character())
+    raindata$NIEDERSCHLAGSHOEHE <- numeric()
+    return(raindata)
+  }
+  # Construct the date before filtering; do not resolve a missing Date column
+  # to the base::Date function in dplyr's data mask.
+  raindata$Date <- as.Date(as.character(raindata$MESS_DATUM), "%Y%m%d")
   # remove data older than start date
-  raindata <- raindata %>% filter(Date >= as.Date(startdate))
+  raindata <- raindata %>% filter(.data$Date >= as.Date(startdate))
   # rename columns
   raindata <- raindata %>% dplyr::rename(NIEDERSCHLAGSHOEHE = RS)
-  raindata$Date <- as.Date(as.character(raindata$MESS_DATUM), "%Y%m%d")
   raindata$MESS_DATUM <- NULL
   raindata$Jahr <- year(raindata$Date)
   raindata$Monat <- month(raindata$Date)
@@ -3458,8 +3487,103 @@ InterpolateWeatherData <- function(station_selected,
   #' @export
   #'
   # @examples InterpolateFromDWD(df_DWD_core, stationlist, geoBreite, geoLaenge, max.Height.Distance_m=100, Hoehe_m = 100, df_Rain=NULL, startdate = "1990-01-01")
+# Download nearest eligible stations until every requested day and core variable
+# has three distinct non-missing station observations (one for rainfall, taken
+# from the nearest station with a valid record). Incomplete days are reported
+# in coverage and excluded from interpolation, never filled with invented values.
+# enddate defaults to yesterday because today's daily observations are incomplete.
+LoadRecentDWDInterpolated <- function(geoBreite, geoLaenge, Hoehe_m, startdate,
+                                     enddate = Sys.Date() - 1,
+                                     max.Height.Distance_m = 150,
+                                     repository = DWD_ftp_recent,
+                                     content = NULL, max_stations = Inf) {
+  startdate <- as.Date(startdate)
+  enddate <- as.Date(enddate)
+  if (length(startdate) != 1L || length(enddate) != 1L ||
+      is.na(startdate) || is.na(enddate)) stop("Provide valid start and end dates.")
+  if (length(max_stations) != 1L || is.na(max_stations) || max_stations < 1)
+    stop("max_stations must be positive.")
+  empty <- list(DWDdata = NULL, df.wf = NULL, quality = NULL, coverage = data.frame(),
+                stations_downloaded = character(), failed_stations = character())
+  if (startdate > enddate) return(empty)
+  # Reuse preloaded metadata when supplied; fetch it only for standalone calls
+  # without content. Removed/unreadable archives are handled per station below.
+  if (is.null(content)) content <- getDWDContent(repository)
+  if (is.null(content$stationlist) || is.null(content$ziplist))
+    stop("Recent station metadata must contain stationlist and ziplist.")
+  stations <- as.data.frame(content$stationlist)
+  stations$Stations_id <- vapply(stations$Stations_id, normalize_dwd_station_id, character(1))
+  archive_ids <- sub("^tageswerte_KL_([0-9]{5})_.*$", "\\1", basename(content$ziplist))
+  stations <- stations[!duplicated(stations$Stations_id) &
+    stations$Stations_id %in% archive_ids &
+    is.finite(stations$geoBreite) & is.finite(stations$geoLaenge) &
+    is.finite(stations$Stationshoehe) &
+    abs(stations$Stationshoehe - Hoehe_m) < max.Height.Distance_m, , drop = FALSE]
+  location <- sf::st_sfc(sf::st_point(c(geoLaenge, geoBreite)), crs = 4326)
+  if (nrow(stations)) {
+    points <- sf::st_as_sf(stations, coords = c("geoLaenge", "geoBreite"), crs = 4326)
+    stations$Distance_m <- pmax(1, as.numeric(sf::st_distance(points, location)))
+    stations$Distance_km <- stations$Distance_m / 1000
+    stations <- stations[order(stations$Distance_m, stations$Stations_id), , drop = FALSE]
+  }
+  days <- seq(startdate, enddate, by = "day")
+  counts <- matrix(0L, nrow = length(days), ncol = length(longNames_DWD_core),
+                   dimnames = list(as.character(days), longNames_DWD_core))
+  required <- ifelse(longNames_DWD_core == "NIEDERSCHLAGSHOEHE", 1L, 3L)
+  records <- list()
+  downloaded <- failed <- character()
+  for (i in seq_len(min(nrow(stations), max_stations))) {
+    station <- stations$Stations_id[i]
+    weather <- tryCatch({
+      raw <- getsingleDWDWeather(station, content$ziplist, repository)
+      raw <- RenameDWDWeather(raw)
+      raw$Date <- as.Date(raw$Date)
+      for (variable in setdiff(longNames_DWD_core, names(raw))) raw[[variable]] <- rep(NA_real_, nrow(raw))
+      raw <- raw[!is.na(raw$Date) & raw$Date >= startdate & raw$Date <= enddate,
+                 c("Stations_id", "Date", longNames_DWD_core), drop = FALSE]
+      raw$Stations_id <- rep(station, nrow(raw))
+      raw[!duplicated(raw$Date), , drop = FALSE]
+    }, error = function(e) {
+      warning("Skipping unavailable or unreadable station ", station, ": ",
+              conditionMessage(e), ". Trying the next nearest station.", call. = FALSE)
+      NULL
+    })
+    if (is.null(weather)) {
+      failed <- c(failed, station)
+      next
+    }
+    downloaded <- c(downloaded, station)
+    records[[length(records) + 1L]] <- weather
+    index <- match(weather$Date, days)
+    for (variable in longNames_DWD_core) {
+      valid <- is.finite(weather[[variable]]) & weather[[variable]] != -999
+      weather[[variable]][!valid] <- NA_real_
+      counts[index[valid], variable] <- counts[index[valid], variable] + 1L
+    }
+    records[[length(records)]] <- weather
+    if (all(sweep(counts, 2L, required, FUN = "-") >= 0L)) break
+  }
+  complete <- rowSums(sweep(counts, 2L, required, FUN = "-") >= 0L) == ncol(counts)
+  coverage <- data.frame(Date = days, counts, complete = complete, check.names = FALSE)
+  if (any(!complete)) warning(
+    sum(!complete), " requested days lack three observations per core variable or one rainfall record; ",
+    "these days are excluded. Inspect $coverage for details.", call. = FALSE)
+  output <- empty
+  if (any(complete)) {
+    core <- as.data.frame(data.table::rbindlist(records, use.names = TRUE))
+    core <- core[core$Date %in% days[complete], , drop = FALSE]
+    output <- InterpolateFromDWD(core, stations, geoBreite, geoLaenge,
+                                max.Height.Distance_m, Hoehe_m, startdate = startdate,
+                                nearest_rain = TRUE)
+  }
+  output$coverage <- coverage
+  output$stations_downloaded <- downloaded
+  output$failed_stations <- failed
+  output
+}
+
   InterpolateFromDWD <- function(df_DWD_core, stationlist, geoBreite, geoLaenge, max.Height.Distance_m=100, Hoehe_m = 100, df_Rain=NULL,
-                                 startdate = "1990-01-01") {
+                                 startdate = "1990-01-01", nearest_rain = TRUE) {
 
 
     df_DWD_core <- df_DWD_core %>% filter(Date >= as.Date(startdate))
@@ -3515,9 +3639,17 @@ InterpolateWeatherData <- function(station_selected,
     # select the nearest value for the rain data for each date
     rainresult <- long_data[variable == "NIEDERSCHLAGSHOEHE"& !is.na(value)&!is.na(Distance_km), head(.SD, 1), by = .(Date, variable)]
     # remove the rain data from the result
-    result <- result[variable != "NIEDERSCHLAGSHOEHE",]
+    if (nearest_rain) result <- result[variable != "NIEDERSCHLAGSHOEHE",]
     # combine the rain data with the result
-    result <- rbind(result, rainresult)
+    if (nearest_rain) result <- rbind(result, rainresult)
+    if (nrow(result) == 0L) {
+      warning(
+        "No usable weather records on or after ", as.character(as.Date(startdate)),
+        ". Check the date ranges of the weather files and station metadata.",
+        call. = FALSE
+      )
+      return(list(DWDdata = NULL, df.wf = NULL, quality = NULL))
+    }
     if (sum(is.na(result$value)>0)) {
       print("NA values in result")
       print(as.character(geoBreite))
@@ -3528,11 +3660,24 @@ InterpolateWeatherData <- function(station_selected,
 
     # calculate the sum of the inverse distance for each variable
     df.SumInvDist <- result %>% mutate(InvDist = 1/Distance_km)  %>%  group_by(Date, variable) %>%
-             dplyr::summarise(SumInvDist=sum(InvDist)) %>%
+             dplyr::summarise(SumInvDist=sum(InvDist), .groups = "drop") %>%
              ungroup()
-    df.InvDist <- result %>% mutate(InvDist = 1/Distance_km) %>% dplyr::select(Date, variable, Stations_id, InvDist)
+    df.InvDist <- result %>% mutate(InvDist = 1/Distance_km) %>%
+      dplyr::select(Date, variable, Stations_id, value, Distance_km, InvDist)
 
     df.wf <- merge(x = df.InvDist, y = df.SumInvDist, by = c("Date", "variable")) %>% mutate(wf=InvDist/SumInvDist)
+    # Spatial sample SD of the station values actually selected, in the source
+    # parameter's units. A single station (notably rainfall) has undefined SD.
+    # Weighted distance uses the same normalized weights as the interpolation.
+    quality <- df.wf %>%
+      dplyr::group_by(Date, variable) %>%
+      dplyr::summarise(
+        n_stations = dplyr::n_distinct(Stations_id),
+        interpolated_value = sum(wf * value),
+        SD = if (dplyr::n() > 1L) stats::sd(value) else NA_real_,
+        weighted_distance_km = sum(wf * Distance_km),
+        .groups = "drop"
+      ) %>% dplyr::arrange(Date, variable)
 
 
 #   %>% dplyr::summarise(Distance_km=mean(Distance_km, na.rm=T), n=n())
@@ -3549,7 +3694,7 @@ InterpolateWeatherData <- function(station_selected,
     xport <- result %>% dplyr::select(Date, variable, value, Distance_km) %>%
       filter (!is.na(value)) %>%
       dplyr::group_by(variable, Date) %>%
-      dplyr::summarise(sumValue=sum(value/Distance_km), sum_1_Dist=sum(1/Distance_km)) %>%
+      dplyr::summarise(sumValue=sum(value/Distance_km), sum_1_Dist=sum(1/Distance_km), .groups = "drop") %>%
       mutate(value=sumValue/sum_1_Dist) %>%
       ungroup %>% dplyr::select(-sum_1_Dist, -sumValue) %>%
       pivot_wider(names_from = variable, values_from = value) %>% arrange(Date)
@@ -3568,7 +3713,7 @@ InterpolateWeatherData <- function(station_selected,
     df <- getRadWeather(xport)
     # format and rename to HUME-formatted data
     DWDdata <- getHUMEWeather(df)
-    output <- list(DWDdata=DWDdata, df.wf=df.wf)
+    output <- list(DWDdata=DWDdata, df.wf=df.wf, quality=quality)
     return(output)
   }
 
@@ -3708,7 +3853,7 @@ InterpolateWeatherData <- function(station_selected,
 #' CumRain, CumRad, TempSum, PT, cPT, Rn, ra, rc, pETP, cumETP, climWbal, cumWbal
 #' @export
 #'
-  AddWeatherParameters <- function(df, ShiftYears=FALSE, StartMonth=1){
+  AddWeatherParameters <- function(df, ShiftYears=FALSE, StartMonth=1, StartDay=1){
     stopifnot("Time" %in% names(df))
     stopifnot("GlobRad" %in% names(df))
     stopifnot("TMPM" %in% names(df))
@@ -3727,7 +3872,16 @@ InterpolateWeatherData <- function(station_selected,
 
     # add parameter for calculations of year summation parameters other than the calendar year
     if (ShiftYears) {
-      df$SumYear <- ifelse(df$Month >= StartMonth, df$Year+1, df$Year)
+      stopifnot(length(StartMonth) == 1L, length(StartDay) == 1L,
+                !is.na(StartMonth), !is.na(StartDay),
+                StartMonth %in% 1:12, StartDay %in% 1:31)
+      boundary <- as.Date(sprintf("2000-%02d-%02d", StartMonth, StartDay))
+      if (is.na(boundary)) stop("Invalid cumulation start month/day.")
+      # Compare month/day only, so the boundary repeats in every year.
+      # February 29 starts on March 1 in non-leap years.
+      after_start <- df$Month * 100L + as.integer(format(df$Datum, "%d")) >=
+        StartMonth * 100L + StartDay
+      df$SumYear <- ifelse(after_start, df$Year+1, df$Year)
     }
     else {
       df$SumYear <- df$Year
@@ -3749,6 +3903,7 @@ InterpolateWeatherData <- function(station_selected,
 
     # calculate cumulative parameters
     df <- df %>%
+      arrange(Time) %>%
       group_by(SumYear) %>%
       mutate(CumRain = cumsum(Rain),
              CumRad = cumsum(GlobRad),
